@@ -1,17 +1,32 @@
 package com.example.poomagnet.App
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
-@HiltViewModel
-class AppViewModel @Inject constructor() : ViewModel() {
+
+class AppViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState
-    val showBottombar =  MutableStateFlow(false)
+    val dexRepo: MangaDexRepository = MangaDexRepository()
+
+    fun searchAllManga(title: String) {
+        viewModelScope.launch {
+            val r = dexRepo.searchAllManga(title).toString()
+            _uiState.update {
+                it.copy(
+                    followedManga = r
+                )
+            }
+        }
+    }
 
     fun changeScreen(screenType: ScreenType) {
         _uiState.update {

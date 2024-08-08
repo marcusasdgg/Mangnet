@@ -16,6 +16,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.poomagnet.App.data.BottomList
+import com.example.poomagnet.ui.HomeScreen.HomeScreen
+import com.example.poomagnet.ui.HomeScreen.HomeTopBar
+import com.example.poomagnet.ui.HomeScreen.HomeTopBarV2
 import com.example.poomagnet.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,13 +39,16 @@ fun App() {
                 }
             )
         }},
+        topBar = { HomeTopBarV2()}
 
     ) { innerPadding ->
         when(uiState.currentScreen) {
-            ScreenType.Home -> Text("Home", Modifier.padding(innerPadding))
+            ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding))
             ScreenType.Search -> Text("Search", Modifier.padding(innerPadding))
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
-            ScreenType.Settings -> Text("Settings", Modifier.padding(innerPadding))
+            ScreenType.Settings -> {
+                viewModel.searchAllManga("Dog Nigga")
+                Text(uiState.followedManga, Modifier.padding(innerPadding))}
         }
     }
 
