@@ -1,6 +1,8 @@
 package com.example.poomagnet.App
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,8 +49,9 @@ fun App() {
             ScreenType.Search -> Text("Search", Modifier.padding(innerPadding))
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
+                val scrollState = rememberScrollState()
                 viewModel.searchAllManga("Dog Nigga")
-                Text(uiState.followedManga, Modifier.padding(innerPadding))}
+                Text(uiState.followedManga, Modifier.padding(innerPadding).verticalScroll(scrollState))}
         }
     }
 
