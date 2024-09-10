@@ -19,7 +19,7 @@ class AppViewModel : ViewModel() {
 
     fun searchAllManga(title: String) {
         viewModelScope.launch {
-            val r = dexRepo.searchAllManga(title).toString()
+            val r = dexRepo.searchAllManga(title)
             _uiState.update {
                 it.copy(
                     followedManga = r

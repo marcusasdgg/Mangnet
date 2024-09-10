@@ -1,7 +1,10 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
-import com.example.poomagnet.ui.HomeScreen.mangaInfo
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 
 enum class mangaState {
     IN_PROGRESS,
@@ -16,14 +19,17 @@ data class MangaInfo(
     val description: String,
     val state: mangaState,
     val contentRating: String,
-    val availableLanguages: List<String>
+    val availableLanguages: List<String>,
+    val coverArt: ImageBitmap?
 )
 
 class MangaDexRepository() {
     private val apiService = RetrofitInstance.api
     //add local database jargon blah blah later. learn SQL.
     suspend fun searchAllManga(title: String): List<MangaInfo> {//search including stuff like coverpage url.
-        val s = apiService.mangaSearchSimple(title)
+        Log.d("TAG", "searchALlManga: startin first get request")
+        val s = apiService.mangaSearchSimple(title, listOf("cover_art"))
+        Log.d("TAG", "searchALlManga: called first get request")
         val list: MutableList<MangaInfo> = mutableListOf()
         if (s["result"] == "ok") {
             var altlist: MutableList<String> = mutableListOf()
@@ -61,7 +67,24 @@ class MangaDexRepository() {
                                 jl.forEach { lan -> languageList.add(lan.toString()) }
                             }
 
-                            list.add(MangaInfo(id,type,mangaTitle,altlist,description,state,contentRating,languageList))
+                            val relationships = elm["relationships"]
+                            var coverUrl = ""
+                            if (relationships is List<*>) {
+                                relationships.forEach { relation ->
+                                    if (relation is Map<*,*>)  {
+                                        if (relation["type"] == "cover_art"){
+                                            val rel_attr = relation["attributes"]
+                                            if (rel_attr is Map<*,*>) {
+                                                coverUrl = rel_attr["fileName"].toString()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            val image = downloadImage(coverUrl, id)
+
+                            list.add(MangaInfo(id,type,mangaTitle,altlist,description,state,contentRating,languageList, image?.asImageBitmap()))
                         }
                     }
                 }
@@ -70,6 +93,22 @@ class MangaDexRepository() {
             return listOf()
         }
         return list;
+    }
+
+    private suspend fun downloadImage(url: String, id: String): Bitmap? {
+        return try {
+            val response = apiService.downloadFile("https://uploads.mangadex.org/covers/$id/$url")
+            if (response.isSuccessful) {
+                response.body()?.let { responseBody ->
+                    val inputStream = responseBody.byteStream()
+                    BitmapFactory.decodeStream(inputStream)
+                }
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun detailedSearchManga(title: String, tags: List<String>) {}
