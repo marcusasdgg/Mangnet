@@ -56,10 +56,22 @@ fun BottomNavBar(
             onClick = {
                 onButtonPressed(item.screenType)
             },
-            icon = {Icon(imageVector = item.icon, contentDescription = stringResource(
-                id = item.name
-            ))},
-            label = {Text(stringResource(id = item.name))}
+            icon = {
+                if (currentTab == ScreenType.Search && item.screenType == ScreenType.Search){
+                    Icon(imageVector = Icons.Default.FilterList, contentDescription = stringResource(
+                        id = item.name
+                    ))
+                } else {
+                    Icon(imageVector = item.icon, contentDescription = stringResource(
+                        id = item.name
+                    ))
+                }
+           },
+            label = {if (currentTab == ScreenType.Search && item.screenType == ScreenType.Search){
+                Text("Filter")
+            } else {
+                Text(stringResource(id = item.name))
+            }}
         )
     }
 }

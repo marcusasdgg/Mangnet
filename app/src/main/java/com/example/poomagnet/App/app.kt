@@ -35,6 +35,9 @@ fun App() {
                 BottomList.infoList,
                 currentTab = uiState.currentScreen,
                 onButtonPressed = { item ->
+                    if (uiState.currentScreen == item) {
+                        
+                    }
                     viewModel.changeScreen(item)
                 }
             )
