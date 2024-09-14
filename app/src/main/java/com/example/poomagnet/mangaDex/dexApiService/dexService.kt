@@ -8,8 +8,8 @@ import retrofit2.http.Url
 
 
 interface MangaDexApiService {
-    @GET("manga")
-    suspend fun mangaSearchSimple(@Query("title") title: String, @Query("includes[]") includes: List<String>?): Map<String, Any?>
+    @GET("manga?limit=50")
+    suspend fun mangaSearchSimple(@Query("title") title: String,@Query("offset") offset: Int, @Query("includes[]") includes: List<String>?): Map<String, Any?>
 
     @GET("/manga/{mangaId}?includes[]=cover_art")
     suspend fun getMangaCoverUrl(@Path("mangaId") mangaId: String): Map<String, Any?>

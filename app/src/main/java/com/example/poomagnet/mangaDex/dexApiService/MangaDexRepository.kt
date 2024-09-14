@@ -20,29 +20,38 @@ data class MangaInfo(
     val state: mangaState,
     val contentRating: String,
     val availableLanguages: List<String>,
-    val coverArt: ImageBitmap?
+    val coverArt: ImageBitmap?,
+    val coverArtUrl: String,
+    val offSet: Int,
 )
 
 class MangaDexRepository() {
     private val apiService = RetrofitInstance.api
     //add local database jargon blah blah later. learn SQL.
-    suspend fun searchAllManga(title: String): List<MangaInfo> {//search including stuff like coverpage url.
-        Log.d("TAG", "searchALlManga: startin first get request")
-        val s = apiService.mangaSearchSimple(title, listOf("cover_art"))
-        Log.d("TAG", "searchALlManga: called first get request")
+    suspend fun searchAllManga(title: String, offSet: Int = 0): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
+        Log.d("TAG", "searchALlManga: starting first get request")
+        val s = apiService.mangaSearchSimple(title,offSet, listOf("cover_art"))
+
         val list: MutableList<MangaInfo> = mutableListOf()
         if (s["result"] == "ok") {
             var altlist: MutableList<String> = mutableListOf()
             val searchArray = s["data"]
             if (searchArray is List<Any?>){
+                Log.d("TAG", "there are ${searchArray.size} search results")
                 searchArray.forEach { elm ->
+                    Log.d("TAG", "result found")
                     if (elm is Map<*,*>) {
                         val id = elm["id"].toString()
                         val type = elm["type"].toString()
                         val attributes = elm["attributes"]
                         if (attributes is Map<*,*>) {
 
-                            val mangaTitle = attributes["title"].toString()
+                            var mangaTitle = "n/a"
+                            val titleSearch = attributes["title"]
+                            if (titleSearch is Map<*, *>) {
+                                mangaTitle = titleSearch["en"].toString()
+                            }
+
 
                             val altTitles = attributes["altTitles"]
                             if (altTitles is List<*>) {
@@ -82,17 +91,21 @@ class MangaDexRepository() {
                                 }
                             }
 
-                            val image = downloadImage(coverUrl, id)
-
-                            list.add(MangaInfo(id,type,mangaTitle,altlist,description,state,contentRating,languageList, image?.asImageBitmap()))
+                            //val image = downloadImage(coverUrl, id)
+                            val contructedUrl = "https://uploads.mangadex.org/covers/$id/$coverUrl"
+                            list.add(MangaInfo(id,type,mangaTitle,altlist,description,state,contentRating,languageList, null, contructedUrl,offSet))
                         }
                     }
                 }
             }
         } else {
-            return listOf()
+            Log.d("TAG", "searchALlManga: finsihed first get request")
+            return Pair(listOf<MangaInfo>(),0)
         }
-        return list;
+
+        val limit: Int = s["total"].toString().toIntOrNull() ?: 0
+        Log.d("TAG", "searchALlManga: finsihed first get request")
+        return Pair(list, limit);
     }
 
     private suspend fun downloadImage(url: String, id: String): Bitmap? {
@@ -113,9 +126,17 @@ class MangaDexRepository() {
 
     suspend fun detailedSearchManga(title: String, tags: List<String>) {}
 
-    suspend fun searchAllChapter(mangaId: Int) {}
+    suspend fun searchAllChapter(mangaId: Int) {
+
+    }
 
     suspend fun downloadChapter(chapterId: Int) {}
 
+    //shoudlnt belong here
+    fun isEnglish(listing: Map<*,*>): Boolean {
+
+
+        return false
+    }
 
 }

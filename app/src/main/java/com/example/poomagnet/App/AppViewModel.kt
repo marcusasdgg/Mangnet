@@ -22,7 +22,7 @@ class AppViewModel : ViewModel() {
             val r = dexRepo.searchAllManga(title)
             _uiState.update {
                 it.copy(
-                    followedManga = r
+                    followedManga = r.first
                 )
             }
         }
