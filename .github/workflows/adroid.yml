@@ -25,6 +25,10 @@ jobs:
     - name: Set permissions for gradlew
       run: chmod +x ./gradlew  # Add execute permissions to the gradlew script
 
+    - name: Clean and Build APK
+      run: ./gradlew clean assembleRelease --stacktrace
+
+
     - name: Build APK
       run: ./gradlew assembleRelease
 
