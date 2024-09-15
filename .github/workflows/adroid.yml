@@ -20,6 +20,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: 11
+        distribution: 'zulu'  # Specify the Java distribution
 
     - name: Build APK
       run: ./gradlew assembleRelease
