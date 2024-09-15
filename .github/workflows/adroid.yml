@@ -75,7 +75,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: app/build/outputs/apk/release/app-release-unsigned.apk
-        tag_name: ${{NEW_TAG}}
+        tag_name: ${{env.NEW_TAG}}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
          
