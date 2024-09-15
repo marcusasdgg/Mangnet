@@ -31,9 +31,10 @@ jobs:
     - name: ls
       run: ls app/build/outputs/apk/release
 
-    - name: Upload APK to release
-      uses: actions/upload-artifact@v3
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
       with:
-        name: app-release-unsigned.apk
-        path: app/build/outputs/apk/release
+        files: app/build/outputs/apk/release/app-release.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
