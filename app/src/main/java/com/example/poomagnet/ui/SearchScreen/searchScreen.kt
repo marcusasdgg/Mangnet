@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,7 +26,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,6 +56,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -71,6 +76,7 @@ import com.example.poomagnet.ui.HomeScreen.FilterOptions
 import com.example.poomagnet.ui.VerticalCardTest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.lazy.rememberLazyListState as rememberLazyListState1
 
 
 enum class Sources {
@@ -95,7 +101,15 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
     )
 
     TopAppBar(title = {
-        Row( horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(0.dp,18.dp,18.dp,13.dp).fillMaxWidth()){
+        Box(
+            modifier = Modifier
+                .fillMaxHeight() // Ensure the Box takes up the full height of the TopAppBar
+                .fillMaxWidth(), // Optionally, ensure the Box takes up the full width if needed
+            contentAlignment = Alignment.Center // Center the content vertically
+        ) {
+        Row( horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+            .padding(0.dp, 10.dp, 10.dp, 13.dp)
+            .fillMaxWidth().fillMaxHeight()){
             if (!state.searchExpanded){
                 Button(
                     onClick = { searchViewModel.dropdownSource(true) },
@@ -168,15 +182,15 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
                     .focusable()
                     .width(animatedWidth)
                     .onFocusChanged { focusState ->
-                        if (focusState.isFocused){
+                        if (focusState.isFocused) {
                             searchViewModel.expandSearchBar(true)
-                        }else {
+                        } else {
                             searchViewModel.expandSearchBar(false)
                         }
                     }
             )
         }
-    })
+    }}, modifier = modifier.height(110.dp))
 
 }
 
@@ -187,18 +201,36 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
 fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel) {
     //left side bar.
 
+    val currentScrollState = rememberLazyGridState()
+
     val uiState = searchViewModel.uiState.collectAsState().value
 
     LaunchedEffect(uiState.searchText) {
+       currentScrollState.scrollToItem(0)
         searchViewModel.executeSearch()
     }
+
+    LaunchedEffect(currentScrollState) {
+        snapshotFlow { currentScrollState.layoutInfo }
+            .collect { layoutInfo ->
+                val totalItemsCount = layoutInfo.totalItemsCount
+                val visibleItems = layoutInfo.visibleItemsInfo
+                if (visibleItems.isNotEmpty()) {
+                    val lastVisibleItemIndex = visibleItems.last().index
+                    if (lastVisibleItemIndex == totalItemsCount - 1) {
+                        searchViewModel.continueSearch()
+                    }
+                }
+            }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(2), // 2 items per row
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-
+        state = currentScrollState
     ) {
         items(uiState.searchListing) { manga ->
             DoubleStackCard(
@@ -226,3 +258,5 @@ fun previewSearchTOp() {
 
 //switch ImageCard to use Coil instead of Image composable and make it donwload image link, then async download image 1 by 1 to make overal faster.`
 //wrap the executesearch in an try-catch as if internet is down, the app will crash.
+
+//adding bottomSheet to bott nav bar will help.

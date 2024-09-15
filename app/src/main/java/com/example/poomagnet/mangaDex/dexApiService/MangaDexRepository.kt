@@ -1,10 +1,20 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
+
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import com.example.poomagnet.ui.HomeScreen.mangaInfo
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import javax.inject.Inject
 
 enum class mangaState {
     IN_PROGRESS,
@@ -23,11 +33,79 @@ data class MangaInfo(
     val coverArt: ImageBitmap?,
     val coverArtUrl: String,
     val offSet: Int,
+    var inLibrary: Boolean = false,
+    var chapterList: MutableList<Chapter>? = null,
 )
+// on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
+//the null to a MutableList.
 
-class MangaDexRepository() {
+
+sealed class Chapter {
+    data class Downloaded(val imagePaths: List<String>) : Chapter()
+    data class Online(val imagePaths: List<String>) : Chapter()
+}
+
+val Chapter.isDownloaded: Boolean
+    get() = this is Chapter.Downloaded
+
+val Chapter.isOnline: Boolean
+    get() = this is Chapter.Online
+
+
+
+class MangaDexRepository @Inject constructor(private val context: Context)  {
     private val apiService = RetrofitInstance.api
     //add local database jargon blah blah later. learn SQL.
+
+    private val gsonSerializer = Gson()
+
+    //local persistence is so much easier now, i just backup
+
+    private var library: MutableList<MangaInfo> = mutableListOf()
+
+    init {
+        loadMangaFromBackup(context)
+    }
+
+    private fun loadMangaFromBackup(context: Context) {
+        try {
+            // Read the file content from backup.txt
+            val file = File(context.filesDir, "backup.txt")
+            if (file.exists()) {
+                val jsonString = file.readText()
+
+                // Deserialize the JSON string into a list of MangaInfo objects using Gson
+                val gson = Gson()
+                val listType = object : TypeToken<List<MangaInfo>>() {}.type
+                library = gson.fromJson(jsonString, listType)
+            } else {
+                Log.d("MangaDexRepository", "backup.txt not found, mangaObj is empty.")
+            }
+        } catch (e: Exception) {
+            Log.e("MangaDexRepository", "Error loading manga from backup.txt: ${e.message}")
+        }
+    }
+
+    private suspend fun backUpManga(context: Context){
+        val file = File(context.filesDir, "backup.txt")
+        withContext(Dispatchers.IO) {
+            FileOutputStream(file).use { fos ->
+                // Create an OutputStreamWriter to write text data
+                OutputStreamWriter(fos).use { writer ->
+                    // Write the data to the file
+                    writer.write(
+                        gsonSerializer.toJson(library)
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun addToLibrary(manga: MangaInfo) {
+        library.add(manga)
+        backUpManga(context)
+    }
+
     suspend fun searchAllManga(title: String, offSet: Int = 0): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
         Log.d("TAG", "searchALlManga: starting first get request")
         val s = apiService.mangaSearchSimple(title,offSet, listOf("cover_art"))
@@ -124,19 +202,5 @@ class MangaDexRepository() {
         }
     }
 
-    suspend fun detailedSearchManga(title: String, tags: List<String>) {}
-
-    suspend fun searchAllChapter(mangaId: Int) {
-
-    }
-
-    suspend fun downloadChapter(chapterId: Int) {}
-
-    //shoudlnt belong here
-    fun isEnglish(listing: Map<*,*>): Boolean {
-
-
-        return false
-    }
 
 }

@@ -2,6 +2,7 @@ package com.example.poomagnet.ui
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,25 +76,43 @@ fun VerticalCardTest(modifier: Modifier = Modifier, manga: MangaInfo){
 @Composable
 fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo) {
     Card(modifier = modifier.height(250.dp).width(110.dp), shape = CardDefaults.shape){
-        if (manga.coverArt == null) {
-            AsyncImage(model = ImageRequest.Builder(LocalContext.current)
-                .data(manga.coverArtUrl)
-                .crossfade(true)
-                .build(),
-                placeholder = painterResource(R.drawable.prevthumbnail),
-                contentDescription = "",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            AsyncImage(model = ImageRequest.Builder(LocalContext.current)
-                .data(manga.coverArt)
-                .crossfade(true)
-                .build(),
-                placeholder = painterResource(R.drawable.prevthumbnail),
-                contentDescription = "",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+        Box {
+            // Main content of the card
+            if (manga.coverArt == null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(manga.coverArtUrl)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.prevthumbnail),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(manga.coverArt)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.prevthumbnail),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            Text(
+                text = manga.title,  // Adjust text as needed
+                fontSize = 14.sp,
+                color = Color.White,
+                maxLines = 2,  // Limit text to 2 lines
+                overflow = TextOverflow.Ellipsis,  // Add ellipsis if text overflows
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .padding(8.dp)
+                    .fillMaxWidth()  // Ensure text takes up full width of the card
             )
         }
     }

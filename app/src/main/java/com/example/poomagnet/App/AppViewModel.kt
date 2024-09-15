@@ -15,18 +15,7 @@ import javax.inject.Inject
 class AppViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState
-    val dexRepo: MangaDexRepository = MangaDexRepository()
 
-    fun searchAllManga(title: String) {
-        viewModelScope.launch {
-            val r = dexRepo.searchAllManga(title)
-            _uiState.update {
-                it.copy(
-                    followedManga = r.first
-                )
-            }
-        }
-    }
 
     fun changeScreen(screenType: ScreenType) {
         _uiState.update {
