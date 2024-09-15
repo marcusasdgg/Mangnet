@@ -190,7 +190,7 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
                     }
             )
         }
-    }}, modifier = modifier.height(110.dp))
+    }}, modifier = modifier.height(124.5.dp))
 
 }
 
