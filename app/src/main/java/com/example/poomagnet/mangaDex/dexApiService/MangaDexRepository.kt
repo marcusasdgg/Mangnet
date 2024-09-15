@@ -79,7 +79,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 val listType = object : TypeToken<List<MangaInfo>>() {}.type
                 library = gson.fromJson(jsonString, listType)
             } else {
-                Log.d("MangaDexRepository", "backup.txt not found, mangaObj is empty.")
+                Log.d("MangaDexRepository", "backup.txt not found, mangaObj is empty. yess")
             }
         } catch (e: Exception) {
             Log.e("MangaDexRepository", "Error loading manga from backup.txt: ${e.message}")

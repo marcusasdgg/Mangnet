@@ -27,6 +27,7 @@ fun App() {
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
 
+    
     Scaffold(
         modifier = Modifier,
         bottomBar = {if (!uiState.botHidden) {
