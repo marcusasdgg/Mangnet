@@ -1,5 +1,6 @@
 package com.example.poomagnet.App
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -7,9 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.poomagnet.App.data.BottomList
+import com.example.poomagnet.R
 import com.example.poomagnet.ui.HomeScreen.HomeScreen
 import com.example.poomagnet.ui.HomeScreen.HomeTopBarV2
 import com.example.poomagnet.ui.HomeScreen.HomeViewModel
@@ -26,6 +29,7 @@ fun App() {
     val homeViewModel: HomeViewModel = viewModel()
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
+    val mediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.ambatu) // Replace 'your_sound_file' with the name of your MP3 file (without the extension)
 
     
     Scaffold(
@@ -36,8 +40,8 @@ fun App() {
                 BottomList.infoList,
                 currentTab = uiState.currentScreen,
                 onButtonPressed = { item ->
-                    if (uiState.currentScreen == item) {
-                        
+                    if (uiState.currentScreen == ScreenType.Search) {
+                        mediaPlayer.start()
                     }
                     viewModel.changeScreen(item)
                 }
