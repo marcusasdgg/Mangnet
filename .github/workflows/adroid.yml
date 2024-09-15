@@ -31,9 +31,16 @@ jobs:
     - name: List APK directory
       run: ls app/build/outputs/apk/release
 
+    - name: Create Tag
+      run: |
+        git tag v1.0.0
+        git push origin v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
-        files: app/build/outputs/apk/release/app-release-unsigned.apk
+        files: app/build/outputs/apk/release/app-release.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
