@@ -74,7 +74,7 @@ jobs:
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
-        files: app/build/outputs/apk/release/app-release.apk
+        files: app/build/outputs/apk/release/app-release-unsigned.apk
         tag_name: $NEW_TAG
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
