@@ -25,10 +25,6 @@ jobs:
     - name: Set permissions for gradlew
       run: chmod +x ./gradlew  # Add execute permissions to the gradlew script
 
-    - name: Clean and Build APK
-      run: ./gradlew clean assembleRelease --stacktrace
-
-
     - name: Build APK
       run: ./gradlew assembleRelease
 
@@ -38,5 +34,6 @@ jobs:
     - name: Upload APK to release
       uses: actions/upload-artifact@v3
       with:
-        name: app-release.apk
-        path: app/build/outputs/app-release.apk
+        name: app-release-unsigned.apk
+        path: app/build/outputs/apk/release
+
