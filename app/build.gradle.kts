@@ -27,7 +27,7 @@ android {
         create("release") {
             keyAlias = "key0"
             keyPassword = "unique123"
-            storeFile = file("app/keyManga.jks")
+            storeFile = file("keyManga.jks")
             storePassword = "unique123"
         }
     }
