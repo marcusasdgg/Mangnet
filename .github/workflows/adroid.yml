@@ -38,6 +38,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Delay for Tag Availability
+      run: sleep 10  # Adjust the delay as needed
+
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
