@@ -32,11 +32,11 @@ jobs:
     - name: Build APK
       run: ./gradlew assembleRelease
 
-    - name: apk location
-      run: ./gradlew assembleRelease --info
+    - name: ls
+      run: ls app/build
 
     - name: Upload APK to release
       uses: actions/upload-artifact@v3
       with:
         name: app-release.apk
-        path: app/build/outputs/apk/release/app-release.apk
+        path: app/build/outputs/app-release.apk
