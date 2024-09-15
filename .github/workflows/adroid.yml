@@ -3,10 +3,10 @@ name: Android CI
 on:
   push:
     branches:
-      - main  # or 'master', depending on your default branch
+      - master  # or 'master', depending on your default branch
   pull_request:
     branches:
-      - main  # or 'master'
+      - master # or 'master'
 
 jobs:
   build:
