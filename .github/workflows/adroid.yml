@@ -31,10 +31,40 @@ jobs:
     - name: List APK directory
       run: ls app/build/outputs/apk/release
 
-    - name: Create Tag
+    - name: Get Latest Tag
+      id: get_tag
       run: |
-        git tag v1.0.0
-        git push origin v1.0.0
+        # Fetch all tags and get the latest one
+        git fetch --tags
+        TAG=$(git tag | sort -V | tail -n 1)
+        echo "Latest tag: $TAG"
+        echo "LATEST_TAG=$TAG" >> $GITHUB_ENV
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Increment Tag
+      id: increment_tag
+      run: |
+        # Default to v0.0.0 if no tags are found
+        if [ -z "${LATEST_TAG}" ]; then
+          NEW_TAG="v0.0.1"
+        else
+          # Extract version components and increment the patch version
+          IFS='.' read -r -a VERSION <<< "${LATEST_TAG#v}"
+          MAJOR=${VERSION[0]}
+          MINOR=${VERSION[1]}
+          PATCH=$((${VERSION[2]} + 1))
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+        fi
+        echo "New tag: $NEW_TAG"
+        echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+      env:
+        LATEST_TAG: ${{ env.LATEST_TAG }}
+
+    - name: Create and Push Tag
+      run: |
+        git tag $NEW_TAG
+        git push origin $NEW_TAG
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
