@@ -3,10 +3,10 @@ name: Android CI
 on:
   push:
     branches:
-      - master  # or 'master', depending on your default branch
+      - master
   pull_request:
     branches:
-      - master # or 'master'
+      - master
 
 jobs:
   build:
@@ -20,21 +20,20 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: 17
-        distribution: 'zulu'  # Specify the Java distribution
+        distribution: 'zulu'
 
     - name: Set permissions for gradlew
-      run: chmod +x ./gradlew  # Add execute permissions to the gradlew script
+      run: chmod +x ./gradlew
 
     - name: Build APK
       run: ./gradlew assembleRelease
 
-    - name: ls
+    - name: List APK directory
       run: ls app/build/outputs/apk/release
 
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
-        files: app/build/outputs/apk/release/app-release.apk
+        files: app/build/outputs/apk/release/app-release-unsigned.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
