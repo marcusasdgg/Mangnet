@@ -33,7 +33,7 @@ jobs:
       run: ./gradlew assembleRelease
 
     - name: ls
-      run: ls app/build
+      run: ls app/build/outputs
 
     - name: Upload APK to release
       uses: actions/upload-artifact@v3
