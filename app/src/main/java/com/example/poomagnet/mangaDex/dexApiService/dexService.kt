@@ -20,5 +20,7 @@ interface MangaDexApiService {
     @GET("/at-home/server/{cInfo}")
     suspend fun getChapterInfo(@Path("cInfo") chapterInfo: String): Bitmap
 
+    @GET("manga/tag")
+    suspend fun getTagList(): Map<String,Any?>
 }
 

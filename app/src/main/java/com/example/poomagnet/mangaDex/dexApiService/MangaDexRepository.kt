@@ -1,6 +1,7 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
 
+import Tag
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,7 +10,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import com.example.poomagnet.ui.HomeScreen.mangaInfo
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -40,11 +44,6 @@ data class MangaInfo(
 //the null to a MutableList.
 
 
-enum class Tag {
-    ROMANCE,
-    COMEDY,
-
-}
 
 
 
@@ -71,11 +70,43 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     private var library: MutableList<MangaInfo> = mutableListOf()
 
-    private var tagMap: Map<String,String> = mutableMapOf()
+    private var tagMap: MutableMap<Tag,String> = mutableMapOf()
 
     init {
         loadMangaFromBackup(context)
-        //setup tag ids.
+        setupTags()
+    }
+
+    private fun setupTags(){
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.getTagList()["data"]
+
+                if (response is List<*>) {
+                    response.forEach { elm ->
+                        if (elm is Map<*,*>){
+                            val id: String = elm["id"].toString()
+                            val attribute = elm["attributes"]
+                            if (attribute is Map<*,*>){
+                                val name = attribute["name"]
+                                if (name is Map<*,*>){
+                                    val tag = Tag.fromValue(name["en"].toString())
+                                    if (tag != null) {
+                                        tagMap[tag] = id
+                                    } else {
+                                        Log.d("TAG", "setupTags: tag configuration went wrong")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.d("TAG", "setupTags: failed due to $e")
+            }
+            Log.d("TAG", "setupTags: ${tagMap.size}")
+        }
     }
 
     private fun loadMangaFromBackup(context: Context) {
@@ -90,10 +121,10 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 val listType = object : TypeToken<List<MangaInfo>>() {}.type
                 library = gson.fromJson(jsonString, listType)
             } else {
-                Log.d("MangaDexRepository", "backup.txt not found, mangaObj is empty. ")
+                Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
             }
         } catch (e: Exception) {
-            Log.e("MangaDexRepository", "Error loading manga from backup.txt: ${e.message}")
+            Log.e("TAG", "Error loading manga from backup.txt: ${e.message}")
         }
     }
 
@@ -119,83 +150,104 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     suspend fun searchAllManga(title: String, offSet: Int = 0): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
         Log.d("TAG", "searchALlManga: starting first get request")
-        val s = apiService.mangaSearchSimple(title,offSet, listOf("cover_art"))
 
-        val list: MutableList<MangaInfo> = mutableListOf()
-        if (s["result"] == "ok") {
-            var altlist: MutableList<String> = mutableListOf()
-            val searchArray = s["data"]
-            if (searchArray is List<Any?>){
-                Log.d("TAG", "there are ${searchArray.size} search results")
-                searchArray.forEach { elm ->
-                    Log.d("TAG", "result found")
-                    if (elm is Map<*,*>) {
-                        val id = elm["id"].toString()
-                        val type = elm["type"].toString()
-                        val attributes = elm["attributes"]
-                        if (attributes is Map<*,*>) {
+        try {
+            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"))
 
-                            var mangaTitle = "n/a"
-                            val titleSearch = attributes["title"]
-                            if (titleSearch is Map<*, *>) {
-                                mangaTitle = titleSearch["en"].toString()
-                            }
+            val list: MutableList<MangaInfo> = mutableListOf()
+            if (s["result"] == "ok") {
+                var altlist: MutableList<String> = mutableListOf()
+                val searchArray = s["data"]
+                if (searchArray is List<Any?>) {
+                    Log.d("TAG", "there are ${searchArray.size} search results")
+                    searchArray.forEach { elm ->
+                        Log.d("TAG", "result found")
+                        if (elm is Map<*, *>) {
+                            val id = elm["id"].toString()
+                            val type = elm["type"].toString()
+                            val attributes = elm["attributes"]
+                            if (attributes is Map<*, *>) {
+
+                                var mangaTitle = "n/a"
+                                val titleSearch = attributes["title"]
+                                if (titleSearch is Map<*, *>) {
+                                    mangaTitle = titleSearch["en"].toString()
+                                }
 
 
-                            val altTitles = attributes["altTitles"]
-                            if (altTitles is List<*>) {
-                                altTitles.forEach { titl ->
-                                    if (titl is Map<*,*>){
-                                        titl.forEach { (key,value) -> altlist.add(value.toString()) }
+                                val altTitles = attributes["altTitles"]
+                                if (altTitles is List<*>) {
+                                    altTitles.forEach { titl ->
+                                        if (titl is Map<*, *>) {
+                                            titl.forEach { (key, value) -> altlist.add(value.toString()) }
+                                        }
                                     }
                                 }
-                            }
 
-                            val descriptions = attributes["description"]
-                            var description = ""
-                            if (descriptions is Map<*,*>){
-                                description = descriptions["en"].toString()
-                            }
+                                val descriptions = attributes["description"]
+                                var description = ""
+                                if (descriptions is Map<*, *>) {
+                                    description = descriptions["en"].toString()
+                                }
 
-                            val state = mangaState.IN_PROGRESS;
-                            val contentRating = attributes["contentRating"].toString()
-                            val languageList: MutableList<String> = mutableListOf()
-                            val jl = attributes["availableTranslatedLanguages"]
-                            if (jl is List<*>){
-                                jl.forEach { lan -> languageList.add(lan.toString()) }
-                            }
+                                val state = mangaState.IN_PROGRESS;
+                                val contentRating = attributes["contentRating"].toString()
+                                val languageList: MutableList<String> = mutableListOf()
+                                val jl = attributes["availableTranslatedLanguages"]
+                                if (jl is List<*>) {
+                                    jl.forEach { lan -> languageList.add(lan.toString()) }
+                                }
 
-                            val relationships = elm["relationships"]
-                            var coverUrl = ""
-                            if (relationships is List<*>) {
-                                relationships.forEach { relation ->
-                                    if (relation is Map<*,*>)  {
-                                        if (relation["type"] == "cover_art"){
-                                            val rel_attr = relation["attributes"]
-                                            if (rel_attr is Map<*,*>) {
-                                                coverUrl = rel_attr["fileName"].toString()
+                                val relationships = elm["relationships"]
+                                var coverUrl = ""
+                                if (relationships is List<*>) {
+                                    relationships.forEach { relation ->
+                                        if (relation is Map<*, *>) {
+                                            if (relation["type"] == "cover_art") {
+                                                val rel_attr = relation["attributes"]
+                                                if (rel_attr is Map<*, *>) {
+                                                    coverUrl = rel_attr["fileName"].toString()
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            //val image = downloadImage(coverUrl, id)
-                            val contructedUrl = "https://uploads.mangadex.org/covers/$id/$coverUrl"
-                            list.add(MangaInfo(id,type,mangaTitle,altlist,description,state,contentRating,languageList, null, contructedUrl,offSet))
-                            altlist = mutableListOf()
+                                //val image = downloadImage(coverUrl, id)
+                                val contructedUrl =
+                                    "https://uploads.mangadex.org/covers/$id/$coverUrl"
+                                list.add(
+                                    MangaInfo(
+                                        id,
+                                        type,
+                                        mangaTitle,
+                                        altlist,
+                                        description,
+                                        state,
+                                        contentRating,
+                                        languageList,
+                                        null,
+                                        contructedUrl,
+                                        offSet
+                                    )
+                                )
+                                altlist = mutableListOf()
+                            }
                         }
                     }
                 }
+            } else {
+                Log.d("TAG", "searchALlManga: finsihed first get request")
+                return Pair(listOf<MangaInfo>(), 0)
             }
-        } else {
-            Log.d("TAG", "searchALlManga: finsihed first get request")
-            return Pair(listOf<MangaInfo>(),0)
-        }
 
-        val limit: Int = s["total"].toString().toIntOrNull() ?: 0
-        Log.d("TAG", "searchALlManga: finsihed first get request")
-        return Pair(list, limit);
+            val limit: Int = s["total"].toString().toIntOrNull() ?: 0
+            Log.d("TAG", "searchALlManga: finsihed first get request")
+            return Pair(list, limit);
+        } catch(e : Exception) {
+            Log.d("TAG", "search failed ")
+            return Pair(listOf(),0)
+        }
     }
 
     private suspend fun downloadImage(url: String, id: String): Bitmap? {

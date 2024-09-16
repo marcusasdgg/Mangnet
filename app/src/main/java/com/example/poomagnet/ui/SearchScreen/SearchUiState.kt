@@ -1,6 +1,9 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import Tag
+import androidx.compose.ui.state.ToggleableState
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import included
 
 
 data class SearchUiState (
@@ -12,4 +15,5 @@ data class SearchUiState (
     val itemCount: Int = 0,
     val sortTags: List<String> = listOf(),
     val showDrawer: Boolean = false,
+    val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off}
 )

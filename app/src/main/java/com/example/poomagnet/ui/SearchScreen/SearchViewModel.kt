@@ -1,10 +1,13 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import Tag
 import android.util.Log
+import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.ViewModel
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import included
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -56,6 +59,17 @@ class SearchViewModel @Inject constructor(
             it.copy(
                 itemCount = result.second,
                 searchListing = result.first,
+            )
+        }
+    }
+
+    fun switchTag(tag: Tag, state: ToggleableState) {
+        _uiState.update {
+            val updatedTagsIncluded = it.tagsIncluded.toMutableMap().apply {
+                this[tag] = state
+            }
+            it.copy(
+                tagsIncluded = updatedTagsIncluded
             )
         }
     }
