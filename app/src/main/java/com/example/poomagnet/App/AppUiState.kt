@@ -8,5 +8,6 @@ data class AppUiState(
     val topHidden: Boolean = false,
     val botHidden: Boolean = false,
 
-    val followedManga: List<MangaInfo> = listOf()
+    val currentManga: MangaInfo? = null,
+    val previousScreen: ScreenType = ScreenType.Home
 )

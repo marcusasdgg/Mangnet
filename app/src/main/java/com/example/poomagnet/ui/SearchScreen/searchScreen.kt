@@ -71,6 +71,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.ui.DoubleStackCard
 import com.example.poomagnet.ui.HomeScreen.FilterOptions
 import com.example.poomagnet.ui.SortDrawer.sortDrawer
@@ -199,7 +200,7 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel) {
+fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel, setCurrentManga: (MangaInfo) -> Unit) {
     //left side bar.
 
     val currentScrollState = rememberLazyGridState()
@@ -235,7 +236,8 @@ fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
     ) {
         items(uiState.searchListing) { manga ->
             DoubleStackCard(
-                manga = manga
+                manga = manga,
+                click = setCurrentManga
             )
         }
     }

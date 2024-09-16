@@ -74,8 +74,10 @@ fun VerticalCardTest(modifier: Modifier = Modifier, manga: MangaInfo){
 
 
 @Composable
-fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo) {
-    Card(modifier = modifier.height(250.dp).width(110.dp), shape = CardDefaults.shape){
+fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (MangaInfo) -> Unit) {
+    Card(modifier = modifier
+        .height(250.dp)
+        .width(110.dp), shape = CardDefaults.shape, onClick = { click(manga) }){
         Box {
             // Main content of the card
             if (manga.coverArt == null) {
@@ -136,7 +138,8 @@ fun DoubleStackCardPreviewScreen() {
     ) {
         items(list) { manga ->
             DoubleStackCard(
-                manga = manga
+                manga = manga,
+                click = {}
             )
         }
     }

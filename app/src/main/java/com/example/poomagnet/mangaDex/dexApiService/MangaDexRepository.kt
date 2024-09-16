@@ -40,6 +40,14 @@ data class MangaInfo(
 //the null to a MutableList.
 
 
+enum class Tag {
+    ROMANCE,
+    COMEDY,
+
+}
+
+
+
 sealed class Chapter {
     data class Downloaded(val imagePaths: List<String>) : Chapter()
     data class Online(val imagePaths: List<String>) : Chapter()
@@ -63,8 +71,11 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     private var library: MutableList<MangaInfo> = mutableListOf()
 
+    private var tagMap: Map<String,String> = mutableMapOf()
+
     init {
         loadMangaFromBackup(context)
+        //setup tag ids.
     }
 
     private fun loadMangaFromBackup(context: Context) {
@@ -79,7 +90,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 val listType = object : TypeToken<List<MangaInfo>>() {}.type
                 library = gson.fromJson(jsonString, listType)
             } else {
-                Log.d("MangaDexRepository", "backup.txt not found, mangaObj is empty. yess")
+                Log.d("MangaDexRepository", "backup.txt not found, mangaObj is empty. ")
             }
         } catch (e: Exception) {
             Log.e("MangaDexRepository", "Error loading manga from backup.txt: ${e.message}")
@@ -172,6 +183,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                             //val image = downloadImage(coverUrl, id)
                             val contructedUrl = "https://uploads.mangadex.org/covers/$id/$coverUrl"
                             list.add(MangaInfo(id,type,mangaTitle,altlist,description,state,contentRating,languageList, null, contructedUrl,offSet))
+                            altlist = mutableListOf()
                         }
                     }
                 }

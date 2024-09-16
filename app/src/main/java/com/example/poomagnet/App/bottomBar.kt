@@ -38,7 +38,7 @@ data class BottomNavInfo(
 )
 
 enum class ScreenType{
-    Home, Search, Update, Settings
+    Home, Search, Update, Settings, MangaSpecific
 }
 
 

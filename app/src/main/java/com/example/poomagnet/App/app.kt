@@ -1,6 +1,7 @@
 package com.example.poomagnet.App
 
 import android.media.MediaPlayer
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -16,6 +17,7 @@ import com.example.poomagnet.R
 import com.example.poomagnet.ui.HomeScreen.HomeScreen
 import com.example.poomagnet.ui.HomeScreen.HomeTopBarV2
 import com.example.poomagnet.ui.HomeScreen.HomeViewModel
+import com.example.poomagnet.ui.MangaExpanded.MangaScreen
 import com.example.poomagnet.ui.SearchScreen.SearchScreen
 import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
@@ -30,6 +32,10 @@ fun App() {
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
     val mediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.ambatu) // Replace 'your_sound_file' with the name of your MP3 file (without the extension)
+
+    BackHandler {
+        viewModel.changeToPrevious()
+    }
 
     
     Scaffold(
@@ -52,6 +58,7 @@ fun App() {
             when (uiState.currentScreen) {
                 ScreenType.Home -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown)
                 ScreenType.Search -> SearchTopBar(Modifier, searchViewModel)
+                ScreenType.MangaSpecific -> {}
                 else -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown)
             }
         } }
@@ -59,11 +66,12 @@ fun App() {
     ) { innerPadding ->
         when (uiState.currentScreen) {
             ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding))
-            ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel)
+            ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, viewModel::SelectCurrentManga)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
                 HomeScreen(modifier = Modifier.padding(innerPadding))
             }
+            ScreenType.MangaSpecific -> MangaScreen(Modifier.padding(innerPadding),uiState.currentManga)
         }
     }
 
