@@ -47,6 +47,7 @@ fun BottomNavBar(
     infoList: List<BottomNavInfo>,
     currentTab: ScreenType,
     onButtonPressed: (ScreenType) -> Unit,
+    openFilter: () -> Unit,
     ) {
     Log.d("APPMAIN", currentTab.name)
     NavigationBar(modifier) {
@@ -60,7 +61,9 @@ fun BottomNavBar(
                 if (currentTab == ScreenType.Search && item.screenType == ScreenType.Search){
                     Icon(imageVector = Icons.Default.FilterList, contentDescription = stringResource(
                         id = item.name
+
                     ))
+                    openFilter()
                 } else {
                     Icon(imageVector = item.icon, contentDescription = stringResource(
                         id = item.name
@@ -93,6 +96,7 @@ private fun BarPreview() {
                 infoList = infoList,
                 currentTab = screenType,
                 onButtonPressed = { new -> screenType = new },
+                openFilter = {}
             )
         }
 

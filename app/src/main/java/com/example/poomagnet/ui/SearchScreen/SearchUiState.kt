@@ -11,5 +11,5 @@ data class SearchUiState (
     val searchListing: List<MangaInfo> = listOf(),
     val itemCount: Int = 0,
     val sortTags: List<String> = listOf(),
-
+    val showDrawer: Boolean = false,
 )

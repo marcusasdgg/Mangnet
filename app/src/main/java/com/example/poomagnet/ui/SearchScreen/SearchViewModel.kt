@@ -73,6 +73,15 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun revealBottomSheet(boolean: Boolean) {
+        _uiState.update{
+            it.copy(
+                showDrawer = boolean
+            )
+        }
+    }
+
+
     //search listings, switch page.
 
 

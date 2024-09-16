@@ -44,7 +44,8 @@ fun App() {
                         mediaPlayer.start()
                     }
                     viewModel.changeScreen(item)
-                }
+                },
+                openFilter = {searchViewModel.revealBottomSheet(true)}
             )
         }},
         topBar = { if (!uiState.topHidden) {

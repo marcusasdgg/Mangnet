@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.poomagnet.ui.DoubleStackCard
 import com.example.poomagnet.ui.HomeScreen.FilterOptions
+import com.example.poomagnet.ui.SortDrawer.sortDrawer
 import com.example.poomagnet.ui.VerticalCardTest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -238,6 +239,8 @@ fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
             )
         }
     }
+
+    sortDrawer(Modifier,searchViewModel)
 
     //
 }
