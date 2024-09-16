@@ -35,7 +35,7 @@ fun App() {
     val mediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.ambatu) // Replace 'your_sound_file' with the name of your MP3 file (without the extension)
 
     BackHandler {
-
+        viewModel.hideBotBar(false)
         viewModel.changeToPrevious()
     }
 
@@ -73,7 +73,10 @@ fun App() {
             ScreenType.Settings -> {
                 HomeScreen(modifier = Modifier.padding(innerPadding))
             }
-            ScreenType.MangaSpecific -> MangaScreen(Modifier.padding(innerPadding),uiState.currentManga)
+            ScreenType.MangaSpecific -> {
+                viewModel.hideBotBar(true)
+                MangaScreen(Modifier.padding(innerPadding),uiState.currentManga)
+            }
         }
     }
 

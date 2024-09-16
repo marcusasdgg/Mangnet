@@ -1,10 +1,12 @@
 package com.example.poomagnet.ui.SortDrawer
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.poomagnet.ui.HomeScreen.HomeViewModel
 import com.example.poomagnet.ui.SearchScreen.SearchUiState
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
@@ -16,7 +18,7 @@ fun sortDrawer(modifier: Modifier = Modifier, viewModel: SearchViewModel){
     val uistate = viewModel.uiState.collectAsState().value
 
     if (uistate.showDrawer){
-        ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}) {
+        ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}, Modifier.height(400.dp)) {
 
         }
     }

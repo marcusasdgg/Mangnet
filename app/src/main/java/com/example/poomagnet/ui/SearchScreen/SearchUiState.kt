@@ -15,5 +15,6 @@ data class SearchUiState (
     val itemCount: Int = 0,
     val sortTags: List<String> = listOf(),
     val showDrawer: Boolean = false,
-    val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off}
+    val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off},
+    val isRefreshing: Boolean = false
 )

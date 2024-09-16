@@ -4,13 +4,16 @@ import Tag
 import android.util.Log
 import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import included
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -96,7 +99,23 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun startRefresh(boolean: Boolean){
+        _uiState.update {
+            it.copy(
+                isRefreshing = boolean
+            )
+        }
+    }
 
+    fun loadit() {
+        viewModelScope.launch {
+            startRefresh(true)
+            Log.d("TAG", "loadit: started")
+            delay(1000)
+            Log.d("TAG", "loadit: ended")
+            startRefresh(false)
+        }
+    }
 
     //search listings, switch page.
 

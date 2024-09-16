@@ -33,9 +33,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -54,8 +58,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +77,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.ui.DoubleStackCard
 import com.example.poomagnet.ui.HomeScreen.FilterOptions
@@ -111,7 +119,8 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
         ) {
         Row( horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically, modifier = Modifier
             .padding(0.dp, 10.dp, 10.dp, 13.dp)
-            .fillMaxWidth().fillMaxHeight()){
+            .fillMaxWidth()
+            .fillMaxHeight()){
             if (!state.searchExpanded){
                 Button(
                     onClick = { searchViewModel.dropdownSource(true) },
@@ -198,19 +207,23 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel, setCurrentManga: (MangaInfo) -> Unit) {
-    //left side bar.
-
+fun SearchScreen(
+    modifier: Modifier = Modifier,
+    searchViewModel: SearchViewModel,
+    setCurrentManga: (MangaInfo) -> Unit
+) {
     val currentScrollState = rememberLazyGridState()
 
-    val uiState = searchViewModel.uiState.collectAsState().value
+    val uiState by searchViewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.searchText) {
-       currentScrollState.scrollToItem(0)
+        currentScrollState.scrollToItem(0)
         searchViewModel.executeSearch()
     }
+
+
 
     LaunchedEffect(currentScrollState) {
         snapshotFlow { currentScrollState.layoutInfo }
@@ -226,26 +239,46 @@ fun SearchScreen(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
             }
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2), // 2 items per row
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        state = currentScrollState
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = uiState.isRefreshing,
+        onRefresh = searchViewModel::loadit,
+        refreshThreshold = 160.dp,
+        refreshingOffset = 180.dp
+    )
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
     ) {
-        items(uiState.searchListing) { manga ->
-            DoubleStackCard(
-                manga = manga,
-                click = setCurrentManga
-            )
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2), // 2 items per row
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            state = currentScrollState
+        ) {
+            items(uiState.searchListing) { manga ->
+                DoubleStackCard(
+                    manga = manga,
+                    click = setCurrentManga
+                )
+            }
         }
+
+        PullRefreshIndicator(
+            refreshing = uiState.isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+
     }
 
-    sortDrawer(Modifier,searchViewModel)
-
-    //
+    sortDrawer(modifier, searchViewModel)
 }
+
 
 
 @Preview
