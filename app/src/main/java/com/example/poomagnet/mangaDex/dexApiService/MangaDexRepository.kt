@@ -7,13 +7,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
-import com.example.poomagnet.ui.HomeScreen.mangaInfo
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -152,7 +150,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         Log.d("TAG", "searchALlManga: starting first get request")
 
         try {
-            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"))
+            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"), null, null,  mapOf("order[rating]" to "desc", ))
 
             val list: MutableList<MangaInfo> = mutableListOf()
             if (s["result"] == "ok") {
@@ -245,7 +243,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             Log.d("TAG", "searchALlManga: finsihed first get request")
             return Pair(list, limit);
         } catch(e : Exception) {
-            Log.d("TAG", "search failed ")
+            Log.d("TAG", "search failed $e")
             return Pair(listOf(),0)
         }
     }
