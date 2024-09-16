@@ -43,7 +43,7 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun SelectCurrentManga(manga: MangaInfo?){
+    fun selectCurrentManga(manga: MangaInfo?){
         if (manga == null){ //shouldnt happen?
             _uiState.update{
                 it.copy(
@@ -64,11 +64,13 @@ class AppViewModel : ViewModel() {
     }
 
     fun changeToPrevious(){
+
         _uiState.update {
             it.copy(
                 currentScreen = _uiState.value.previousScreen
             )
         }
     }
+
 
 }

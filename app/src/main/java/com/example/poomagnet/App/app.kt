@@ -22,6 +22,7 @@ import com.example.poomagnet.ui.SearchScreen.SearchScreen
 import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -34,6 +35,7 @@ fun App() {
     val mediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.ambatu) // Replace 'your_sound_file' with the name of your MP3 file (without the extension)
 
     BackHandler {
+
         viewModel.changeToPrevious()
     }
 
@@ -66,7 +68,7 @@ fun App() {
     ) { innerPadding ->
         when (uiState.currentScreen) {
             ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding))
-            ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, viewModel::SelectCurrentManga)
+            ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, viewModel::selectCurrentManga)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
                 HomeScreen(modifier = Modifier.padding(innerPadding))

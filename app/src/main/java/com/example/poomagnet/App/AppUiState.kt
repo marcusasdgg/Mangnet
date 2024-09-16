@@ -9,5 +9,5 @@ data class AppUiState(
     val botHidden: Boolean = false,
 
     val currentManga: MangaInfo? = null,
-    val previousScreen: ScreenType = ScreenType.Home
+    val previousScreen: ScreenType = ScreenType.Home,
 )
