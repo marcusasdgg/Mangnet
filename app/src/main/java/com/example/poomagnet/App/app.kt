@@ -21,7 +21,7 @@ import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun App() {
     val viewModel: AppViewModel = viewModel()
@@ -46,7 +46,6 @@ fun App() {
                     }
                     viewModel.changeScreen(item)
                 },
-                openFilter = {}
             )
         }},
         topBar = { if (!uiState.topHidden) {

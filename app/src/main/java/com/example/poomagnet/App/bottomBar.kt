@@ -7,6 +7,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -47,7 +48,6 @@ fun BottomNavBar(
     infoList: List<BottomNavInfo>,
     currentTab: ScreenType,
     onButtonPressed: (ScreenType) -> Unit,
-    openFilter: () -> Unit,
     ) {
     Log.d("APPMAIN", currentTab.name)
     NavigationBar(modifier) {
@@ -63,12 +63,16 @@ fun BottomNavBar(
                         id = item.name
 
                     ))
-                    openFilter()
+                } else if(currentTab == ScreenType.Home && item.screenType == ScreenType.Home){
+                    Icon(imageVector = Icons.AutoMirrored.Default.List, contentDescription = stringResource(
+                        id = item.name
+                    ))
                 } else {
                     Icon(imageVector = item.icon, contentDescription = stringResource(
                         id = item.name
                     ))
                 }
+
            },
             label = {if (currentTab == ScreenType.Search && item.screenType == ScreenType.Search){
                 Text("Filter")
@@ -95,8 +99,7 @@ private fun BarPreview() {
             BottomNavBar(
                 infoList = infoList,
                 currentTab = screenType,
-                onButtonPressed = { new -> screenType = new },
-                openFilter = {}
+                onButtonPressed = { new -> screenType = new }
             )
         }
 
