@@ -40,12 +40,13 @@ fun App() {
                 BottomList.infoList,
                 currentTab = uiState.currentScreen,
                 onButtonPressed = { item ->
-                    if (uiState.currentScreen == ScreenType.Search) {
+                    if (uiState.currentScreen == ScreenType.Search && item == ScreenType.Search) {
                         mediaPlayer.start()
+                        searchViewModel.revealBottomSheet(true)
                     }
                     viewModel.changeScreen(item)
                 },
-                openFilter = {searchViewModel.revealBottomSheet(true)}
+                openFilter = {}
             )
         }},
         topBar = { if (!uiState.topHidden) {
