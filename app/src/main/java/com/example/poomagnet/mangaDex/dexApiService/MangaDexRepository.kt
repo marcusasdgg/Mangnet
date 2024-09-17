@@ -1,6 +1,7 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
 
+import Ordering
 import Tag
 import android.content.Context
 import android.graphics.Bitmap
@@ -58,6 +59,7 @@ val Chapter.isOnline: Boolean
 
 
 
+
 class MangaDexRepository @Inject constructor(private val context: Context)  {
     private val apiService = RetrofitInstance.api
     //add local database jargon blah blah later. learn SQL.
@@ -69,6 +71,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     private var library: MutableList<MangaInfo> = mutableListOf()
 
     private var tagMap: MutableMap<Tag,String> = mutableMapOf()
+
 
     init {
         loadMangaFromBackup(context)
@@ -146,11 +149,11 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         backUpManga(context)
     }
 
-    suspend fun searchAllManga(title: String, offSet: Int = 0): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
+    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Map<String,String> = mapOf()): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
         Log.d("TAG", "searchALlManga: starting first get request")
 
         try {
-            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"), null, null,  mapOf("order[rating]" to "desc", ))
+            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"), null, null, ordering)
 
             val list: MutableList<MangaInfo> = mutableListOf()
             if (s["result"] == "ok") {

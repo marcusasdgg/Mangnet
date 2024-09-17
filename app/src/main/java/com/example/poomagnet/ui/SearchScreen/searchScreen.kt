@@ -218,9 +218,11 @@ fun SearchScreen(
 
     val uiState by searchViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.searchText) {
+    LaunchedEffect(uiState.searchText, uiState.somethingChanged) {
         currentScrollState.scrollToItem(0)
         searchViewModel.executeSearch()
+        searchViewModel.setFlag(false)
+        Log.d("TAG", "Ding")
     }
 
 
@@ -276,7 +278,7 @@ fun SearchScreen(
 
     }
 
-    sortDrawer(modifier, searchViewModel)
+    sortDrawer(Modifier, searchViewModel)
 }
 
 

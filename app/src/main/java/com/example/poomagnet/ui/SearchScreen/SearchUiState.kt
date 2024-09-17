@@ -1,9 +1,9 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import Ordering
 import Tag
 import androidx.compose.ui.state.ToggleableState
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
-import included
 
 
 data class SearchUiState (
@@ -13,8 +13,14 @@ data class SearchUiState (
     val searchText: String = "",
     val searchListing: List<MangaInfo> = listOf(),
     val itemCount: Int = 0,
-    val sortTags: List<String> = listOf(),
+    val sortTags: Map<Ordering, Pair<Boolean, Direction>> = Ordering.entries.associateWith { Pair(false, Direction.Descending) }.toMutableMap().apply { this[Ordering.relevance] = Pair(true,Direction.Descending) },
     val showDrawer: Boolean = false,
     val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off},
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val somethingChanged: Boolean = false,
 )
+
+enum class Direction(val msg: String) {
+    Ascending("asc"),
+    Descending("desc"),
+}

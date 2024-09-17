@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import Ordering
 import Tag
 import android.util.Log
 import androidx.compose.ui.state.ToggleableState
@@ -8,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
-import included
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,8 +56,10 @@ class SearchViewModel @Inject constructor(
     }
 
     suspend fun executeSearch() {
-        ///
-        val result = mangaDexRepository.searchAllManga(uiState.value.searchText)
+        val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
+
+
+        val result = mangaDexRepository.searchAllManga(uiState.value.searchText, ordering = mapOf(res))
         _uiState.update{
             it.copy(
                 itemCount = result.second,
@@ -114,6 +116,36 @@ class SearchViewModel @Inject constructor(
             delay(1000)
             Log.d("TAG", "loadit: ended")
             startRefresh(false)
+        }
+    }
+
+    fun selectOrder(selected: Ordering, currentState: Pair<Boolean, Direction>) {
+        val newMap = _uiState.value.sortTags.toMutableMap().apply {
+            for (i in this){
+                i.setValue(Pair(false, Direction.Descending))
+            }
+            if (currentState.second == Direction.Descending && !currentState.first){
+                this[selected] = Pair(true, Direction.Descending)
+            } else if (currentState.second == Direction.Descending && currentState.first) {
+                this[selected] = Pair(true, Direction.Ascending)
+            } else if (currentState.second == Direction.Ascending){
+                this[selected] = Pair(true, Direction.Descending)
+            }
+        }
+
+        _uiState.update {
+            it.copy(
+                sortTags = newMap,
+                somethingChanged = true,
+            )
+        }
+    }
+
+    fun setFlag(boolean: Boolean){
+        _uiState.update {
+            it.copy(
+                somethingChanged = boolean
+            )
         }
     }
 

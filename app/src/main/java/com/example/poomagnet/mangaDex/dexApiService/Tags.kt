@@ -80,13 +80,18 @@ enum class Tag(val full_name: String){
 
     companion object {
         fun fromValue(value: String): Tag? {
-            return values().find { it.full_name == value }
+            return entries.find { it.full_name == value }
         }
     }
 }
 
-enum class included {
-    Yes,
-    No,
-    Undefined
+
+enum class Ordering(val msg: String){
+    title("order[title]"),
+    year("order[year]"),
+    createdAt("order[createdAt]"),
+    updatedAt("order[updatedAt]"),
+    latestChapter("order[latestUploadedChapter]"),
+    followedCount("order[followedCount]"),
+    relevance("order[relevance]"),
 }
