@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import ContentRating
 import Demographic
 import Ordering
 import Tag
@@ -14,10 +15,11 @@ data class SearchUiState (
     val searchText: String = "",
     val searchListing: List<MangaInfo> = listOf(),
     val itemCount: Int = 0,
-    val sortTags: Map<Ordering, Pair<Boolean, Direction>> = Ordering.entries.associateWith { Pair(false, Direction.Descending) }.toMutableMap().apply { this[Ordering.relevance] = Pair(true,Direction.Descending) },
+    val sortTags: Map<Ordering, Pair<Boolean, Direction>> = Ordering.entries.associateWith { Pair(false, Direction.Descending) }.toMutableMap().apply { this[Ordering.Relevance] = Pair(true,Direction.Descending) },
     val showDrawer: Boolean = false,
     val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off},
     val demographics: Map<Demographic,ToggleableState> = Demographic.entries.associateWith { ToggleableState.Off },
+    val contentRating: Map<ContentRating, ToggleableState> = ContentRating.entries.associateWith { ToggleableState.Off },
     val isRefreshing: Boolean = false,
     val somethingChanged: Boolean = false,
 )

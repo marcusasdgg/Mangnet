@@ -61,15 +61,16 @@ import com.example.poomagnet.ui.SearchScreen.SearchViewModel
 fun sortDrawer(modifier: Modifier = Modifier, viewModel: SearchViewModel){
     val uiState by viewModel.uiState.collectAsState()
 
-    if (uiState.showDrawer){
-        ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}, Modifier.height(600.dp)) {
+    if (uiState.showDrawer){ //uiState.showDrawer
+        ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}, Modifier.height(600.dp)) { //viewModel.revealBottomSheet(false)
             LazyColumn(modifier.fillMaxSize()) {
                 item{
                     OrderBy(Modifier,viewModel)
+                    Spacer(Modifier.height(15.dp))
                     Row(Modifier.fillMaxWidth().height(150.dp)) {
                         //demographic and content rating
-                        Demographic(Modifier.weight(1f),viewModel)
-                        Demographic(Modifier.weight(1f),viewModel)
+                        Demographic(Modifier.weight(1f).fillMaxHeight(),viewModel)
+                        ContentRating(Modifier.weight(1f).fillMaxHeight(),viewModel)
                     }
                     Spacer(Modifier.height(30.dp))
                 }
@@ -109,19 +110,32 @@ fun CheckATitle(modifier: Modifier = Modifier, title: String, checkboxState: Tog
 }
 
 @Composable
+fun ContentRating(modifier: Modifier = Modifier, viewModel: SearchViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    Column(modifier = modifier.fillMaxWidth().fillMaxHeight()){
+        Text("Content Rating:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+        for ((rating, state) in uiState.contentRating.entries){
+            CheckATitle(Modifier.fillMaxWidth().weight(1f), rating.toString(),state) { viewModel.setContentRating(rating, state)}
+        }
+    }
+
+}
+
+@Composable
 fun TagListing(modifier: Modifier = Modifier, viewModel: SearchViewModel){
     val uiState by viewModel.uiState.collectAsState()
     val halfindex = uiState.tagsIncluded.size/2
     val list = uiState.tagsIncluded.toList()
+    Text("Genres:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
     Row(modifier){
         Column(Modifier.weight(1f)){
-            for (i in 0..halfindex){
+            for (i in 0..halfindex-1){
                 CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) {viewModel.setTag(list[i].first, list[i].second) }
             }
         }
         Column(Modifier.weight(1f)){
             for (i in halfindex..uiState.tagsIncluded.size-1){
-                CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) { }
+                CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) { viewModel.setTag(list[i].first, list[i].second) }
             }
         }
     }
@@ -155,17 +169,21 @@ fun OrderBy(modifier: Modifier = Modifier, viewModel: SearchViewModel){
 
 }
 
+//add text in here
 @Composable
 fun Demographic(modifier: Modifier = Modifier, viewModel: SearchViewModel){
     val uiState by viewModel.uiState.collectAsState()
-    Column(modifier.fillMaxWidth().fillMaxHeight()) {
-        for(demo in uiState.demographics){
-            CheckATitle(
-                Modifier.fillMaxWidth().weight(1f),
-                title = demo.key.toString(),
-                checkboxState = demo.value,
-                onclick = {viewModel.setDemo(demo.key,demo.value)}
-            )
+    Column(modifier.fillMaxWidth().fillMaxHeight()){
+        Text("Demographic:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+        Column(modifier.fillMaxWidth().fillMaxHeight()) {
+            for(demo in uiState.demographics){
+                CheckATitle(
+                    Modifier.fillMaxWidth().weight(1f),
+                    title = demo.key.toString(),
+                    checkboxState = demo.value,
+                    onclick = {viewModel.setDemo(demo.key,demo.value)}
+                )
+            }
         }
     }
 

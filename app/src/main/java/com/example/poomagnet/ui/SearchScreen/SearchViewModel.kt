@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import ContentRating
 import Demographic
 import Ordering
 import Tag
@@ -59,14 +60,36 @@ class SearchViewModel @Inject constructor(
     suspend fun executeSearch() {
         val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
 
+        val s = getIncludeExclude()
+        val result = mangaDexRepository.searchAllManga(
+            uiState.value.searchText,
+            ordering = mapOf(res),
+            demo = getDemo().map { it.msg }.toList(),
+            rating = getContentRating().map { it.msg }.toList(),
+            tagsIncluded = s.first,
+            tagsExcluded = s.second
+        )
 
-        val result = mangaDexRepository.searchAllManga(uiState.value.searchText, ordering = mapOf(res))
         _uiState.update{
             it.copy(
                 itemCount = result.second,
                 searchListing = result.first,
             )
         }
+    }
+
+    fun getIncludeExclude(): Pair<List<Tag>, List<Tag>> {
+        val include = uiState.value.tagsIncluded.entries.filter { it.value == ToggleableState.On }.map { it.key }.toList()
+        val exclude = uiState.value.tagsIncluded.entries.filter { it.value == ToggleableState.Indeterminate }.map { it.key }.toList()
+        return Pair(include, exclude)
+    }
+
+    fun getDemo(): List<Demographic> {
+        return uiState.value.demographics.entries.filter { it.value == ToggleableState.On }.map { it.key }.toList()
+    }
+
+    fun getContentRating(): List<ContentRating> {
+        return uiState.value.contentRating.entries.filter { it.value == ToggleableState.On }.map { it.key }.toList()
     }
 
     fun switchTag(tag: Tag, state: ToggleableState) {
@@ -85,10 +108,21 @@ class SearchViewModel @Inject constructor(
             Log.d("TAG", "continueSearch: failed as search finished")
             return
         } else {
-            val result = mangaDexRepository.searchAllManga(uiState.value.searchText, offSet = uiState.value.searchListing.size+1)
+            val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
+            val s = getIncludeExclude()
+            val result = mangaDexRepository.searchAllManga(uiState.value.searchText,
+                offSet = uiState.value.searchListing.size+1,
+                ordering = mapOf(res),
+                demo = getDemo().map { it.msg }.toList(),
+                rating = getContentRating().map { it.msg }.toList(),
+                tagsIncluded = s.first,
+                tagsExcluded = s.second
+            )
+
             _uiState.update{
                 it.copy(
                     searchListing = it.searchListing + result.first,
+                    somethingChanged = false,
                 )
             }
         }
@@ -165,6 +199,16 @@ class SearchViewModel @Inject constructor(
         _uiState.update{
             it.copy(
                 tagsIncluded = it.tagsIncluded.toMutableMap().apply { this[tag] = newToggleState },
+                somethingChanged = true
+            )
+        }
+    }
+
+    fun setContentRating(rating: ContentRating, toggle: ToggleableState){
+        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else if (toggle == ToggleableState.On){ToggleableState.Indeterminate} else {ToggleableState.Off}
+        _uiState.update{
+            it.copy(
+                contentRating = it.contentRating.toMutableMap().apply { this[rating] = newToggleState },
                 somethingChanged = true
             )
         }

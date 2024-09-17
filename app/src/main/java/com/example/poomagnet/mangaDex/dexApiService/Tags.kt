@@ -83,17 +83,25 @@ enum class Tag(val full_name: String){
             return entries.find { it.full_name == value }
         }
     }
+
+    override fun toString(): String {
+        return super.toString().replace("_", " ")
+    }
 }
 
 
 enum class Ordering(val msg: String){
-    title("order[title]"),
-    year("order[year]"),
-    createdAt("order[createdAt]"),
-    updatedAt("order[updatedAt]"),
-    latestChapter("order[latestUploadedChapter]"),
-    followedCount("order[followedCount]"),
-    relevance("order[relevance]"),
+    Title("order[title]"),
+    Year("order[year]"),
+    Created_At("order[createdAt]"),
+    Updated_At("order[updatedAt]"),
+    Latest_Chapter("order[latestUploadedChapter]"),
+    Followed_Count("order[followedCount]"),
+    Relevance("order[relevance]");
+
+    override fun toString(): String {
+        return super.toString().replace("_", " ")
+    }
 }
 
 enum class Demographic(val msg: String){
@@ -101,4 +109,11 @@ enum class Demographic(val msg: String){
     Shoujo("shoujo"),
     Josei("josei"),
     Seinen("seinen")
+}
+
+enum class ContentRating(val msg: String){
+    Safe("safe"),
+    Suggestive("suggestive"),
+    Erotica("erotica"),
+    Pornographic("pornographic")
 }

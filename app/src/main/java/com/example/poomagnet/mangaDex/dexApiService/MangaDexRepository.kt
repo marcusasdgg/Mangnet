@@ -149,11 +149,13 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         backUpManga(context)
     }
 
-    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Map<String,String> = mapOf()): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
+    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Map<String,String> = mapOf(), demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<String>): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
         Log.d("TAG", "searchALlManga: starting first get request")
 
+        val tI = tagsIncluded.map { tagMap[it] }.toList().filterNotNull()
+        val tE = tagsExcluded.map{tagMap[it]}.toList().filterNotNull()
         try {
-            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"), null, null, ordering)
+            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"),tI ,tE, demo, rating,ordering)
 
             val list: MutableList<MangaInfo> = mutableListOf()
             if (s["result"] == "ok") {
