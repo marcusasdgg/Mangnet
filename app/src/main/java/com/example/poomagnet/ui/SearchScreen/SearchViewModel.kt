@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import Demographic
 import Ordering
 import Tag
 import android.util.Log
@@ -145,6 +146,26 @@ class SearchViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 somethingChanged = boolean
+            )
+        }
+    }
+
+    fun setDemo(demo: Demographic, toggle: ToggleableState){
+        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else if (toggle == ToggleableState.On){ToggleableState.Indeterminate} else {ToggleableState.Off}
+        _uiState.update{
+            it.copy(
+                demographics = it.demographics.toMutableMap().apply { this[demo] = newToggleState },
+                somethingChanged = true
+            )
+        }
+    }
+
+    fun setTag(tag: Tag, toggle: ToggleableState){
+        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else if (toggle == ToggleableState.On){ToggleableState.Indeterminate} else {ToggleableState.Off}
+        _uiState.update{
+            it.copy(
+                tagsIncluded = it.tagsIncluded.toMutableMap().apply { this[tag] = newToggleState },
+                somethingChanged = true
             )
         }
     }

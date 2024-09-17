@@ -32,7 +32,6 @@ fun App() {
     val homeViewModel: HomeViewModel = viewModel()
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
-    val mediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.ambatu) // Replace 'your_sound_file' with the name of your MP3 file (without the extension)
 
     BackHandler {
         viewModel.hideBotBar(false)
@@ -49,7 +48,6 @@ fun App() {
                 currentTab = uiState.currentScreen,
                 onButtonPressed = { item ->
                     if (uiState.currentScreen == ScreenType.Search && item == ScreenType.Search) {
-                        mediaPlayer.start()
                         searchViewModel.revealBottomSheet(true)
                     }
                     viewModel.changeScreen(item)

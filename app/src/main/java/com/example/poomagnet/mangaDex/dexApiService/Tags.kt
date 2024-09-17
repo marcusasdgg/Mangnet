@@ -95,3 +95,10 @@ enum class Ordering(val msg: String){
     followedCount("order[followedCount]"),
     relevance("order[relevance]"),
 }
+
+enum class Demographic(val msg: String){
+    Shounen("shounen"),
+    Shoujo("shoujo"),
+    Josei("josei"),
+    Seinen("seinen")
+}

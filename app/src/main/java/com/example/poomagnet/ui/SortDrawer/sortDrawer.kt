@@ -6,12 +6,14 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -31,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorModel.Companion.Rgb
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,20 +63,70 @@ fun sortDrawer(modifier: Modifier = Modifier, viewModel: SearchViewModel){
 
     if (uiState.showDrawer){
         ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}, Modifier.height(600.dp)) {
-            Column(modifier = modifier.verticalScroll(rememberScrollState()).fillMaxSize()) {
-                OrderBy(Modifier,viewModel)
-                    Row(Modifier.fillMaxWidth().height(200.dp).border(1.dp,Color.Black)) {
+            LazyColumn(modifier.fillMaxSize()) {
+                item{
+                    OrderBy(Modifier,viewModel)
+                    Row(Modifier.fillMaxWidth().height(150.dp)) {
                         //demographic and content rating
+                        Demographic(Modifier.weight(1f),viewModel)
+                        Demographic(Modifier.weight(1f),viewModel)
                     }
+                    Spacer(Modifier.height(30.dp))
+                }
 
-                    //tag list in shape of dual column following check box -> Text format.
+                item {
+                    TagListing(Modifier, viewModel)
+                }
+                //tag list in shape of dual column following check box -> Text format.
 
-                    //content rating at the end.
-
+                //content rating at the end.
             }
         }
     }
 }
+
+//OrderBy(Modifier,viewModel)
+//                    Row(Modifier.fillMaxWidth().height(150.dp)) {
+//                        //demographic and content rating
+//                        Demographic(Modifier.weight(1f),viewModel)
+//                        Demographic(Modifier.weight(1f),viewModel)
+//                    }
+//                Spacer(Modifier.height(30.dp))
+//                    TagListing(Modifier, viewModel)
+//                    //tag list in shape of dual column following check box -> Text format.
+//
+//                    //content rating at the end.
+
+//make entire thing clickable
+@Composable
+fun CheckATitle(modifier: Modifier = Modifier, title: String, checkboxState: ToggleableState, onclick: () -> Unit){
+    Box(modifier.fillMaxWidth().fillMaxHeight().clickable { onclick() }){
+        Row(Modifier.fillMaxWidth().fillMaxHeight(), verticalAlignment = Alignment.CenterVertically){
+            TriStateCheckbox(checkboxState,onclick)
+            Text(title)
+        }
+    }
+}
+
+@Composable
+fun TagListing(modifier: Modifier = Modifier, viewModel: SearchViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    val halfindex = uiState.tagsIncluded.size/2
+    val list = uiState.tagsIncluded.toList()
+    Row(modifier){
+        Column(Modifier.weight(1f)){
+            for (i in 0..halfindex){
+                CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) {viewModel.setTag(list[i].first, list[i].second) }
+            }
+        }
+        Column(Modifier.weight(1f)){
+            for (i in halfindex..uiState.tagsIncluded.size-1){
+                CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) { }
+            }
+        }
+    }
+}
+
 
 
 @Composable
@@ -96,6 +150,22 @@ fun OrderBy(modifier: Modifier = Modifier, viewModel: SearchViewModel){
                     }
                 }
             }
+        }
+    }
+
+}
+
+@Composable
+fun Demographic(modifier: Modifier = Modifier, viewModel: SearchViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    Column(modifier.fillMaxWidth().fillMaxHeight()) {
+        for(demo in uiState.demographics){
+            CheckATitle(
+                Modifier.fillMaxWidth().weight(1f),
+                title = demo.key.toString(),
+                checkboxState = demo.value,
+                onclick = {viewModel.setDemo(demo.key,demo.value)}
+            )
         }
     }
 

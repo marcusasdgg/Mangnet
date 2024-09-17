@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.SearchScreen
 
+import Demographic
 import Ordering
 import Tag
 import androidx.compose.ui.state.ToggleableState
@@ -16,6 +17,7 @@ data class SearchUiState (
     val sortTags: Map<Ordering, Pair<Boolean, Direction>> = Ordering.entries.associateWith { Pair(false, Direction.Descending) }.toMutableMap().apply { this[Ordering.relevance] = Pair(true,Direction.Descending) },
     val showDrawer: Boolean = false,
     val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off},
+    val demographics: Map<Demographic,ToggleableState> = Demographic.entries.associateWith { ToggleableState.Off },
     val isRefreshing: Boolean = false,
     val somethingChanged: Boolean = false,
 )
