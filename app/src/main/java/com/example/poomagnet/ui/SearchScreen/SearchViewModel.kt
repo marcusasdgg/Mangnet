@@ -185,7 +185,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun setDemo(demo: Demographic, toggle: ToggleableState){
-        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else if (toggle == ToggleableState.On){ToggleableState.Indeterminate} else {ToggleableState.Off}
+        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else {ToggleableState.Off}
         _uiState.update{
             it.copy(
                 demographics = it.demographics.toMutableMap().apply { this[demo] = newToggleState },
@@ -205,7 +205,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun setContentRating(rating: ContentRating, toggle: ToggleableState){
-        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else if (toggle == ToggleableState.On){ToggleableState.Indeterminate} else {ToggleableState.Off}
+        val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On}  else {ToggleableState.Off}
         _uiState.update{
             it.copy(
                 contentRating = it.contentRating.toMutableMap().apply { this[rating] = newToggleState },
