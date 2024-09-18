@@ -145,32 +145,32 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
         enter = fadeIn(animationSpec = tween(durationMillis = 300)),
         exit = fadeOut(animationSpec = tween(durationMillis = 300)),
     ) {
-        Box(
-            modifier
-                .fillMaxWidth()
-                .height(120.dp)){
             TopAppBar(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
+                modifier = modifier.fillMaxWidth(),
                 title = {
-                    Text(state.currentManga?.title ?: "null", maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(
-                        Alignment.CenterStart))
+                    Text(
+                        state.currentManga?.title ?: "null",
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 },
-                navigationIcon = { IconButton(
-                    onClick = onBack,
-                ){
-                    Icon(Icons.AutoMirrored.Default.ArrowBack, "")
-                }},
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = null
+                        )
+                    }
+                },
                 actions = {
-                    IconButton(
-                        onClick = {},
-                    ){
-                        Icon(Icons.Default.Download, "")
+                    IconButton(onClick = {}) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = null
+                        )
                     }
                 }
             )
-        }
     }
 
 }
