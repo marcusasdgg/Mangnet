@@ -18,7 +18,7 @@ import com.example.poomagnet.ui.HomeScreen.HomeTopBarV2
 import com.example.poomagnet.ui.HomeScreen.HomeViewModel
 import com.example.poomagnet.ui.MangaSpecific.MangaAppBar
 import com.example.poomagnet.ui.MangaSpecific.MangaScreen
-import com.example.poomagnet.ui.MangaSpecific.mangaSpecificViewModel
+import com.example.poomagnet.ui.MangaSpecific.MangaSpecificViewModel
 import com.example.poomagnet.ui.SearchScreen.SearchScreen
 import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
@@ -33,7 +33,7 @@ fun App() {
     val homeViewModel: HomeViewModel = viewModel()
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
-    val mangaViewModel: mangaSpecificViewModel = hiltViewModel()
+    val mangaViewModel: MangaSpecificViewModel = hiltViewModel()
 
 
 

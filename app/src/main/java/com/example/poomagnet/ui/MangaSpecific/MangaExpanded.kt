@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -56,7 +57,7 @@ import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import kotlinx.coroutines.delay
 
 @Composable
-fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: mangaSpecificViewModel) {
+fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificViewModel) {
     val uiState by mangaViewModel.uiState.collectAsState()
 
     AnimatedVisibility(
@@ -130,7 +131,7 @@ fun tagIt(modifier: Modifier = Modifier, name: String = "Preview"){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewModel: mangaSpecificViewModel){
+fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewModel: MangaSpecificViewModel){
     val state by mangaViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -158,10 +159,16 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
                 },
                 navigationIcon = { IconButton(
                     onClick = onBack,
-                    modifier = Modifier.align(Alignment.CenterStart)
                 ){
                     Icon(Icons.AutoMirrored.Default.ArrowBack, "")
-                }}
+                }},
+                actions = {
+                    IconButton(
+                        onClick = {},
+                    ){
+                        Icon(Icons.Default.Download, "")
+                    }
+                }
             )
         }
     }
