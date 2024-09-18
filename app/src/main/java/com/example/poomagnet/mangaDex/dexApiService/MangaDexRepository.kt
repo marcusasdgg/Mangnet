@@ -38,6 +38,7 @@ data class MangaInfo(
     val offSet: Int,
     var inLibrary: Boolean = false,
     var chapterList: MutableList<Chapter>? = null,
+    val tagList: MutableList<String> = mutableListOf(),
 )
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.
@@ -170,13 +171,28 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                             val type = elm["type"].toString()
                             val attributes = elm["attributes"]
                             if (attributes is Map<*, *>) {
-
+                                var tags: MutableList<String> = mutableListOf()
                                 var mangaTitle = "n/a"
                                 val titleSearch = attributes["title"]
                                 if (titleSearch is Map<*, *>) {
                                     mangaTitle = titleSearch["en"].toString()
                                 }
 
+                                val tagSon = attributes["tags"]
+
+                                if (tagSon is List<*>){
+                                    tagSon.forEach { elm ->
+                                        if (elm is Map<*,*>){
+                                            val tagAttr = elm["attributes"]
+                                            if (tagAttr is Map<*,*>){
+                                                val tagName = tagAttr["name"]
+                                                if (tagName is Map<*,*>){
+                                                    tags.add(tagName["en"].toString())
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 
                                 val altTitles = attributes["altTitles"]
                                 if (altTitles is List<*>) {
@@ -231,7 +247,10 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                         languageList,
                                         null,
                                         contructedUrl,
-                                        offSet
+                                        offSet,
+                                        false,
+                                        mutableListOf(),
+                                        tags
                                     )
                                 )
                                 altlist = mutableListOf()

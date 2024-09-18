@@ -44,25 +44,7 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun selectCurrentManga(manga: MangaInfo?){
-        if (manga == null){ //shouldnt happen?
-            _uiState.update{
-                it.copy(
-                    currentManga = null,
-                    currentScreen = it.previousScreen
-                )
-            }
-        } else {
-            _uiState.update {
-                it.copy(
-                    currentManga = manga,
-                    previousScreen = it.currentScreen,
-                    currentScreen = ScreenType.MangaSpecific
-                )
-            }
-        }
 
-    }
 
     fun changeToPrevious(){
 
