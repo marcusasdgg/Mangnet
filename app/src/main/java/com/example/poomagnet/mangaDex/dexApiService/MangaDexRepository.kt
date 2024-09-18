@@ -38,8 +38,17 @@ data class MangaInfo(
     val offSet: Int,
     var inLibrary: Boolean = false,
     var chapterList: MutableList<Chapter>? = null,
-    val tagList: MutableList<String> = mutableListOf(),
-)
+    val tagList: MutableList<String> = mutableListOf()
+){
+    override fun equals(other: Any?): Boolean{
+        if (other !is MangaInfo) return false
+        return id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode() // Only hash based on the unique id
+    }
+}
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.
 
@@ -69,7 +78,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     //local persistence is so much easier now, i just backup
 
-    private var library: MutableList<MangaInfo> = mutableListOf()
+    private var library: MutableSet<MangaInfo> = mutableSetOf()
 
     private var tagMap: MutableMap<Tag,String> = mutableMapOf()
 
@@ -120,7 +129,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
                 val gson = Gson()
-                val listType = object : TypeToken<List<MangaInfo>>() {}.type
+                val listType = object : TypeToken<Set<MangaInfo>>() {}.type
                 library = gson.fromJson(jsonString, listType)
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
@@ -241,23 +250,24 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                 //val image = downloadImage(coverUrl, id)
                                 val contructedUrl =
                                     "https://uploads.mangadex.org/covers/$id/$coverUrl"
+                                val mangad = MangaInfo(
+                                    id,
+                                    type,
+                                    mangaTitle,
+                                    altlist,
+                                    description,
+                                    state,
+                                    contentRating,
+                                    languageList,
+                                    null,
+                                    contructedUrl,
+                                    offSet,
+                                    false,
+                                    mutableListOf(),
+                                    tags
+                                )
                                 list.add(
-                                    MangaInfo(
-                                        id,
-                                        type,
-                                        mangaTitle,
-                                        altlist,
-                                        description,
-                                        state,
-                                        contentRating,
-                                        languageList,
-                                        null,
-                                        contructedUrl,
-                                        offSet,
-                                        library.any { em -> em.id == id },
-                                        mutableListOf(),
-                                        tags
-                                    )
+                                    mangad.copy(inLibrary = library.contains(mangad))
                                 )
                                 altlist = mutableListOf()
                             }
