@@ -59,7 +59,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                 if (newManga.inLibrary) {
                     mangaDexRepository.addToLibrary(newManga)
                 } else {
-                    mangaDexRepository.removeFromLibrary(newManga)
+                    mangaDexRepository.removeFromLibrary(currentManga)
                 }
             }
                 // Update the UI state inside the coroutine to ensure consistency
