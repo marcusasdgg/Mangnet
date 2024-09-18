@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -71,7 +74,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 Spacer(Modifier.width(15.dp))
                 Column(
                     Modifier
-                        .weight(1.5f)
+                        .weight(1.8f)
                         .fillMaxHeight()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -91,7 +94,9 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     Modifier
                         .weight(2f)
                         .fillMaxHeight()){
-                    Text(uiState.currentManga?.title ?: "null", Modifier.weight(1f))
+                    Text(uiState.currentManga?.type ?: "null", Modifier.weight(1f))
+                    Text(uiState.currentManga?.state.toString() ?: "null", Modifier.weight(1f))
+                    AddToButton(Modifier.weight(2f).padding(20.dp,20.dp), {mangaViewModel.addToLibrary()}, uiState.currentManga?.inLibrary ?: false)
                 }
             }
             Spacer(Modifier.height(10.dp))
@@ -112,8 +117,16 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
 
 }
 
-fun AddToButton(){
-
+@Composable
+fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Boolean){
+    Box(modifier.clip(RoundedCornerShape(10)) // Clip first to apply rounded corners
+        .background(MaterialTheme.colorScheme.background) // Background after clipping
+        .clickable { onclick() } ){
+        Column(Modifier.fillMaxSize()) {
+                Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "", Modifier.weight(1f).align(Alignment.CenterHorizontally), tint = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
+            Text("Add to Library", Modifier.weight(1f).align(Alignment.CenterHorizontally), color = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
+        }
+    }
 }
 
 @Preview

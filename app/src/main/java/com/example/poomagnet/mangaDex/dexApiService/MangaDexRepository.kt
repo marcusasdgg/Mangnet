@@ -145,8 +145,14 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         }
     }
 
-    private suspend fun addToLibrary(manga: MangaInfo) {
+    suspend fun addToLibrary(manga: MangaInfo) {
         library.add(manga)
+        backUpManga(context)
+        Log.d("TAG", "addToLibrary: $library")
+    }
+
+    suspend fun removeFromLibrary(manga: MangaInfo?){
+        library.remove(manga)
         backUpManga(context)
     }
 
