@@ -254,7 +254,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                         null,
                                         contructedUrl,
                                         offSet,
-                                        false,
+                                        library.any { em -> em.id == id },
                                         mutableListOf(),
                                         tags
                                     )
