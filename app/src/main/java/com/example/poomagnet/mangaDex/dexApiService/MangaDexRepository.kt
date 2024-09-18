@@ -39,16 +39,7 @@ data class MangaInfo(
     var inLibrary: Boolean = false,
     var chapterList: MutableList<Chapter>? = null,
     val tagList: MutableList<String> = mutableListOf()
-){
-    override fun equals(other: Any?): Boolean{
-        if (other !is MangaInfo) return false
-        return id == other.id
-    }
-
-    override fun hashCode(): Int {
-        return id.hashCode() // Only hash based on the unique id
-    }
-}
+)
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.
 
@@ -79,6 +70,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     //local persistence is so much easier now, i just backup
 
     private var library: MutableSet<MangaInfo> = mutableSetOf()
+    private var idSet: MutableSet<String> = mutableSetOf()
 
     private var tagMap: MutableMap<Tag,String> = mutableMapOf()
 
@@ -129,8 +121,10 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
                 val gson = Gson()
-                val listType = object : TypeToken<Set<MangaInfo>>() {}.type
-                library = gson.fromJson(jsonString, listType)
+                val listType = object : TypeToken<Pair<Set<MangaInfo>, Set<String>>>() {}.type
+                val r: Pair<Set<MangaInfo>, Set<String>> = gson.fromJson(jsonString, listType)
+                library = r.first.toMutableSet()
+                idSet = r.second.toMutableSet()
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
             }
@@ -147,7 +141,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 OutputStreamWriter(fos).use { writer ->
                     // Write the data to the file
                     writer.write(
-                        gsonSerializer.toJson(library)
+                        gsonSerializer.toJson(Pair(library,idSet))
                     )
                 }
             }
@@ -156,12 +150,14 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     suspend fun addToLibrary(manga: MangaInfo) {
         library.add(manga)
+        idSet.add(manga.id)
         backUpManga(context)
-        Log.d("TAG", "addToLibrary: $library")
+        Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
     }
 
     suspend fun removeFromLibrary(manga: MangaInfo?){
         library.remove(manga)
+        idSet.remove(manga?.id)
         backUpManga(context)
     }
 
@@ -250,24 +246,24 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                 //val image = downloadImage(coverUrl, id)
                                 val contructedUrl =
                                     "https://uploads.mangadex.org/covers/$id/$coverUrl"
-                                val mangad = MangaInfo(
-                                    id,
-                                    type,
-                                    mangaTitle,
-                                    altlist,
-                                    description,
-                                    state,
-                                    contentRating,
-                                    languageList,
-                                    null,
-                                    contructedUrl,
-                                    offSet,
-                                    false,
-                                    mutableListOf(),
-                                    tags
-                                )
+
                                 list.add(
-                                    mangad.copy(inLibrary = library.contains(mangad))
+                                    MangaInfo(
+                                        id,
+                                        type,
+                                        mangaTitle,
+                                        altlist,
+                                        description,
+                                        state,
+                                        contentRating,
+                                        languageList,
+                                        null,
+                                        contructedUrl,
+                                        offSet,
+                                        idSet.contains(id),
+                                        mutableListOf(),
+                                        tags
+                                    )
                                 )
                                 altlist = mutableListOf()
                             }
