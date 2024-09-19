@@ -1,6 +1,8 @@
 package com.example.poomagnet.ui.MangaSpecific
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -70,6 +72,24 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getChapterInfo(){
+        val id = uiState.value.currentManga?.id
+        Log.d("TAG", "id passed was this: \"$id\"")
+        if (id !== null){
+            val chapterlist = mangaDexRepository.chapList(id)
+            _uiState.update {
+                it.copy(
+                    currentManga = it.currentManga?.copy(chapterList = chapterlist)
+                )
+            }
+        }
+    }
 
 
 }
+
+//when moving to read chapter view, we need to edit the app.kt's backhandler such that
+//it now navigates us back to the mangaScreen page? Since backhandler is triggerred by
+//the leafiest element we can define a new backhandler in our newscreen that will block the old
+// one. The entire reading experience must be stored in mangaSpecificViewModel though.

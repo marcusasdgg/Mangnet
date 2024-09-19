@@ -1,6 +1,8 @@
 package com.example.poomagnet.ui.MangaSpecific
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -8,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,7 +23,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
@@ -59,9 +64,15 @@ import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificViewModel) {
     val uiState by mangaViewModel.uiState.collectAsState()
+    val scrollstate = rememberScrollState()
+    LaunchedEffect(Unit) {
+        delay(100)
+        mangaViewModel.getChapterInfo()
+    }
 
     AnimatedVisibility(
         visible = uiState.visible,
@@ -69,7 +80,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
         exit = fadeOut(animationSpec = tween(durationMillis = 80)),
         modifier = modifier.fillMaxSize()
     ) {
-        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().verticalScroll(scrollstate)) {
             Row(Modifier.height(250.dp)) {
                 Spacer(Modifier.width(15.dp))
                 Column(
@@ -109,8 +120,10 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     tagIt(Modifier.fillMaxHeight(),item)
                 }
             }
-            Column(Modifier.weight(5f)){
-
+            Column(){
+                uiState.currentManga?.chapterList?.forEach { elm ->
+                    Text("Volume ${elm.volume.toInt()} Chapter ${elm.chapter} ${if (elm.name == "null") "" else elm.name}")
+                }
             }
         }
     }
@@ -141,7 +154,7 @@ fun tagIt(modifier: Modifier = Modifier, name: String = "Preview"){
 
 
 
-
+//maybe add a button that scrolls to bottom?
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewModel: MangaSpecificViewModel){

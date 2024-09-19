@@ -249,6 +249,7 @@ class SearchViewModel @Inject constructor(
 
 
 
+
     //search listings, switch page.
 
 

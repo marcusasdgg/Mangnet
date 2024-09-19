@@ -1,12 +1,13 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
 
-import Ordering
 import Tag
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -14,9 +15,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 enum class mangaState {
@@ -37,26 +40,36 @@ data class MangaInfo(
     val coverArtUrl: String,
     val offSet: Int,
     var inLibrary: Boolean = false,
-    var chapterList: MutableList<Chapter>? = null,
+    var chapterList: List<Chapter>? = null,
     val tagList: MutableList<String> = mutableListOf()
 )
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.
 
 
+data class Chapter(
+    val name: String,
+    val id: String,
+    val volume: Double,
+    val chapter: Double,
+    val group: String,
+    val type: String,
+    val pageCount: Double,
+    val contents: ChapterContents?,
+)
 
 
 
-sealed class Chapter {
-    data class Downloaded(val imagePaths: List<String>) : Chapter()
-    data class Online(val imagePaths: List<String>) : Chapter()
+sealed class ChapterContents {
+    data class Downloaded(val imagePaths: List<String>, val timeRetrieved: OffsetDateTime) : ChapterContents()
+    data class Online(val imagePaths: List<String>) : ChapterContents()
 }
 
-val Chapter.isDownloaded: Boolean
-    get() = this is Chapter.Downloaded
+val ChapterContents.isDownloaded: Boolean
+    get() = this is ChapterContents.Downloaded
 
-val Chapter.isOnline: Boolean
-    get() = this is Chapter.Online
+val ChapterContents.isOnline: Boolean
+    get() = this is ChapterContents.Online
 
 
 
@@ -118,7 +131,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             val file = File(context.filesDir, "backup.txt")
             if (file.exists()) {
                 val jsonString = file.readText()
-
+                Log.d("TAG", "loadMangaFromBackup: backup is $jsonString")
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
                 val gson = Gson()
                 val listType = object : TypeToken<Pair<Set<MangaInfo>, Set<String>>>() {}.type
@@ -130,6 +143,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             }
         } catch (e: Exception) {
             Log.e("TAG", "Error loading manga from backup.txt: ${e.message}")
+
         }
     }
 
@@ -295,6 +309,99 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun chapList(id: String): List<Chapter> {
+        val TAG = "TAG"
+        try {
+            val responses = mutableListOf(apiService.getChapterList(id,0))
+            Log.d(TAG, "chapList first response: $responses")
+            val totalChapters = responses[0]["total"] as Double
+            var offSet = 0
+            while (offSet < totalChapters){
+                Log.d(TAG, "1 pass done for pagination")
+                responses.add(apiService.getChapterList(id,offSet))
+                offSet += 100
+            }
+            val chapterObjects: MutableList<Chapter> = mutableListOf()
+
+            responses.forEach { res ->
+                val reponse = res["data"]
+                if (reponse is List<*>){
+                    reponse.forEach { response ->
+                        if (response is Map<*,*>){
+                            val chapterId = response["id"].toString()
+                            val attributes = response["attributes"]
+                            if (attributes is Map<*,*>){
+                                if (attributes["translatedLanguage"] != "en"){
+                                    return@forEach
+                                }
+                                Log.d(TAG, "chapList: volume is ${attributes["volume"]} and chapters ${attributes["chapter"]}")
+                                val volume = attributes["volume"].toString().toDoubleOrNull() ?: -1.0
+                                val chapter = attributes["chapter"].toString().toDoubleOrNull() ?: -1.0
+                                val title = attributes["title"].toString()
+                                val pageCount = attributes["pages"] as? Double ?: -1.0
+                                val time = OffsetDateTime.parse(attributes["updatedAt"].toString())
+                                val type = response["type"].toString()
+
+                                val relationships = response["relationships"]
+                                var group = ""
+
+                                if (relationships is List<*>){
+                                    relationships.forEach { relation ->
+                                        if (relation is Map<*,*>){
+                                            if( relation["type"] == "scanlation_group"){
+                                                val relAttr = relation["attributes"]
+                                                if (relAttr is Map<*,*>){
+                                                    group = relAttr["name"].toString()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                chapterObjects.add(Chapter(title,chapterId,volume,chapter,group,type,pageCount,null))
+                            }
+                        }
+                    }
+                }
+            }
+            backUpManga(context)
+            Log.d("TAG", "chapList: found ${chapterObjects.size} chapters")
+            library.map { elm ->
+                if (elm.id == id){
+                    Log.d(TAG, "chapList: commencing sotrage of chapter list")
+                    elm.copy(chapterList = chapterObjects)
+                } else {
+                    elm
+                }
+            }
+            return chapterObjects
+
+        } catch(e: HttpException){
+            Log.d("TAG", "chapList: failed to get chapters ${e.message} ${e.response()?.errorBody()?.string()}")
+            return listOf()
+        }
+    }
+
+    //add support for datasaver later.
+    private suspend fun getChapterContents(id: String): List<String>{
+        val response = apiService.getChapterPagesInfo(id)
+        val baseUrl = response["baseUrl"]
+        val chapterInfo = response["chapter"]
+        var hash = ""
+        val list: MutableList<String> = mutableListOf()
+        if (chapterInfo is Map<*,*>){
+            hash = chapterInfo["hash"].toString()
+            val data = chapterInfo["data"]
+            if (data is List<*>){
+                data.forEach { elm->
+                    list.add("$baseUrl/data/$hash/$elm")
+                }
+            }
+        }
+        return list
+    }
+
     private suspend fun downloadImage(url: String, id: String): Bitmap? {
         return try {
             val response = apiService.downloadFile("https://uploads.mangadex.org/covers/$id/$url")
@@ -313,3 +420,5 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
 
 }
+
+//right now for library swapped mangaInfo objects, it doesnt properly work? as in it tries to load the chapters but gets a http 400?
