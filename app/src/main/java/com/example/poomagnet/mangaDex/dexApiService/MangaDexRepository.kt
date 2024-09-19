@@ -320,7 +320,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             while (offSet < totalChapters){
                 Log.d(TAG, "1 pass done for pagination")
                 responses.add(apiService.getChapterList(id,offSet))
-                offSet += 100
+                offSet += 200
             }
             val chapterObjects: MutableList<Chapter> = mutableListOf()
 
