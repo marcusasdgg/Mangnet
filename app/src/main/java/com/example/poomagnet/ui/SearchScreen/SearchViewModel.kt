@@ -255,5 +255,6 @@ class SearchViewModel @Inject constructor(
 
 
     //anything else?
-
+    // we need a cache stored here of like the last 15 opened mangas, with the chapter list cached so that
+    //if we find the manga again we can immediately load.
 }

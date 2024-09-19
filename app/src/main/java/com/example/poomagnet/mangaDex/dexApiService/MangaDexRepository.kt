@@ -422,3 +422,5 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 }
 
 //right now for library swapped mangaInfo objects, it doesnt properly work? as in it tries to load the chapters but gets a http 400?
+//fixed it by increasing limit, must be a rate limti issue i reckon.
+//now need to link library/home page to mangadex repo.

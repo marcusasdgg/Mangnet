@@ -29,8 +29,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -148,7 +150,8 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
 @Composable
 fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String){
     Box(modifier.fillMaxWidth().clickable { onclick() }){
-        Text("Vol.${volume.toInt()} Chapter $chapter ${if (name.strip() !== "null") name else ""}", Modifier.align(Alignment.TopStart).padding(20.dp,5.dp,0.dp,0.dp))
+        Text("Vol.${volume.toInt()} Ch. $chapter ${if (name !== "null") name else ""}", Modifier.align(Alignment.TopStart).padding(20.dp,5.dp,0.dp,0.dp).fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1)
+        Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.align(Alignment.CenterEnd).padding(0.dp,0.dp,15.dp,0.dp), tint = Color.Gray)
     }
 }
 
