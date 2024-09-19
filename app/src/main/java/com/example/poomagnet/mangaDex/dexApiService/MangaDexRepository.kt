@@ -179,6 +179,17 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                         Log.d("TAG", "result found")
                         if (elm is Map<*, *>) {
                             val id = elm["id"].toString()
+
+                            if (idSet.contains(id)){
+                                val em = library.firstOrNull { e -> e.id == id }
+                                if (em !== null){
+                                    list.add(em)
+                                    Log.d("TAG", "found manga in lib")
+                                    return@forEach
+                                } else {
+                                    Log.d("TAG", "searchAllManga: Id set not synchronized")
+                                }
+                            }
                             val type = elm["type"].toString()
                             val attributes = elm["attributes"]
                             if (attributes is Map<*, *>) {
@@ -260,7 +271,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                         null,
                                         contructedUrl,
                                         offSet,
-                                        idSet.contains(id),
+                                        false,
                                         mutableListOf(),
                                         tags
                                     )

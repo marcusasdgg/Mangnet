@@ -10,4 +10,5 @@ data class AppUiState(
 
     val currentManga: MangaInfo? = null,
     val previousScreen: ScreenType = ScreenType.Home,
+
 )

@@ -70,4 +70,6 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+
+
 }

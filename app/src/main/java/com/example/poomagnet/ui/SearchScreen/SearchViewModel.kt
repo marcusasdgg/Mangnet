@@ -28,6 +28,7 @@ class SearchViewModel @Inject constructor(
     fun updateSearchText(newText: String){
         _uiState.update {
             it.copy(
+                oldText = it.searchText,
                 searchText = newText
             )
         }
@@ -59,7 +60,7 @@ class SearchViewModel @Inject constructor(
 
     suspend fun executeSearch() {
         val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
-
+        Log.d("TAG", "current order is $res")
         val s = getIncludeExclude()
         val result = mangaDexRepository.searchAllManga(
             uiState.value.searchText,
@@ -176,6 +177,27 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun selectFirstOrder(selected: Ordering, currentState: Pair<Boolean, Direction>) {
+        val newMap = _uiState.value.sortTags.toMutableMap().apply {
+            for (i in this){
+                i.setValue(Pair(false, Direction.Descending))
+            }
+            if (currentState.second == Direction.Descending && !currentState.first){
+                this[selected] = Pair(true, Direction.Descending)
+            } else if (currentState.second == Direction.Descending && currentState.first) {
+                this[selected] = Pair(true, Direction.Ascending)
+            } else if (currentState.second == Direction.Ascending){
+                this[selected] = Pair(true, Direction.Descending)
+            }
+        }
+
+        _uiState.update {
+            it.copy(
+                sortTags = newMap,
+            )
+        }
+    }
+
     fun setFlag(boolean: Boolean){
         _uiState.update {
             it.copy(
@@ -213,6 +235,19 @@ class SearchViewModel @Inject constructor(
             )
         }
     }
+    fun changeFirstLoad(){
+        _uiState.update {
+            it.copy(firstLoad = false)
+        }
+    }
+
+    fun changeSecondLoad(){
+        _uiState.update {
+            it.copy(secondLoad = false)
+        }
+    }
+
+
 
     //search listings, switch page.
 

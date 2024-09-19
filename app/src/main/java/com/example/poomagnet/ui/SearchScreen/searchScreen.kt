@@ -220,11 +220,30 @@ fun SearchScreen(
 
     val uiState by searchViewModel.uiState.collectAsState()
 
+
+    // i need this so that on first load of the search screen, the default tag is follow count, but once
+    // changed i need to make it so that it is by Relevance
     LaunchedEffect(uiState.searchText, uiState.somethingChanged) {
-        currentScrollState.scrollToItem(0)
-        searchViewModel.executeSearch()
-        searchViewModel.setFlag(false)
-        Log.d("TAG", "Ding")
+        if (uiState.firstLoad){
+            Log.d("TAG", "First Load detected: ")
+            searchViewModel.selectFirstOrder(Ordering.Followed_Count, Pair(true, Direction.Ascending))
+            currentScrollState.scrollToItem(0)
+            searchViewModel.executeSearch()
+            Log.d("TAG", "Ding")
+            searchViewModel.changeFirstLoad()
+        } else if(uiState.secondLoad && !uiState.firstLoad && uiState.oldText !== uiState.searchText) {
+            Log.d("TAG", "Second Load detected: ")
+            searchViewModel.selectFirstOrder(Ordering.Relevance, Pair(true, Direction.Ascending))
+            currentScrollState.scrollToItem(0)
+            searchViewModel.executeSearch()
+            searchViewModel.changeSecondLoad()
+        } else {
+            Log.d("TAG", "Normal Load detected: ")
+            currentScrollState.scrollToItem(0)
+            searchViewModel.executeSearch()
+            searchViewModel.setFlag(false)
+            Log.d("TAG", "Ding")
+        }
     }
 
 

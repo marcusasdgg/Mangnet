@@ -124,7 +124,7 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
         .clickable { onclick() } ){
         Column(Modifier.fillMaxSize()) {
                 Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "", Modifier.weight(1f).align(Alignment.CenterHorizontally), tint = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
-            Text("Add to Library", Modifier.weight(1f).align(Alignment.CenterHorizontally), color = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
+            Text("Add${if (selected) "ed" else ""} to Library", Modifier.weight(1f).align(Alignment.CenterHorizontally), color = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
         }
     }
 }

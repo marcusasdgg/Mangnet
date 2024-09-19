@@ -22,6 +22,9 @@ data class SearchUiState (
     val contentRating: Map<ContentRating, ToggleableState> = ContentRating.entries.associateWith { ToggleableState.Off },
     val isRefreshing: Boolean = false,
     val somethingChanged: Boolean = false,
+    val firstLoad: Boolean = true,
+    val secondLoad: Boolean = true,
+    val oldText: String = ""
 )
 
 enum class Direction(val msg: String) {
