@@ -31,7 +31,7 @@ interface MangaDexApiService {
     suspend fun getChapterPagesInfo(@Path("cInfo") id: String): Map<String,Any?>
 
 
-    @GET("/manga/{id}/feed?limit=200")
+    @GET("/manga/{id}/feed?limit=500")
     suspend fun getChapterList(@Path("id") mangaId: String, @Query("offset") offset: Int): Map<String,Any?>
 
     @GET("manga/tag")

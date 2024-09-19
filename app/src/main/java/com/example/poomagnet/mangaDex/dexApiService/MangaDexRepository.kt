@@ -314,13 +314,13 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         val TAG = "TAG"
         try {
             val responses = mutableListOf(apiService.getChapterList(id,0))
-            Log.d(TAG, "chapList first response: $responses")
+            Log.d(TAG, "chapList first response: ${responses[0]["limit"]}")
             val totalChapters = responses[0]["total"] as Double
             var offSet = 0
             while (offSet < totalChapters){
                 Log.d(TAG, "1 pass done for pagination")
                 responses.add(apiService.getChapterList(id,offSet))
-                offSet += 200
+                offSet += 500
             }
             val chapterObjects: MutableList<Chapter> = mutableListOf()
 
