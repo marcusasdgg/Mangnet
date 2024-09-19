@@ -310,7 +310,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun chapList(id: String): List<Chapter> {
+    suspend fun chapList(id: String): Pair<List<Chapter>, OffsetDateTime> {
         val TAG = "TAG"
         try {
             val responses = mutableListOf(apiService.getChapterList(id,0))
@@ -320,7 +320,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             while (offSet < totalChapters){
                 Log.d(TAG, "1 pass done for pagination")
                 responses.add(apiService.getChapterList(id,offSet))
-                offSet += 500
+                offSet += 1000
             }
             val chapterObjects: MutableList<Chapter> = mutableListOf()
 
@@ -375,11 +375,11 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                     elm
                 }
             }
-            return chapterObjects
+            return Pair(chapterObjects, OffsetDateTime.now())
 
         } catch(e: HttpException){
             Log.d("TAG", "chapList: failed to get chapters ${e.message} ${e.response()?.errorBody()?.string()}")
-            return listOf()
+            return Pair(listOf(), OffsetDateTime.now())
         }
     }
 

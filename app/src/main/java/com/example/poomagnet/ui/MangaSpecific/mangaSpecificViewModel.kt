@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+//make sure to not overwrite the old chapter list objects and add the new ones in.
 @HiltViewModel
 class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository: MangaDexRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(mangaUiState())
@@ -80,7 +81,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             val chapterlist = mangaDexRepository.chapList(id)
             _uiState.update {
                 it.copy(
-                    currentManga = it.currentManga?.copy(chapterList = chapterlist)
+                    currentManga = it.currentManga?.copy(chapterList = chapterlist.first)
                 )
             }
         }

@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
@@ -120,9 +121,11 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     tagIt(Modifier.fillMaxHeight(),item)
                 }
             }
+            Spacer(Modifier.height(20.dp))
+            Text("${uiState.currentManga?.chapterList?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,10.dp))
             Column(){
                 uiState.currentManga?.chapterList?.forEach { elm ->
-                    Text("Volume ${elm.volume.toInt()} Chapter ${elm.chapter} ${if (elm.name == "null") "" else elm.name}")
+                    ChapterListing(Modifier.height(60.dp),{},elm.volume,elm.chapter,elm.name)
                 }
             }
         }
@@ -139,6 +142,13 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
                 Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "", Modifier.weight(1f).align(Alignment.CenterHorizontally), tint = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
             Text("Add${if (selected) "ed" else ""} to Library", Modifier.weight(1f).align(Alignment.CenterHorizontally), color = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
         }
+    }
+}
+
+@Composable
+fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String){
+    Box(modifier.fillMaxWidth().clickable { onclick() }){
+        Text("Vol.${volume.toInt()} Chapter $chapter ${if (name.strip() !== "null") name else ""}", Modifier.align(Alignment.TopStart).padding(20.dp,5.dp,0.dp,0.dp))
     }
 }
 

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.util.logging.Filter
-
+//make this a hilt view model and inject mangadex api object in.
 class HomeViewModel: ViewModel() {
     private val _uistate = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uistate
