@@ -63,7 +63,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
     }
 
 
-    LazyRow(modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, flingBehavior = state) {
+    LazyRow(modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, flingBehavior = state, state = listState) {
         if (s !== null){
             when(s){
                is ChapterContents.Downloaded -> {
