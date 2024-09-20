@@ -86,7 +86,10 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
         exit = fadeOut(animationSpec = tween(durationMillis = 80)),
         modifier = modifier.fillMaxSize()
     ) {
-        Column(Modifier.fillMaxSize().verticalScroll(scrollstate)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollstate)) {
             Row(Modifier.height(250.dp)) {
                 Spacer(Modifier.width(15.dp))
                 Column(
@@ -113,7 +116,10 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                         .fillMaxHeight()){
                     Text(uiState.currentManga?.type ?: "null", Modifier.weight(1f))
                     Text(uiState.currentManga?.state.toString() ?: "null", Modifier.weight(1f))
-                    AddToButton(Modifier.weight(2f).padding(20.dp,20.dp), {mangaViewModel.addToLibrary(); onAdd()}, uiState.currentManga?.inLibrary ?: false)
+                    AddToButton(
+                        Modifier
+                            .weight(2f)
+                            .padding(20.dp, 20.dp), {mangaViewModel.addToLibrary(); onAdd()}, uiState.currentManga?.inLibrary ?: false)
                 }
             }
             Spacer(Modifier.height(10.dp))
@@ -132,9 +138,11 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 uiState.currentManga?.chapterList?.second?.forEach { elm ->
                     ChapterListing(Modifier.height(60.dp),
                         {mangaViewModel.viewModelScope.launch {
-                            mangaViewModel.getChapterUrls(elm.id)}
-                            mangaViewModel.enterReadMode(true, elm)
+                            mangaViewModel.getChapterUrls(elm.id)
+                            delay(1000)
+                            mangaViewModel.enterReadMode(true)
                             hideTopBar(true)
+                        }
                         }
                         ,elm.volume,elm.chapter, elm.name,elm.date)
                 }
@@ -148,35 +156,61 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
         enter = fadeIn(animationSpec = tween(durationMillis = 80)),
         exit = fadeOut(animationSpec = tween(durationMillis = 80)),
     ) {
-        BackHandler {
+        val returner: () -> Unit = {
             mangaViewModel.viewModelScope.launch {
                 delay(80)
                 hideTopBar(false)
-                mangaViewModel.enterReadMode(false, null)
+                mangaViewModel.enterReadMode(false)
             }
         }
-        Text("read mode")
+
+        BackHandler {
+            returner()
+        }
+        ReadScreen(Modifier,mangaViewModel,returner)
+
     }
 }
 
 @Composable
 fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Boolean){
-    Box(modifier.clip(RoundedCornerShape(10)) // Clip first to apply rounded corners
-        .background(MaterialTheme.colorScheme.background) // Background after clipping
-        .clickable { onclick() } ){
+    Box(
+        modifier
+            .clip(RoundedCornerShape(10)) // Clip first to apply rounded corners
+            .background(MaterialTheme.colorScheme.background) // Background after clipping
+            .clickable { onclick() } ){
         Column(Modifier.fillMaxSize()) {
-                Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "", Modifier.weight(1f).align(Alignment.CenterHorizontally), tint = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
-            Text("Add${if (selected) "ed" else ""} to Library", Modifier.weight(1f).align(Alignment.CenterHorizontally), color = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
+                Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "",
+                    Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterHorizontally), tint = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
+            Text("Add${if (selected) "ed" else ""} to Library",
+                Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterHorizontally), color = if (!selected) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer)
         }
     }
 }
 
 @Composable
 fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?){
-    Box(modifier.fillMaxWidth().clickable { onclick() }){
-        Text("Vol.${volume.toInt()} Ch. $chapter ${if (name !== "null") name else ""}", Modifier.align(Alignment.TopStart).padding(20.dp,5.dp,0.dp,0.dp).fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1)
-        Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.align(Alignment.CenterEnd).padding(0.dp,0.dp,15.dp,0.dp), tint = Color.Gray)
-        Text(date.toString(), Modifier.align(Alignment.BottomStart).padding(27.dp,0.dp,0.dp,5.dp))
+    Box(
+        modifier
+            .fillMaxWidth()
+            .clickable { onclick() }){
+        Text("Vol.${volume.toInt()} Ch. $chapter ${if (name !== "null") name else ""}",
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(20.dp, 5.dp, 0.dp, 0.dp)
+                .fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1)
+        Icon(Icons.AutoMirrored.Filled.OpenInNew, "",
+            Modifier
+                .align(Alignment.CenterEnd)
+                .padding(0.dp, 0.dp, 15.dp, 0.dp), tint = Color.Gray)
+        Text(date.toString(),
+            Modifier
+                .align(Alignment.BottomStart)
+                .padding(27.dp, 0.dp, 0.dp, 5.dp))
     }
 }
 

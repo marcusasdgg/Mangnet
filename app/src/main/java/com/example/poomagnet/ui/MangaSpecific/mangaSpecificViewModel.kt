@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.poomagnet.App.ScreenType
 import com.example.poomagnet.mangaDex.dexApiService.Chapter
+import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.isOnline
@@ -46,21 +47,28 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getChapterUrls(chapterId: String){
+        var t: Chapter? = null;
         val new_chapter = uiState.value.currentManga?.chapterList?.second?.map { elm ->
             if (elm.id == chapterId && (elm.contents == null || elm.contents.isOnline)){
                 val s =  mangaDexRepository.getChapterContents(chapterId)
                 Log.d("TAG", "getChapterUrls: $s")
+                t = elm.copy(contents =s)
                 elm.copy(contents =s)
             }else {
                 elm
             }
         }
 
+        Log.d("TAG", "getChapterUrls: $new_chapter")
+
         _uiState.update {
             it.copy(
-                currentManga = it.currentManga?.copy(chapterList = it.currentManga.chapterList?.copy(second = new_chapter?: listOf()))
+                currentManga = it.currentManga?.copy(chapterList = Pair(Date(),new_chapter?: listOf())),
+                currentChapter = t?:it.currentChapter
             )
         }
+
+        Log.d("TAG", "current one: ${_uiState.value.currentChapter}")
     }
 
     fun makeVisible(boolean: Boolean){
@@ -71,23 +79,21 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
-    fun enterReadMode(boolean: Boolean, curr: Chapter?){
-        if (boolean){
+    fun enterReadMode(boolean: Boolean){
+        if (!boolean){
             _uiState.update {
                 it.copy(
-                    inReadMode = boolean,
-                    currentChapter = curr
+                    inReadMode = false,
+                    currentChapter = null,
                 )
             }
         } else {
             _uiState.update {
                 it.copy(
-                    inReadMode = boolean,
-                    currentChapter = null,
+                    inReadMode = true,
                 )
             }
         }
-
     }
 
     //need to add extra function to download image and store it.

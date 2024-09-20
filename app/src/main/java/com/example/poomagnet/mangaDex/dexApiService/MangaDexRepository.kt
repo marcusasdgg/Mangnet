@@ -75,7 +75,7 @@ data class Chapter(
 
 sealed class ChapterContents {
     data class Downloaded(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
-    data class Online(val imagePaths: List<String>) : ChapterContents()
+    data class Online(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
 }
 
 val ChapterContents.isDownloaded: Boolean
@@ -445,7 +445,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 }
             }
         }
-        return ChapterContents.Downloaded(list.map {elm -> Pair(elm, false) }, false)
+        return ChapterContents.Online(list.map {elm -> Pair(elm, false) }, false)
     }
 
     private suspend fun downloadImage(url: String, id: String): Bitmap? {
