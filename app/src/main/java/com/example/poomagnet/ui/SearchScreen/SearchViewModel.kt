@@ -4,7 +4,9 @@ import ContentRating
 import Demographic
 import Ordering
 import Tag
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -58,6 +60,7 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun executeSearch() {
         val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
         Log.d("TAG", "current order is $res")

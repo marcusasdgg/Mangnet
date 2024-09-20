@@ -35,6 +35,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,19 +49,14 @@ import com.example.poomagnet.R
 import java.util.logging.Filter
 
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}) {
-    val s = listOf(
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7,8,9,10,11,12,), "description", "YuruCamp"),
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7,8,9,10,11,12,), "description", "YuruCamp"),
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7,8,9,10,11,12,), "description", "YuruCamp"),
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7,8,9,10,11,12,), "description", "YuruCamp"),
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7, 8,9,10,11,12,), "description", "YuruCamp"),
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7,8,9,10,11,12,), "description", "YuruCamp"),
-        mangaInfo(R.drawable.prevthumbnail, listOf(1,2,3,4,5,6,7,8,9,10,11,12,), "description", "YuruCamp"),
-        )
+fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.syncLibrary()
+    }
     Column {
         LazyColumn(modifier = modifier.fillMaxWidth()) {
-            items(s) { manga ->
+            items(uiState.library) { manga ->
                 VerticalCard(manga = manga, modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp, 0.dp))

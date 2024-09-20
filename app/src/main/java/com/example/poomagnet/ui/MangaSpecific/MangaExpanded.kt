@@ -65,6 +65,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaDex.dexApiService.SimpleDate
 import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -124,10 +125,10 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 }
             }
             Spacer(Modifier.height(20.dp))
-            Text("${uiState.currentManga?.chapterList?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,10.dp))
+            Text("${uiState.currentManga?.chapterList?.second?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,10.dp))
             Column(){
-                uiState.currentManga?.chapterList?.forEach { elm ->
-                    ChapterListing(Modifier.height(60.dp),{},elm.volume,elm.chapter,elm.name)
+                uiState.currentManga?.chapterList?.second?.forEach { elm ->
+                    ChapterListing(Modifier.height(60.dp),{},elm.volume,elm.chapter, elm.name,elm.date)
                 }
             }
         }
@@ -148,10 +149,11 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
 }
 
 @Composable
-fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String){
+fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?){
     Box(modifier.fillMaxWidth().clickable { onclick() }){
         Text("Vol.${volume.toInt()} Ch. $chapter ${if (name !== "null") name else ""}", Modifier.align(Alignment.TopStart).padding(20.dp,5.dp,0.dp,0.dp).fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1)
         Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.align(Alignment.CenterEnd).padding(0.dp,0.dp,15.dp,0.dp), tint = Color.Gray)
+        Text(date.toString(), Modifier.align(Alignment.BottomStart).padding(27.dp,0.dp,0.dp,5.dp))
     }
 }
 

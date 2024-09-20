@@ -40,8 +40,8 @@ data class MangaInfo(
     val coverArtUrl: String,
     val offSet: Int,
     var inLibrary: Boolean = false,
-    var chapterList: List<Chapter>? = null,
-    val tagList: MutableList<String> = mutableListOf()
+    var chapterList: Pair<OffsetDateTime, List<Chapter>>? = null,
+    val tagList: MutableList<String> = mutableListOf(),
 )
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.
@@ -56,6 +56,7 @@ data class Chapter(
     val type: String,
     val pageCount: Double,
     val contents: ChapterContents?,
+    val date: SimpleDate? = null,
 )
 
 
@@ -82,7 +83,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     //local persistence is so much easier now, i just backup
 
-    private var library: MutableSet<MangaInfo> = mutableSetOf()
+    var library: MutableSet<MangaInfo> = mutableSetOf()
     private var idSet: MutableSet<String> = mutableSetOf()
 
     private var tagMap: MutableMap<Tag,String> = mutableMapOf()
@@ -175,6 +176,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         backUpManga(context)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Map<String,String> = mapOf(), demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<String>): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
         Log.d("TAG", "searchALlManga: starting first get request")
 
@@ -286,7 +288,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                         contructedUrl,
                                         offSet,
                                         false,
-                                        mutableListOf(),
+                                        Pair(OffsetDateTime.MIN,mutableListOf()),
                                         tags
                                     )
                                 )
@@ -309,16 +311,15 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         }
     }
 
+    // make it so that it can pull off library autmatically instead of calling a get request.
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun chapList(id: String): Pair<List<Chapter>, OffsetDateTime> {
         val TAG = "TAG"
         try {
             val responses = mutableListOf(apiService.getChapterList(id,0))
-            Log.d(TAG, "chapList first response: ${responses[0]["limit"]}")
             val totalChapters = responses[0]["total"] as Double
             var offSet = 0
             while (offSet < totalChapters){
-                Log.d(TAG, "1 pass done for pagination")
                 responses.add(apiService.getChapterList(id,offSet))
                 offSet += 1000
             }
@@ -335,12 +336,11 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                 if (attributes["translatedLanguage"] != "en"){
                                     return@forEach
                                 }
-                                Log.d(TAG, "chapList: volume is ${attributes["volume"]} and chapters ${attributes["chapter"]}")
                                 val volume = attributes["volume"].toString().toDoubleOrNull() ?: -1.0
                                 val chapter = attributes["chapter"].toString().toDoubleOrNull() ?: -1.0
-                                val title = attributes["title"].toString()
+                                val title = attributes["title"] as? String ?: ""
                                 val pageCount = attributes["pages"] as? Double ?: -1.0
-                                val time = OffsetDateTime.parse(attributes["updatedAt"].toString())
+                                val time = SimpleDate(attributes["readableAt"].toString())
                                 val type = response["type"].toString()
 
                                 val relationships = response["relationships"]
@@ -359,7 +359,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                     }
                                 }
 
-                                chapterObjects.add(Chapter(title,chapterId,volume,chapter,group,type,pageCount,null))
+                                chapterObjects.add(Chapter(title,chapterId,volume,chapter,group,type,pageCount,null,time))
                             }
                         }
                     }
@@ -369,8 +369,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             Log.d("TAG", "chapList: found ${chapterObjects.size} chapters")
             library.map { elm ->
                 if (elm.id == id){
-                    Log.d(TAG, "chapList: commencing sotrage of chapter list")
-                    elm.copy(chapterList = chapterObjects)
+                    elm.copy(chapterList = Pair(OffsetDateTime.now(),chapterObjects))
                 } else {
                     elm
                 }
@@ -419,6 +418,22 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
 
 
+}
+
+data class SimpleDate(
+    val day: Int,
+    val month: Int,
+    val year: Int,
+){
+    override fun toString(): String {
+        return "$day/$month/$year"
+    }
+
+    constructor(date: String): this(
+        date.split("-")[2].substring(0..1).toInt(),
+        date.split("-")[1].toInt(),
+        date.split("-")[0].toInt()
+    )
 }
 
 //right now for library swapped mangaInfo objects, it doesnt properly work? as in it tries to load the chapters but gets a http 400?

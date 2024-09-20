@@ -1,9 +1,12 @@
 package com.example.poomagnet.App
 
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,15 +29,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun App() {
     val viewModel: AppViewModel = viewModel()
     val uiState = viewModel.uiState.collectAsState().value
-    val homeViewModel: HomeViewModel = viewModel()
+    val homeViewModel: HomeViewModel = hiltViewModel()
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
     val mangaViewModel: MangaSpecificViewModel = hiltViewModel()
-
 
 
     val simpleBack: () -> Unit = { viewModel.viewModelScope.launch {
@@ -49,6 +52,7 @@ fun App() {
         simpleBack();
     }
 
+    val currentScrollStateSearch = rememberLazyGridState()
 
     
     Scaffold(
@@ -77,14 +81,14 @@ fun App() {
 
     ) { innerPadding ->
         when (uiState.currentScreen) {
-            ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding))
+            ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding), {},homeViewModel)
             ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
-            })
+            }, currentScrollStateSearch)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding))
+                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel)
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

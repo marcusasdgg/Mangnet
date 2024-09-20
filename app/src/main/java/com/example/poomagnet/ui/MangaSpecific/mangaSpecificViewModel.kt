@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 //make sure to not overwrite the old chapter list objects and add the new ones in.
@@ -81,7 +82,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             val chapterlist = mangaDexRepository.chapList(id)
             _uiState.update {
                 it.copy(
-                    currentManga = it.currentManga?.copy(chapterList = chapterlist.first)
+                    currentManga = it.currentManga?.copy(chapterList = Pair(OffsetDateTime.now(),chapterlist.first))
                 )
             }
         }

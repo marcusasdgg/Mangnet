@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -213,10 +214,11 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
 fun SearchScreen(
     modifier: Modifier = Modifier,
     searchViewModel: SearchViewModel,
-    setCurrentManga: (MangaInfo) -> Unit
+    setCurrentManga: (MangaInfo) -> Unit,
+    currentScrollState: LazyGridState
 ) {
     val sheetState = rememberModalBottomSheetState()
-    val currentScrollState = rememberLazyGridState()
+
 
     val uiState by searchViewModel.uiState.collectAsState()
 
@@ -224,6 +226,7 @@ fun SearchScreen(
     // i need this so that on first load of the search screen, the default tag is follow count, but once
     // changed i need to make it so that it is by Relevance
     LaunchedEffect(uiState.searchText, uiState.somethingChanged) {
+        Log.d("TAG", "SearchScreen: effect launched")
         if (uiState.firstLoad){
             Log.d("TAG", "First Load detected: ")
             searchViewModel.selectFirstOrder(Ordering.Followed_Count, Pair(true, Direction.Ascending))
@@ -238,11 +241,14 @@ fun SearchScreen(
             searchViewModel.executeSearch()
             searchViewModel.changeSecondLoad()
         } else {
-            Log.d("TAG", "Normal Load detected: ")
-            currentScrollState.scrollToItem(0)
-            searchViewModel.executeSearch()
-            searchViewModel.setFlag(false)
-            Log.d("TAG", "Ding")
+            Log.d("TAG", "Normal Load detected: ${uiState.somethingChanged}")
+            if (uiState.oldText != uiState.searchText|| uiState.somethingChanged){
+                Log.d("TAG", "SearchScreen: old text !== new test and something changed")
+                currentScrollState.scrollToItem(0)
+                searchViewModel.executeSearch()
+                searchViewModel.setFlag(false)
+                Log.d("TAG", "Ding")
+            }
         }
     }
 
