@@ -139,7 +139,6 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     ChapterListing(Modifier.height(60.dp),
                         {mangaViewModel.viewModelScope.launch {
                             mangaViewModel.getChapterUrls(elm.id)
-                            delay(1000)
                             mangaViewModel.enterReadMode(true)
                             hideTopBar(true)
                         }
