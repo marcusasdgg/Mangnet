@@ -45,6 +45,7 @@ fun App() {
         delay(80)
         viewModel.hideBotBar(false)
         viewModel.changeToPrevious()
+        viewModel.hideTopBar(false)
         Log.d("TAG", "App: end refresh")
     } }
 
@@ -92,7 +93,7 @@ fun App() {
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)
-                MangaScreen(Modifier.padding(innerPadding),mangaViewModel, searchViewModel::addManga)
+                MangaScreen(Modifier.padding(innerPadding),mangaViewModel, searchViewModel::addManga, viewModel::hideTopBar)
             }
         }
     }

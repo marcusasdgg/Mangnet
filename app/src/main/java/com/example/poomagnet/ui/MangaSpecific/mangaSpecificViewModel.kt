@@ -7,8 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.poomagnet.App.ScreenType
+import com.example.poomagnet.mangaDex.dexApiService.Chapter
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaDex.dexApiService.isOnline
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,12 +44,50 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getChapterUrls(chapterId: String){
+        val new_chapter = uiState.value.currentManga?.chapterList?.second?.map { elm ->
+            if (elm.id == chapterId && (elm.contents == null || elm.contents.isOnline)){
+                val s =  mangaDexRepository.getChapterContents(chapterId)
+                Log.d("TAG", "getChapterUrls: $s")
+                elm.copy(contents =s)
+            }else {
+                elm
+            }
+        }
+
+        _uiState.update {
+            it.copy(
+                currentManga = it.currentManga?.copy(chapterList = it.currentManga.chapterList?.copy(second = new_chapter?: listOf()))
+            )
+        }
+    }
+
     fun makeVisible(boolean: Boolean){
         _uiState.update {
             it.copy(
                 visible = boolean
             )
         }
+    }
+
+    fun enterReadMode(boolean: Boolean, curr: Chapter?){
+        if (boolean){
+            _uiState.update {
+                it.copy(
+                    inReadMode = boolean,
+                    currentChapter = curr
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    inReadMode = boolean,
+                    currentChapter = null,
+                )
+            }
+        }
+
     }
 
     //need to add extra function to download image and store it.

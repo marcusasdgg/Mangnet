@@ -74,7 +74,7 @@ data class Chapter(
 
 
 sealed class ChapterContents {
-    data class Downloaded(val imagePaths: List<String>, val timeRetrieved: OffsetDateTime) : ChapterContents()
+    data class Downloaded(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
     data class Online(val imagePaths: List<String>) : ChapterContents()
 }
 
@@ -430,7 +430,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
 
     //add support for datasaver later.
-    private suspend fun getChapterContents(id: String): List<String>{
+   suspend fun getChapterContents(id: String): ChapterContents {
         val response = apiService.getChapterPagesInfo(id)
         val baseUrl = response["baseUrl"]
         val chapterInfo = response["chapter"]
@@ -445,7 +445,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 }
             }
         }
-        return list
+        return ChapterContents.Downloaded(list.map {elm -> Pair(elm, false) }, false)
     }
 
     private suspend fun downloadImage(url: String, id: String): Bitmap? {
