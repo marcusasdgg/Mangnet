@@ -92,7 +92,7 @@ fun App() {
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)
-                MangaScreen(Modifier.padding(innerPadding),mangaViewModel)
+                MangaScreen(Modifier.padding(innerPadding),mangaViewModel, searchViewModel::addManga)
             }
         }
     }

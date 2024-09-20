@@ -32,22 +32,7 @@ import com.google.gson.JsonSerializationContext
 import java.lang.reflect.Type
 import java.util.Date
 
-class OffsetDateTimeTypeAdapter : JsonSerializer<OffsetDateTime>, JsonDeserializer<OffsetDateTime> {
-    override fun serialize(src: OffsetDateTime?, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        // Convert OffsetDateTime to string
-        return JsonPrimitive(src?.toString())
-    }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun deserialize(json: JsonElement?, typeOfT: Type, context: JsonDeserializationContext): OffsetDateTime {
-        // Convert string back to OffsetDateTime
-        return if (json == null || json.asString.isEmpty()) {
-            OffsetDateTime.now() // Provide a fallback if the value is null or empty
-        } else {
-            OffsetDateTime.parse(json.asString)
-        }
-    }
-}
 
 enum class mangaState {
     IN_PROGRESS,
@@ -101,14 +86,13 @@ val ChapterContents.isOnline: Boolean
 
 
 
-
+@RequiresApi(Build.VERSION_CODES.O)
 class MangaDexRepository @Inject constructor(private val context: Context)  {
     private val apiService = RetrofitInstance.api
     //add local database jargon blah blah later. learn SQL.
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val gsonSerializer = GsonBuilder()
-        .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeTypeAdapter()) // Register adapter
         .create()
 
     //local persistence is so much easier now, i just backup
@@ -162,6 +146,12 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             Log.d("TAG", "printBackUp: ${file.readText()}")
         }
     }
+    
+    private fun printLibrary(){
+        Log.d("TAG", "printLibrary: $library")
+    }
+
+
 
 
     private fun loadMangaFromBackup(context: Context) {
@@ -207,8 +197,13 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
 
     suspend fun addToLibrary(manga: MangaInfo) {
+        if (idSet.contains(manga.id)){
+            Log.d("TAG", "already in library ")
+            return
+        }
         library.add(manga)
         idSet.add(manga.id)
+        printLibrary()
         backUpManga(context)
         Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
     }
@@ -341,12 +336,10 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                     }
                 }
             } else {
-                Log.d("TAG", "searchALlManga: finsihed first get request")
                 return Pair(listOf<MangaInfo>(), 0)
             }
 
             val limit: Int = s["total"].toString().toIntOrNull() ?: 0
-            Log.d("TAG", "searchALlManga: finsihed first get request")
             return Pair(list, limit);
         } catch(e : Exception) {
             Log.d("TAG", "search failed $e")
@@ -409,7 +402,6 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 }
             }
             backUpManga(context)
-            Log.d("TAG", "chapList: found ${chapterObjects.size} chapters")
             library.map { elm ->
                 if (elm.id == id){
                     elm.copy(chapterList = Pair(Date(),chapterObjects))

@@ -1,6 +1,8 @@
     package com.example.poomagnet.ui.HomeScreen
 
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,11 +14,13 @@ import javax.inject.Inject
 
     //make this a hilt view model and inject mangadex api object in.
 @HiltViewModel
+@RequiresApi(Build.VERSION_CODES.O)
 class HomeViewModel @Inject constructor(
     private val mangaDexRepository: MangaDexRepository
     ): ViewModel() {
     private val _uistate = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uistate
+
 
     public fun syncLibrary(){
         _uistate.update {

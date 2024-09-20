@@ -57,7 +57,9 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         if (currentManga != null) {
             // Toggle the inLibrary value
             val newManga = currentManga.copy(inLibrary = !currentManga.inLibrary)
-
+            val TAG = "TAG"
+            Log.d(TAG, "addToLibrary: current state: ${currentManga.inLibrary}")
+            Log.d(TAG, "addToLibrary: new state: ${newManga.inLibrary}")
             // Launch coroutine to handle state update and repository operation sequentially
             this.viewModelScope.launch {
                 // Add or remove manga from the library based on the toggled value

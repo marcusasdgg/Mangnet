@@ -70,7 +70,7 @@ import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificViewModel) {
+fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificViewModel, onAdd: () -> Unit) {
     val uiState by mangaViewModel.uiState.collectAsState()
     val scrollstate = rememberScrollState()
     LaunchedEffect(Unit) {
@@ -110,7 +110,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                         .fillMaxHeight()){
                     Text(uiState.currentManga?.type ?: "null", Modifier.weight(1f))
                     Text(uiState.currentManga?.state.toString() ?: "null", Modifier.weight(1f))
-                    AddToButton(Modifier.weight(2f).padding(20.dp,20.dp), {mangaViewModel.addToLibrary()}, uiState.currentManga?.inLibrary ?: false)
+                    AddToButton(Modifier.weight(2f).padding(20.dp,20.dp), {mangaViewModel.addToLibrary(); onAdd()}, uiState.currentManga?.inLibrary ?: false)
                 }
             }
             Spacer(Modifier.height(10.dp))

@@ -60,6 +60,23 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun addManga(){
+        _uiState.update {
+            it.copy(
+                somethingAdded = true
+            )
+        }
+    }
+
+    fun resetAddManga(){
+        _uiState.update {
+            it.copy(
+                somethingAdded = false
+            )
+        }
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun executeSearch() {
         val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()

@@ -24,7 +24,8 @@ data class SearchUiState (
     val somethingChanged: Boolean = false,
     val firstLoad: Boolean = true,
     val secondLoad: Boolean = true,
-    val oldText: String = ""
+    val oldText: String = "",
+    val somethingAdded: Boolean = false,
 )
 
 enum class Direction(val msg: String) {
