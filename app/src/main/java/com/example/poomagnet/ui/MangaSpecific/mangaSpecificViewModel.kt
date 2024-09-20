@@ -59,6 +59,31 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+    fun toggleReadBar(boolean: Boolean = !_uiState.value.readBarVisible){
+        _uiState.update {
+            it.copy(
+                readBarVisible = boolean
+            )
+        }
+    }
+
+    fun toggleHomeBar(boolean: Boolean = !_uiState.value.homeBarVisible){
+        _uiState.update {
+            it.copy(
+                homeBarVisible = boolean
+            )
+        }
+    }
+
+
+    fun updateCurrentpage(page: Int){
+        _uiState.update{
+            it.copy(
+                currentPage = page
+            )
+        }
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getChapterUrls(chapterId: String){

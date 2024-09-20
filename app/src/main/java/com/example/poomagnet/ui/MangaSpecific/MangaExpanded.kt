@@ -160,6 +160,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 delay(80)
                 hideTopBar(false)
                 mangaViewModel.enterReadMode(false)
+                mangaViewModel.toggleReadBar()
             }
         }
 

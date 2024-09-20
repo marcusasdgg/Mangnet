@@ -8,6 +8,9 @@ data class mangaUiState(
     val visible: Boolean = false,
     val inReadMode: Boolean = false,
     val currentChapter: Chapter? = null,
+    val readBarVisible: Boolean = false,
+    val currentPage: Int = 0,
+    val homeBarVisible: Boolean = false,
 )
 
 
