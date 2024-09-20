@@ -143,7 +143,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             hideTopBar(true)
                         }
                         }
-                        ,elm.volume,elm.chapter, elm.name,elm.date)
+                        ,elm.chapter,elm.volume, elm.name,elm.date)
                 }
             }
         }

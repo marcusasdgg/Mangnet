@@ -66,7 +66,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
         }
     }
     val configuration = LocalConfiguration.current
-
+    //wrap this whole thing in a scaffold so we can have bottom and top bar.
     LazyRow(modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, flingBehavior = state, state = listState) {
         if (s !== null){
             when(s){

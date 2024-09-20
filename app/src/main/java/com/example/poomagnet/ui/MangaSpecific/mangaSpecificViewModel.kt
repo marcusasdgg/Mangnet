@@ -45,6 +45,21 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
     }
 
+    fun orderManga(){
+        _uiState.update { ot ->
+            ot.copy(
+                currentManga = ot.currentManga?.copy(
+                    chapterList = ot.currentManga.chapterList?.copy(
+                        second = ot.currentManga.chapterList?.second?.sortedWith(
+                            compareByDescending<Chapter> { it.volume }.thenByDescending { it.chapter }
+                        )?: listOf()
+                    )
+                )
+            )
+        }
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getChapterUrls(chapterId: String){
         var t: Chapter? = null;
@@ -78,6 +93,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             )
         }
     }
+
 
     fun enterReadMode(boolean: Boolean){
         if (!boolean){
@@ -134,6 +150,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                     currentManga = it.currentManga?.copy(chapterList = Pair(Date(),chapterlist.first))
                 )
             }
+            orderManga()
         }
     }
 
