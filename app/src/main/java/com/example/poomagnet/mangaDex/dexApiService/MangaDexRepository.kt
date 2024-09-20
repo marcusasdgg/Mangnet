@@ -10,6 +10,10 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +25,29 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.time.OffsetDateTime
 import javax.inject.Inject
+
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import java.lang.reflect.Type
+import java.util.Date
+
+class OffsetDateTimeTypeAdapter : JsonSerializer<OffsetDateTime>, JsonDeserializer<OffsetDateTime> {
+    override fun serialize(src: OffsetDateTime?, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        // Convert OffsetDateTime to string
+        return JsonPrimitive(src?.toString())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun deserialize(json: JsonElement?, typeOfT: Type, context: JsonDeserializationContext): OffsetDateTime {
+        // Convert string back to OffsetDateTime
+        return if (json == null || json.asString.isEmpty()) {
+            OffsetDateTime.now() // Provide a fallback if the value is null or empty
+        } else {
+            OffsetDateTime.parse(json.asString)
+        }
+    }
+}
 
 enum class mangaState {
     IN_PROGRESS,
@@ -40,7 +67,7 @@ data class MangaInfo(
     val coverArtUrl: String,
     val offSet: Int,
     var inLibrary: Boolean = false,
-    var chapterList: Pair<OffsetDateTime, List<Chapter>>? = null,
+    var chapterList: Pair<Date, List<Chapter>>? = null,
     val tagList: MutableList<String> = mutableListOf(),
 )
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
@@ -79,7 +106,10 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     private val apiService = RetrofitInstance.api
     //add local database jargon blah blah later. learn SQL.
 
-    private val gsonSerializer = Gson()
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val gsonSerializer = GsonBuilder()
+        .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeTypeAdapter()) // Register adapter
+        .create()
 
     //local persistence is so much easier now, i just backup
 
@@ -126,6 +156,14 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         }
     }
 
+    private fun printBackUp(){
+        val file = File(context.filesDir, "backup.txt")
+        if (file.exists()){
+            Log.d("TAG", "printBackUp: ${file.readText()}")
+        }
+    }
+
+
     private fun loadMangaFromBackup(context: Context) {
         try {
             // Read the file content from backup.txt
@@ -148,7 +186,9 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun backUpManga(context: Context){
+        Log.d("TAG", "commencing backup: $library")
         val file = File(context.filesDir, "backup.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
@@ -160,6 +200,9 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                     )
                 }
             }
+        }
+        withContext(Dispatchers.IO) {
+            printBackUp()
         }
     }
 
@@ -288,7 +331,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                                         contructedUrl,
                                         offSet,
                                         false,
-                                        Pair(OffsetDateTime.MIN,mutableListOf()),
+                                        Pair(Date(0),mutableListOf()),
                                         tags
                                     )
                                 )
@@ -313,7 +356,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     // make it so that it can pull off library autmatically instead of calling a get request.
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun chapList(id: String): Pair<List<Chapter>, OffsetDateTime> {
+    suspend fun chapList(id: String): Pair<List<Chapter>, Date> {
         val TAG = "TAG"
         try {
             val responses = mutableListOf(apiService.getChapterList(id,0))
@@ -369,16 +412,16 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             Log.d("TAG", "chapList: found ${chapterObjects.size} chapters")
             library.map { elm ->
                 if (elm.id == id){
-                    elm.copy(chapterList = Pair(OffsetDateTime.now(),chapterObjects))
+                    elm.copy(chapterList = Pair(Date(),chapterObjects))
                 } else {
                     elm
                 }
             }
-            return Pair(chapterObjects, OffsetDateTime.now())
+            return Pair(chapterObjects, Date())
 
         } catch(e: HttpException){
             Log.d("TAG", "chapList: failed to get chapters ${e.message} ${e.response()?.errorBody()?.string()}")
-            return Pair(listOf(), OffsetDateTime.now())
+            return Pair(listOf(), Date())
         }
     }
 
