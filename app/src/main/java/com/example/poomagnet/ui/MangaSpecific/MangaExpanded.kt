@@ -74,7 +74,6 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
     val uiState by mangaViewModel.uiState.collectAsState()
     val scrollstate = rememberScrollState()
     LaunchedEffect(Unit) {
-        delay(100)
         mangaViewModel.getChapterInfo()
     }
 

@@ -66,7 +66,7 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo){
                     .fillMaxHeight()
                     .fillMaxWidth(0.32f)
             )
-            Column(Modifier.fillMaxWidth(0.8f)) {
+            Column(Modifier.fillMaxWidth(0.7f)) {
                 Box(modifier = Modifier
                     .fillMaxWidth()
                     .height(45.dp), contentAlignment = Alignment.Center) {
