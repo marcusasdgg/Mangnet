@@ -201,11 +201,23 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             Log.d("TAG", "already in library ")
             return
         }
-        library.add(manga)
-        idSet.add(manga.id)
-        printLibrary()
-        backUpManga(context)
-        Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
+        var mang = manga
+        if(manga.chapterList?.second?.size  == 0){
+            val chapterList = chapList(mang.id)
+            Log.d("TAG", "no chapters found trying again")
+            mang = manga.copy(chapterList = Pair(chapterList.second, chapterList.first))
+            library.add(mang)
+            idSet.add(manga.id)
+            printLibrary()
+            backUpManga(context)
+            Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
+        } else {
+            library.add(mang)
+            idSet.add(manga.id)
+            printLibrary()
+            backUpManga(context)
+            Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
+        }
     }
 
     suspend fun removeFromLibrary(manga: MangaInfo?){
