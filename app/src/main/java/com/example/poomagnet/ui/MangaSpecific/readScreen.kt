@@ -9,6 +9,8 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -23,7 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -61,7 +65,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
             }
         }
     }
-
+    val configuration = LocalConfiguration.current
 
     LazyRow(modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, flingBehavior = state, state = listState) {
         if (s !== null){
@@ -76,11 +80,11 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                             AsyncImage(
                                 model = ImageRequest.Builder(context)
                                     .data(item.first)
-                                    .crossfade(true) // Enables crossfade animation for smooth loading
+                                    .crossfade(true)
                                     .build(),
-                                contentDescription = "Centered Image",
-                                contentScale = ContentScale.Fit, // Stretch the image diagonally, keeping aspect ratio
-                                modifier = Modifier.fillMaxSize() // Make the image fill the screen
+                                contentDescription = "",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -98,8 +102,8 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                     .crossfade(true) // Enables crossfade animation for smooth loading
                                     .build(),
                                 contentDescription = "Centered Image",
-                                contentScale = ContentScale.Fit, // Stretch the image diagonally, keeping aspect ratio
-                                modifier = Modifier.fillMaxSize() // Make the image fill the screen
+                                contentScale = ContentScale.Fit, // Stretch the image diagonally, keeping aspect ratio // Make the image fill the screen
+                                modifier = Modifier.width(configuration.screenWidthDp.dp)
                             )
                         }
                     }
