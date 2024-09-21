@@ -160,7 +160,9 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             )
                         ) {
                             Text(
-                                text = if (uiState.latestChapterReadId == "") "Start" else "Continue",
+                                text = if (uiState.latestChapterReadId == (uiState.currentManga?.chapterList?.second?.lastOrNull()?.id
+                                        ?: "")
+                                ) "Start" else "Continue",
                                 fontSize = 14.sp,
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center
