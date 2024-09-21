@@ -82,7 +82,6 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
     val scrollstate = rememberScrollState()
     LaunchedEffect(Unit) {
         mangaViewModel.getChapterInfo()
-        mangaViewModel.latestUnReadChapter()
     }
 
     AnimatedVisibility(
@@ -138,17 +137,26 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 }
             }
             Spacer(Modifier.height(20.dp))
-            Box(Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.CenterStart){
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(40.dp), contentAlignment = Alignment.CenterStart){
                 Text("${uiState.currentManga?.chapterList?.second?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                         Button(
                             shape = RoundedCornerShape(100),
                             onClick = {
                                 mangaViewModel.viewModelScope.launch {
-                                    mangaViewModel.getChapterUrls(uiState.latestChapterReadId)
-                                    mangaViewModel.enterReadMode(true)
-                                    hideTopBar(true)
-                                    mangaViewModel.setFlag(true)
+                                    var currentManga = uiState.currentManga!!.chapterList?.second?.lastOrNull()?.id
+                                    if (uiState.currentManga?.lastReadChapter?.first !== ""){
+                                        currentManga = uiState.currentManga?.lastReadChapter?.first
+                                    }
+                                    if (currentManga !== null){
+                                        mangaViewModel.getChapterUrls(currentManga)
+                                        mangaViewModel.enterReadMode(true)
+                                        hideTopBar(true)
+                                        mangaViewModel.setFlag(true)
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -160,9 +168,9 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             )
                         ) {
                             Text(
-                                text = if (uiState.latestChapterReadId == (uiState.currentManga?.chapterList?.second?.lastOrNull()?.id
-                                        ?: "")
-                                ) "Start" else "Continue",
+                                text = if (uiState.currentManga!!.lastReadChapter.first == ""
+                                ) "Start" else "Continue"
+                                ,
                                 fontSize = 14.sp,
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center

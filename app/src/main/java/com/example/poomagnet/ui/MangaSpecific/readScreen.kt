@@ -217,9 +217,12 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
 
 
     BackHandler {
-        viewModel.toggleHomeBar(true)
-        viewModel.toggleReadBar(true)
-        returner()
+        viewModel.viewModelScope.launch {
+            viewModel.toggleHomeBar(true)
+            viewModel.toggleReadBar(true)
+            viewModel.updateLastChapterRead(uiState.currentChapter!!.id, uiState.currentPage)
+            returner()
+        }
     }
 
     if (!view.isInEditMode){
@@ -265,9 +268,12 @@ fun MangaTopBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
         TopAppBar(
             title = {Text("Vol.${uiState.currentChapter?.volume} Ch. ${uiState.currentChapter?.chapter} ${uiState.currentChapter?.name}")},
             navigationIcon = {
-                IconButton(onClick = { viewModel.toggleHomeBar(true)
+                IconButton(onClick = { viewModel.viewModelScope.launch {
+                    viewModel.toggleHomeBar(true)
                     viewModel.toggleReadBar(true)
-                    returner() }) {
+                    viewModel.updateLastChapterRead(uiState.currentChapter!!.id, uiState.currentPage)
+                    returner()
+                }}) {
                     Icon(
                         Icons.AutoMirrored.Default.ArrowBack,
                         contentDescription = null

@@ -56,6 +56,7 @@ data class MangaInfo(
     var inLibrary: Boolean = false,
     var chapterList: Pair<Date, List<Chapter>>? = null,
     val tagList: MutableList<String> = mutableListOf(),
+    val lastReadChapter: Pair<String,Int> = Pair("",0)
 )
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.

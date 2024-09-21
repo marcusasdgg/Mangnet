@@ -100,8 +100,9 @@ fun App() {
                 openLast = {manga ->
                     mangaViewModel.viewModelScope.launch {
                         mangaViewModel.selectCurrentManga(manga)
-                        mangaViewModel.latestUnReadChapter()
-                        mangaViewModel.getChapterUrls(mangaViewModel.uiState.value.latestChapterReadId)
+                        if (mangaViewModel.uiState.value.currentManga !== null){
+                            mangaViewModel.getChapterUrls(mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first ?: mangaViewModel.uiState.value.currentManga!!.chapterList?.second?.last()!!.id)
+                        }
                         mangaViewModel.enterReadMode(true)
                         viewModel.hideTopBar(true)
                         viewModel.hideBotBar(true)

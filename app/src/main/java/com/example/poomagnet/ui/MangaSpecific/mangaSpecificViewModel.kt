@@ -308,61 +308,15 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
-    fun latestUnReadChapter(){
-        var latestRead =
-            uiState.value.currentManga?.chapterList?.second?.indexOfFirst { elm ->
-
-                if (elm.finished){
-                    Log.d("TAG", "latestUnReadChapter: $elm")
-                }
-                return@indexOfFirst elm.finished
-            }
-                ?.plus(-1)
-
-        if (latestRead == null || latestRead == -2){
-            latestRead = uiState.value.currentManga?.chapterList?.second?.size?.minus(1)
-            if (latestRead !== null){
-                val chapId = uiState.value.currentManga?.chapterList?.second?.getOrNull(latestRead)?.id
-                if (chapId !== null){
-                    _uiState.update {
-                        it.copy(
-                            latestChapterReadId = chapId
-                        )
-                    }
-                } else {
-                    Log.d("TAG", "latestUnReadChapter: wtf id not found")
-                    _uiState.update {
-                        it.copy(
-                            latestChapterReadId = ""
-                        )
-                    }
-                }
-            }
-            return
-        }
-
-        Log.d("TAG", "attempting to retrieve chapter at index $latestRead")
-
-        val chapId = uiState.value.currentManga?.chapterList?.second?.getOrNull(latestRead)?.id
-
-
-        if (chapId !== null){
-            _uiState.update {
-                it.copy(
-                    latestChapterReadId = chapId
+    suspend fun updateLastChapterRead(chapterId: String, pageCount: Int){
+        _uiState.update {
+            it.copy(
+                currentManga = it.currentManga?.copy(
+                    lastReadChapter = Pair(chapterId,pageCount)
                 )
-            }
-        } else {
-            Log.d("TAG", "latestUnReadChapter: wtf id not found")
-            _uiState.update {
-                it.copy(
-                    latestChapterReadId = ""
-                )
-            }
+            )
         }
-
-
-
+        updateLibraryEquivalent()
     }
 
     fun resetState(){
