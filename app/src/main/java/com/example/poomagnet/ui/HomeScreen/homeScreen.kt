@@ -57,7 +57,7 @@ import com.example.poomagnet.ui.VerticalCard
 import java.util.logging.Filter
 
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType) {
+fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType, openLast: (MangaInfo)-> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.syncLibrary()
@@ -70,6 +70,8 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
                     .fillMaxWidth()
                     .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) }, engageChapter = { id ->
                     readChapter(id,manga)
+                }, openLast = {
+                    openLast(manga)
                 }
                 )
                 Spacer(Modifier.fillMaxWidth().height(10.dp))

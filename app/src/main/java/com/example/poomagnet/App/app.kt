@@ -96,14 +96,26 @@ fun App() {
                     mangaViewModel.setFlag(true)
                     viewModel.changeScreen(ScreenType.MangaSpecific)
                 }
-            }, currentScreen = uiState.currentScreen)
+            }, currentScreen = uiState.currentScreen,
+                openLast = {manga ->
+                    mangaViewModel.viewModelScope.launch {
+                        mangaViewModel.selectCurrentManga(manga)
+                        mangaViewModel.latestUnReadChapter()
+                        mangaViewModel.getChapterUrls(mangaViewModel.uiState.value.latestChapterReadId)
+                        mangaViewModel.enterReadMode(true)
+                        viewModel.hideTopBar(true)
+                        viewModel.hideBotBar(true)
+                        mangaViewModel.setFlag(true)
+                        viewModel.changeScreen(ScreenType.MangaSpecific)
+                    }
+                })
             ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
             }, currentScrollStateSearch)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->}, ScreenType.Settings)
+                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->}, ScreenType.Settings, {})
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)
@@ -114,5 +126,5 @@ fun App() {
 
 }
 
-
+//add a dot on the right side of the mangacard instead of the current icon to indicate when something has been updated with new stuff.
 //addcomment

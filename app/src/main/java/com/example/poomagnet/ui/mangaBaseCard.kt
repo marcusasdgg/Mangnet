@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -167,7 +168,7 @@ fun MangaCard(modifier: Modifier = Modifier, type: displayType, manga: mangaInfo
 }
 
 @Composable
-fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit){
+fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit, openLast: () -> Unit){
     Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp).clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
             AsyncImage(
@@ -187,7 +188,13 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                     .fillMaxWidth()
                     .height(48.dp), contentAlignment = Alignment.Center) {
                     Text(manga.title, fontSize = 18.sp, modifier = Modifier.fillMaxWidth(0.82f).align(Alignment.CenterStart).padding(11.dp,0.dp,0.dp,0.dp), overflow = TextOverflow.Ellipsis, maxLines = 2)
-                    Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.align(Alignment.CenterEnd).padding(0.dp,0.dp,9.dp,0.dp))
+                    IconButton(
+                        onClick = {openLast()},
+                        Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.padding(0.dp,0.dp,9.dp,0.dp))
+                    }
+
                 }
                 LazyColumn(modifier = Modifier.fillMaxWidth(0.82f).fillMaxHeight()) {
                     Log.d("TAG", "VerticalCard: found ${manga.chapterList?.second?.size} chapters")
