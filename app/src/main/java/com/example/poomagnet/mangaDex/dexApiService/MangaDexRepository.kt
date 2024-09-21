@@ -69,6 +69,8 @@ data class Chapter(
     val pageCount: Double,
     val contents: ChapterContents?,
     val date: SimpleDate? = null,
+    val lastPageRead: Int = 0,
+    val finished: Boolean = false,
 )
 
 
@@ -434,6 +436,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         val response = apiService.getChapterPagesInfo(id)
         val baseUrl = response["baseUrl"]
         val chapterInfo = response["chapter"]
+        Log.d("TAG", "getChapterContents: response is $response")
         var hash = ""
         val list: MutableList<String> = mutableListOf()
         if (chapterInfo is Map<*,*>){
@@ -463,6 +466,21 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             null
         }
     }
+
+    suspend fun updateInLibrary(manga: MangaInfo){
+        Log.d("TAG", "updateInLibrary: receieved $manga")
+        library = library.map { elm ->
+            if (manga.id == elm.id){
+                Log.d("TAG", "updateInLibrary: found manga")
+                manga
+            }else {
+                elm
+            }
+        }.toMutableSet()
+
+        backUpManga(context)
+    }
+
 
 
 }

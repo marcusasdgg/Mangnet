@@ -42,6 +42,7 @@ fun App() {
 
     val simpleBack: () -> Unit = { viewModel.viewModelScope.launch {
         mangaViewModel.makeVisible(false)
+        mangaViewModel.updateLibraryEquivalent()
         delay(80)
         viewModel.hideBotBar(false)
         viewModel.changeToPrevious()
@@ -82,14 +83,17 @@ fun App() {
 
     ) { innerPadding ->
         when (uiState.currentScreen) {
-            ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding), {},homeViewModel)
+            ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding), {},homeViewModel, setCurrentManga =  { elm ->
+                viewModel.changeScreen(ScreenType.MangaSpecific)
+                mangaViewModel.selectCurrentManga(elm)
+            },)
             ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
             }, currentScrollStateSearch)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel)
+                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {})
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

@@ -141,9 +141,10 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             mangaViewModel.getChapterUrls(elm.id)
                             mangaViewModel.enterReadMode(true)
                             hideTopBar(true)
+                            mangaViewModel.setFlag(true)
                         }
                         }
-                        ,elm.chapter,elm.volume, elm.name,elm.date)
+                        ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished)
                 }
             }
         }
@@ -160,14 +161,12 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 delay(80)
                 hideTopBar(false)
                 mangaViewModel.enterReadMode(false)
-                mangaViewModel.toggleReadBar()
+                Log.d("TAG", "MangaScreen: ${mangaViewModel.uiState.value}")
             }
         }
 
-        BackHandler {
-            returner()
-        }
-        ReadScreen(Modifier,mangaViewModel,returner)
+
+        ReadScreen(Modifier,mangaViewModel,{returner() })
 
     }
 }
@@ -193,24 +192,28 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
 }
 
 @Composable
-fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?){
+fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?, ifRead: Boolean){
     Box(
         modifier
             .fillMaxWidth()
             .clickable { onclick() }){
-        Text("Vol.${volume.toInt()} Ch. $chapter ${if (name !== "null") name else ""}",
+        Text("${if (volume.toInt() == -1) "" else "Vol.${volume.toInt()}" } Ch. ${if (chapter == -1.0) "Undefined" else chapter.toString()} ${if (name !== "null") name else ""}",
             Modifier
                 .align(Alignment.TopStart)
                 .padding(20.dp, 5.dp, 0.dp, 0.dp)
-                .fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1)
+                .fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1,
+            color = if (ifRead) Color.Gray else Color.Unspecified,
+        )
+
         Icon(Icons.AutoMirrored.Filled.OpenInNew, "",
             Modifier
                 .align(Alignment.CenterEnd)
-                .padding(0.dp, 0.dp, 15.dp, 0.dp), tint = Color.Gray)
+                .padding(0.dp, 0.dp, 15.dp, 0.dp), tint = if (ifRead) Color.DarkGray else Color.Gray)
         Text(date.toString(),
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(27.dp, 0.dp, 0.dp, 5.dp))
+                .padding(27.dp, 0.dp, 0.dp, 5.dp),
+            color = if (ifRead) Color.Gray else Color.Unspecified,)
     }
 }
 

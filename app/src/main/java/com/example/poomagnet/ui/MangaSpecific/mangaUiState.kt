@@ -11,6 +11,9 @@ data class mangaUiState(
     val readBarVisible: Boolean = false,
     val currentPage: Int = 0,
     val homeBarVisible: Boolean = false,
+    val previousChapter: Chapter? = null,
+    val nextChapter: Chapter? = null,
+    val nextFlag: Boolean = true,
 )
 
 

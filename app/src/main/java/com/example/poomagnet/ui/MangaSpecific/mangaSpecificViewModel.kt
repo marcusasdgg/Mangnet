@@ -1,9 +1,11 @@
 package com.example.poomagnet.ui.MangaSpecific
 
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.poomagnet.App.ScreenType
@@ -13,6 +15,7 @@ import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.isOnline
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,9 +54,33 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                 currentManga = ot.currentManga?.copy(
                     chapterList = ot.currentManga.chapterList?.copy(
                         second = ot.currentManga.chapterList?.second?.sortedWith(
-                            compareByDescending<Chapter> { it.volume }.thenByDescending { it.chapter }
+                            compareByDescending<Chapter> { it.chapter }.thenByDescending { it.volume }
                         )?: listOf()
                     )
+                )
+            )
+        }
+    }
+
+    fun filterSame(){
+        _uiState.update {
+            ot ->
+            ot.copy(
+                currentManga = ot.currentManga?.copy(
+                    chapterList = ot.currentManga.chapterList?.copy(
+                        second = ot.currentManga.chapterList?.second?.filter { it.pageCount > 0 }?: listOf()
+                    )
+
+                )
+            )
+        }
+        _uiState.update { ot ->
+            ot.copy(
+                currentManga = ot.currentManga?.copy(
+                    chapterList = ot.currentManga.chapterList?.copy(
+                        second = ot.currentManga.chapterList?.second?.distinctBy { it.chapter }?: listOf()
+                        )
+
                 )
             )
         }
@@ -126,6 +153,8 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                 it.copy(
                     inReadMode = false,
                     currentChapter = null,
+                    nextChapter = null,
+                    previousChapter = null
                 )
             }
         } else {
@@ -134,6 +163,13 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                     inReadMode = true,
                 )
             }
+        }
+    }
+    fun setFlag(boolean: Boolean){
+        _uiState.update {
+            it.copy(
+                nextFlag = boolean
+            )
         }
     }
 
@@ -169,15 +205,197 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         val id = uiState.value.currentManga?.id
         Log.d("TAG", "id passed was this: \"$id\"")
         if (id !== null){
-            val chapterlist = mangaDexRepository.chapList(id)
+            val chapterList = mangaDexRepository.chapList(id)
+            val list = uiState.value.currentManga?.chapterList?.second?.toMutableList()
+            if (list !== null && uiState.value.currentManga?.inLibrary == true){
+                for (i in chapterList.first){
+                    if (!list.any{elm -> elm.id == i.id}){
+                        list.add(i)
+                    }
+                }
+                _uiState.update {
+                    it.copy(
+                        currentManga = it.currentManga?.copy(chapterList = Pair(Date(), list))
+                    )
+                }
+                filterSame()
+                orderManga()
+                if (uiState.value.currentManga !== null){
+                    mangaDexRepository.updateInLibrary(uiState.value.currentManga!!)
+                }
+                return
+            } else {
+                Log.d("TAG", "getChapterInfo: Chapter is not in library")
+            }
+
             _uiState.update {
                 it.copy(
-                    currentManga = it.currentManga?.copy(chapterList = Pair(Date(),chapterlist.first))
+                    currentManga = it.currentManga?.copy(chapterList = Pair(Date(),chapterList.first))
                 )
             }
+            filterSame()
             orderManga()
         }
     }
+
+    suspend fun getNextChapter(context: Context){
+        val currentChapter = uiState.value.currentChapter?.chapter
+        val currentVolume = uiState.value.currentChapter?.volume
+        if (currentVolume !== null && currentChapter !== null){
+
+            var firstNextChapter = uiState.value.currentManga?.chapterList?.second?.reversed()?.firstOrNull { elm  -> elm.chapter > currentChapter }
+            Log.d("TAG", "getNextChapter: next chapter is $firstNextChapter")
+
+            if (firstNextChapter !== null){
+                val chapterUrls = mangaDexRepository.getChapterContents(firstNextChapter.id)
+                Log.d("TAG", "getNextChapter: $chapterUrls")
+                if (chapterUrls is ChapterContents.Online){
+                    firstNextChapter = firstNextChapter.copy(contents = chapterUrls)
+                    for (i in chapterUrls.imagePaths){
+                        preloadImage(context, i.first)
+                    }
+                }
+                _uiState.update {
+                    it.copy(
+                        nextChapter = firstNextChapter
+                    )
+                }
+            }
+            Log.d("TAG", "getNextChapter: finished $firstNextChapter")
+        }
+    }
+
+    fun readPage(pageNum: Int){
+        val currentChapter = uiState.value.currentChapter?.copy(lastPageRead = pageNum)
+        _uiState.update {
+            it.copy(
+                currentChapter = currentChapter
+            )
+        }
+    }
+
+    suspend fun updateLibraryEquivalent(){
+        val currentManga = uiState.value.currentManga
+        if (currentManga !== null && currentManga.inLibrary ){
+            Log.d("TAG", "updateLibraryEquivalent: updating library\n${currentManga}")
+            mangaDexRepository.updateInLibrary(currentManga)
+        }
+    }
+
+    fun resetState(){
+        _uiState.update {
+            it.copy(
+                currentPage = 0,
+                nextChapter = null,
+                previousChapter = null,
+                nextFlag = false,
+            )
+        }
+    }
+
+    fun markAsDone(){
+        val curr = uiState.value.currentChapter
+        var s: Chapter? = null
+        if (curr !== null && curr.contents !== null){
+            when (curr.contents){
+                is ChapterContents.Downloaded ->{
+                    if (curr.lastPageRead == curr.contents.imagePaths.size){
+                        s = curr.copy(finished = true)
+                    }
+                }
+                is ChapterContents.Online -> {
+                    if (curr.lastPageRead == curr.contents.imagePaths.size){
+                        s = curr.copy(finished = true)
+                    }
+                }
+            }
+        }
+
+        if (s !== null){
+            val t  = uiState.value.currentManga?.chapterList?.second?.map { elm ->
+                if (elm.id == s.id){
+                    s
+                } else {
+                    elm
+                }
+            }
+            if (t !== null){
+                _uiState.update {
+                    it.copy(currentManga = it.currentManga?.copy(chapterList = it.currentManga.chapterList?.copy(second = t)))
+                }
+            }
+        }
+    }
+
+    suspend fun getPreviousChapter(context: Context){
+        val currentChapter = uiState.value.currentChapter?.chapter
+        val currentVolume = uiState.value.currentChapter?.volume
+        if (currentVolume !== null && currentChapter !== null){
+            var firstNextChapter = uiState.value.currentManga?.chapterList?.second?.firstOrNull { elm  -> elm.chapter < currentChapter }
+            if (firstNextChapter !== null){
+                val chapterUrls = mangaDexRepository.getChapterContents(firstNextChapter.id)
+                Log.d("TAG", "getNextChapter: $chapterUrls")
+                if (chapterUrls is ChapterContents.Online){
+                    firstNextChapter = firstNextChapter.copy(contents = chapterUrls)
+                    for (i in chapterUrls.imagePaths){
+                        preloadImage(context, i.first)
+                    }
+                }
+                _uiState.update {
+                    it.copy(
+                        previousChapter = firstNextChapter
+                    )
+                }
+            }
+        }
+    }
+    fun setPage(int: Int){
+        _uiState.update {
+            it.copy(
+                currentPage = int
+            )
+        }
+    }
+
+    fun loadNextChapter(){
+        Log.d("TAG", "loadNextChapter:started")
+        val chapter = uiState.value.currentChapter
+        val mangaUpdated = uiState.value.currentManga?.chapterList?.second?.map { elm ->
+            if (elm.id == chapter?.id){
+                chapter
+            } else {
+                elm
+            }
+        } ?: listOf()
+        _uiState.update {
+            it.copy(
+                currentManga = it.currentManga?.copy(chapterList = it.currentManga.chapterList?.let { it1 ->
+                    Pair(
+                        it1.first, mangaUpdated)
+                }),
+                previousChapter = it.currentChapter,
+                currentChapter = it.nextChapter,
+                nextChapter = null,
+                currentPage = 1,
+            )
+        }
+        Log.d("TAG", "loadNextChapter: ${uiState.value.currentChapter}")
+
+    }
+
+
+
+
+    fun loadPreviousChapter(){
+        _uiState.update {
+            it.copy(
+                currentChapter = it.previousChapter,
+                nextChapter = it.currentChapter
+            )
+        }
+    }
+
+
 
 
 }
@@ -186,3 +404,6 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 //it now navigates us back to the mangaScreen page? Since backhandler is triggerred by
 //the leafiest element we can define a new backhandler in our newscreen that will block the old
 // one. The entire reading experience must be stored in mangaSpecificViewModel though.
+
+// redo teh horizontal pager so you instead hook on trying to gesture on the last page.
+//also make the horizontal pager go through a list of composable functions intead of calling dynamically.

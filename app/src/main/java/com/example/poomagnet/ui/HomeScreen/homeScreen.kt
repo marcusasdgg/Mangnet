@@ -46,10 +46,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.poomagnet.R
+import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import java.util.logging.Filter
 
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel) {
+fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.syncLibrary()
@@ -59,7 +60,7 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
             items(uiState.library) { manga ->
                 VerticalCard(manga = manga, modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp, 0.dp))
+                    .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) })
                 Spacer(Modifier.height(10.dp))
             }
         }

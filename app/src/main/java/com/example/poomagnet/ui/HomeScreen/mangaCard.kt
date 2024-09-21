@@ -3,6 +3,7 @@ package com.example.poomagnet.ui.HomeScreen
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,8 +52,8 @@ fun MangaCard(modifier: Modifier = Modifier, type: displayType, manga: mangaInfo
 }
 
 @Composable
-fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo){
-    Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp)) {
+fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit){
+    Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp).clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
