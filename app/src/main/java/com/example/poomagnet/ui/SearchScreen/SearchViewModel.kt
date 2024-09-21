@@ -80,8 +80,9 @@ class SearchViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun executeSearch() {
         val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
-        Log.d("TAG", "current order is $res")
+
         val s = getIncludeExclude()
+        Log.d("TAG", "executeSearch: tags include exclude are $s")
         val result = mangaDexRepository.searchAllManga(
             uiState.value.searchText,
             ordering = mapOf(res),
@@ -237,6 +238,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun setTag(tag: Tag, toggle: ToggleableState){
+        Log.d("TAG", "setTag: called set tag on $tag")
         val newToggleState = if (toggle == ToggleableState.Off) {ToggleableState.On} else if (toggle == ToggleableState.On){ToggleableState.Indeterminate} else {ToggleableState.Off}
         _uiState.update{
             it.copy(
