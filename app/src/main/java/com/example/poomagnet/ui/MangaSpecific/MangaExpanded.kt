@@ -161,12 +161,15 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 delay(80)
                 hideTopBar(false)
                 mangaViewModel.enterReadMode(false)
+                mangaViewModel.resetState()
                 Log.d("TAG", "MangaScreen: ${mangaViewModel.uiState.value}")
             }
         }
 
+        if (uiState.inReadMode){
+            ReadScreen(Modifier,mangaViewModel,{returner() })
+        }
 
-        ReadScreen(Modifier,mangaViewModel,{returner() })
 
     }
 }

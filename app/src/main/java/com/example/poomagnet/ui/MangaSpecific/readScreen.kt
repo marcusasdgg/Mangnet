@@ -205,7 +205,6 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
         viewModel.toggleHomeBar(true)
         viewModel.toggleReadBar(false)
         viewModel.markAsDone()
-        viewModel.resetState()
         returner()
     }
 
