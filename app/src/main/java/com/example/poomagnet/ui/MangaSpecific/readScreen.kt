@@ -17,6 +17,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -131,7 +132,11 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
         Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .clickable { onClick() }, contentAlignment = Alignment.Center){
+            .clickable(
+                onClick = { onClick() },
+                indication = null, // Disables the ripple effect
+                interactionSource = remember { MutableInteractionSource() } // Needed when disabling the indication
+            ), contentAlignment = Alignment.Center){
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(imageUrl)
