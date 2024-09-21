@@ -208,7 +208,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
 
     BackHandler {
         viewModel.toggleHomeBar(true)
-        viewModel.toggleReadBar(false)
+        viewModel.toggleReadBar(true)
         returner()
     }
 
@@ -256,7 +256,7 @@ fun MangaTopBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
             title = {Text("Vol.${uiState.currentChapter?.volume} Ch. ${uiState.currentChapter?.chapter} ${uiState.currentChapter?.name}")},
             navigationIcon = {
                 IconButton(onClick = { viewModel.toggleHomeBar(true)
-                    viewModel.toggleReadBar(false)
+                    viewModel.toggleReadBar(true)
                     returner() }) {
                     Icon(
                         Icons.AutoMirrored.Default.ArrowBack,
