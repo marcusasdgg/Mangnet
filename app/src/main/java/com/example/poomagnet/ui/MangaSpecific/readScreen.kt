@@ -94,6 +94,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
                     delay(80)
                     pagerState.scrollToPage(0)
                     viewModel.setPage(1)
+                    Log.d("TAG", "ReadingScreen: ${uiState.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
                 }else {
                     viewModel.getNextChapter(context)
                     viewModel.loadNextChapter()
@@ -101,11 +102,15 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
                     delay(80)
                     pagerState.scrollToPage(0)
                     viewModel.setPage(1)
+                    Log.d("TAG", "ReadingScreen: ${uiState.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
                 }
             } else {
                 if (pagerState.currentPage == pagerState.pageCount/2){
                     viewModel.getNextChapter(context)
                     Log.d("TAG", "ReadingScreen: getting next chapter")
+                }
+                if (pagerState.currentPage+1 == uiState.currentChapter?.pageCount?.toInt()){
+                    viewModel.markThisAsDone()
                 }
                 Log.d("TAG", "ReadingScreen: changing to ${pagerState.pageCount}")
                 viewModel.setPage(pagerState.currentPage+1)
@@ -204,7 +209,6 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
     BackHandler {
         viewModel.toggleHomeBar(true)
         viewModel.toggleReadBar(false)
-        viewModel.markAsDone()
         returner()
     }
 
@@ -302,11 +306,13 @@ fun MangaBotBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
                 IconButton(onClick = {
                     viewModel.viewModelScope.launch {
                         if (uiState.nextChapter == null){
+                            viewModel.markThisAsDone()
                             viewModel.getNextChapter(context = context)
                             viewModel.loadNextChapter()
                             viewModel.setFlag(true)
                             scrolltoZero()
                         } else {
+                            viewModel.markThisAsDone()
                             viewModel.loadNextChapter()
                             viewModel.setFlag(true)
                             scrolltoZero()

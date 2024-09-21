@@ -274,6 +274,32 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+    fun markThisAsDone(){
+
+        val currentChapter = uiState.value.currentChapter?.copy(finished = true)
+        if (currentChapter !== null){
+            Log.d("TAG", "markThisAsDone: ${currentChapter.chapter}")
+            val t  = uiState.value.currentManga?.chapterList?.second?.map { elm ->
+                if (elm.id == currentChapter.id){
+                    currentChapter
+                } else {
+                    elm
+                }
+            }
+            if (t !== null){
+                Log.d("TAG", "newChapList: ${t.firstOrNull{elm -> elm.finished}}")
+                _uiState.update {
+                    it.copy(currentManga = it.currentManga?.copy(chapterList = it.currentManga.chapterList?.copy(second = t)))
+                }
+                Log.d("TAG", "In actual manga entry markThisAsDone: ${_uiState.value.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
+                viewModelScope.launch {
+                    updateLibraryEquivalent()
+                }
+            }
+
+        }
+    }
+
     suspend fun updateLibraryEquivalent(){
         val currentManga = uiState.value.currentManga
         if (currentManga !== null && currentManga.inLibrary ){
@@ -299,12 +325,12 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         if (curr !== null && curr.contents !== null){
             when (curr.contents){
                 is ChapterContents.Downloaded ->{
-                    if (curr.lastPageRead == curr.contents.imagePaths.size){
+                    if (curr.lastPageRead == curr.pageCount.toInt()){
                         s = curr.copy(finished = true)
                     }
                 }
                 is ChapterContents.Online -> {
-                    if (curr.lastPageRead == curr.contents.imagePaths.size){
+                    if (curr.lastPageRead == curr.pageCount.toInt()){
                         s = curr.copy(finished = true)
                     }
                 }
@@ -359,20 +385,8 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
     fun loadNextChapter(){
         Log.d("TAG", "loadNextChapter:started")
-        val chapter = uiState.value.currentChapter
-        val mangaUpdated = uiState.value.currentManga?.chapterList?.second?.map { elm ->
-            if (elm.id == chapter?.id){
-                chapter
-            } else {
-                elm
-            }
-        } ?: listOf()
         _uiState.update {
             it.copy(
-                currentManga = it.currentManga?.copy(chapterList = it.currentManga.chapterList?.let { it1 ->
-                    Pair(
-                        it1.first, mangaUpdated)
-                }),
                 previousChapter = it.currentChapter,
                 currentChapter = it.nextChapter,
                 nextChapter = null,

@@ -90,6 +90,7 @@ val ChapterContents.isOnline: Boolean
 
 class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
     override fun serialize(src: ChapterContents, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        Log.d("TAG", "serialize: ")
         val jsonObject = JsonObject()
 
         when (src) {
@@ -111,6 +112,7 @@ class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
 
 class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterContents {
+        Log.d("TAG", "serialize: ")
         val jsonObject = json.asJsonObject
         val imagePathsType = object : TypeToken<List<Pair<String, Boolean>>>() {}.type
         val imagePaths: List<Pair<String, Boolean>> = context.deserialize(jsonObject.get("imagePaths"), imagePathsType)
@@ -205,9 +207,8 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 val jsonString = file.readText()
                 Log.d("TAG", "loadMangaFromBackup: backup is $jsonString")
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
-                val gson = Gson()
                 val listType = object : TypeToken<Pair<Set<MangaInfo>, Set<String>>>() {}.type
-                val r: Pair<Set<MangaInfo>, Set<String>> = gson.fromJson(jsonString, listType)
+                val r: Pair<Set<MangaInfo>, Set<String>> = gsonSerializer.fromJson(jsonString, listType)
                 library = r.first.toMutableSet()
                 idSet = r.second.toMutableSet()
             } else {

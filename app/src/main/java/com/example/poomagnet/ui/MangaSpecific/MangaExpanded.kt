@@ -162,7 +162,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 hideTopBar(false)
                 mangaViewModel.enterReadMode(false)
                 mangaViewModel.resetState()
-                Log.d("TAG", "MangaScreen: ${mangaViewModel.uiState.value}")
+                Log.d("TAG", "MangaScreen: ${mangaViewModel.uiState.value.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
             }
         }
 
