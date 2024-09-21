@@ -308,6 +308,44 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+    fun latestUnReadChapter(){
+        var latestRead =
+            uiState.value.currentManga?.chapterList?.second?.indexOfFirst { elm ->
+
+                if (elm.finished){
+                    Log.d("TAG", "latestUnReadChapter: $elm")
+                }
+                return@indexOfFirst elm.finished
+            }
+                ?.plus(-1)
+
+        if (latestRead == null || latestRead == 0){
+            latestRead = 0
+        }
+
+        Log.d("TAG", "attempting to retrieve chapter at index $latestRead")
+
+        val chapId = uiState.value.currentManga?.chapterList?.second?.getOrNull(latestRead)?.id
+
+        if (chapId !== null){
+            _uiState.update {
+                it.copy(
+                    latestChapterReadId = chapId
+                )
+            }
+        } else {
+            Log.d("TAG", "latestUnReadChapter: wtf id not found")
+            _uiState.update {
+                it.copy(
+                    latestChapterReadId = ""
+                )
+            }
+        }
+
+
+
+    }
+
     fun resetState(){
         _uiState.update {
             it.copy(

@@ -74,10 +74,10 @@ fun App() {
         }},
         topBar = { if (!uiState.topHidden) {
             when (uiState.currentScreen) {
-                ScreenType.Home -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown)
+                ScreenType.Home -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown, uiState.currentScreen)
                 ScreenType.Search -> SearchTopBar(Modifier.fillMaxWidth(), searchViewModel)
                 ScreenType.MangaSpecific -> MangaAppBar(Modifier.fillMaxWidth(), simpleBack, mangaViewModel)
-                else -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown)
+                else -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown, uiState.currentScreen)
             }
         } }
 
@@ -96,14 +96,14 @@ fun App() {
                     mangaViewModel.setFlag(true)
                     viewModel.changeScreen(ScreenType.MangaSpecific)
                 }
-            })
+            }, currentScreen = uiState.currentScreen)
             ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
             }, currentScrollStateSearch)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->})
+                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->}, ScreenType.Settings)
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

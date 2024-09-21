@@ -2,12 +2,17 @@ package com.example.poomagnet.ui.HomeScreen
 
 import android.graphics.ColorSpace.Rgb
 import android.graphics.Paint.Align
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -45,16 +50,19 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.poomagnet.App.ScreenType
 import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.ui.VerticalCard
 import java.util.logging.Filter
 
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit) {
+fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.syncLibrary()
     }
+
     Column {
         LazyColumn(modifier = modifier.fillMaxWidth()) {
             items(uiState.library) { manga ->
@@ -64,16 +72,18 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
                     readChapter(id,manga)
                 }
                 )
+                Spacer(Modifier.fillMaxWidth().height(10.dp))
             }
         }
     }
+
 }
 
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBarV2(toggleDrop: (Boolean) -> Unit, uiState: HomeUiState, changeDrop: (FilterOptions) -> Unit){
+fun HomeTopBarV2(toggleDrop: (Boolean) -> Unit, uiState: HomeUiState, changeDrop: (FilterOptions) -> Unit, currentScreen: ScreenType){
     TopAppBar(title = {
         Button(onClick = {toggleDrop(true)}, colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.background,

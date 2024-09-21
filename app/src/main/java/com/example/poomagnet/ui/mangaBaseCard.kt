@@ -3,6 +3,8 @@ package com.example.poomagnet.ui
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +24,12 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,6 +48,7 @@ import coil.request.ImageRequest
 import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.mangaState
+import com.example.poomagnet.ui.HomeScreen.displayType
 import com.example.poomagnet.ui.HomeScreen.mangaInfo
 
 //this should work for both versions of mangaInfo, i.e the one including the covertArturl and the one with the downloaded image.
@@ -145,4 +152,63 @@ fun DoubleStackCardPreviewScreen() {
         }
     }
 }
+
+
+
+
+@Composable
+fun MangaCard(modifier: Modifier = Modifier, type: displayType, manga: mangaInfo) {
+    when (type) {
+        displayType.VERTICALCARD -> {}
+        displayType.LISTSCROLL -> {}
+        displayType.SINGLESCREEN -> {}
+        displayType.TWOGRID -> {}
+    }
+}
+
+@Composable
+fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit){
+    Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp).clickable { onclick() }) {
+        Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(manga.coverArtUrl)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.prevthumbnail),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.32f)
+            )
+            Column(Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp), contentAlignment = Alignment.Center) {
+                    Text(manga.title, fontSize = 18.sp, modifier = Modifier.fillMaxWidth(0.82f).align(Alignment.CenterStart).padding(11.dp,0.dp,0.dp,0.dp), overflow = TextOverflow.Ellipsis, maxLines = 2)
+                    Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.align(Alignment.CenterEnd).padding(0.dp,0.dp,9.dp,0.dp))
+                }
+                LazyColumn(modifier = Modifier.fillMaxWidth(0.82f).fillMaxHeight()) {
+                    Log.d("TAG", "VerticalCard: found ${manga.chapterList?.second?.size} chapters")
+                    items(manga.chapterList?.second ?: listOf()) { chapter ->
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .height(35.dp).clickable {
+                                engageChapter(chapter.id)
+                            },
+                        ) {
+                            Text("Ch. ${chapter.chapter} ${chapter.name}", modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .padding(8.dp, 0.dp).fillMaxWidth(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (chapter.finished){Color.Gray} else Color.Unspecified)
+                            Divider(Modifier.fillMaxWidth(),color = Color.LightGray, thickness =  0.5.dp, )
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+}
+
 

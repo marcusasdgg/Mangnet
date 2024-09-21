@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,7 +63,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
@@ -78,6 +81,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
     val scrollstate = rememberScrollState()
     LaunchedEffect(Unit) {
         mangaViewModel.getChapterInfo()
+        mangaViewModel.latestUnReadChapter()
     }
 
     AnimatedVisibility(
@@ -133,7 +137,21 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 }
             }
             Spacer(Modifier.height(20.dp))
-            Text("${uiState.currentManga?.chapterList?.second?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,10.dp))
+            Box(Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.CenterStart){
+                Text("${uiState.currentManga?.chapterList?.second?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+                    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                        Button(shape = RoundedCornerShape(100), onClick = { mangaViewModel.viewModelScope.launch {
+                            mangaViewModel.getChapterUrls(uiState.latestChapterReadId)
+                            mangaViewModel.enterReadMode(true)
+                            hideTopBar(true)
+                            mangaViewModel.setFlag(true)
+                        }}, modifier =  Modifier.fillMaxHeight().padding(10.dp,2.dp).width(105.dp), colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.inversePrimary)){
+                            Text(if (uiState.latestChapterReadId == "") "Start" else "Continue", fontSize = 14.sp, modifier = Modifier.align(Alignment.CenterVertically).fillMaxWidth())
+                        }
+                    }
+            }
+            Spacer(Modifier.height(20.dp))
             Column(){
                 uiState.currentManga?.chapterList?.second?.forEach { elm ->
                     ChapterListing(Modifier.height(60.dp),
@@ -246,8 +264,8 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
 
     AnimatedVisibility(
         visible = state.visible,
-        enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-        exit = fadeOut(animationSpec = tween(durationMillis = 300)),
+        enter = fadeIn(animationSpec = tween(durationMillis = 80)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 80)),
     ) {
             TopAppBar(
                 modifier = modifier.fillMaxWidth(),
