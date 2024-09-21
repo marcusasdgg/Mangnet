@@ -173,6 +173,11 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
     val window = (view.context as Activity).window
     val insetsController = WindowCompat.getInsetsController(window,view)
 
+    LaunchedEffect(Unit) {
+        viewModel.toggleHomeBar(false)
+        viewModel.toggleReadBar(false)
+    }
+
     val list = remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
     LaunchedEffect(uiState.nextFlag) {
         delay(80)
