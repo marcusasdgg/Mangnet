@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -140,14 +141,30 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
             Box(Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.CenterStart){
                 Text("${uiState.currentManga?.chapterList?.second?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                        Button(shape = RoundedCornerShape(100), onClick = { mangaViewModel.viewModelScope.launch {
-                            mangaViewModel.getChapterUrls(uiState.latestChapterReadId)
-                            mangaViewModel.enterReadMode(true)
-                            hideTopBar(true)
-                            mangaViewModel.setFlag(true)
-                        }}, modifier =  Modifier.fillMaxHeight().padding(10.dp,2.dp).width(105.dp), colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.inversePrimary)){
-                            Text(if (uiState.latestChapterReadId == "") "Start" else "Continue", fontSize = 14.sp, modifier = Modifier.align(Alignment.CenterVertically).fillMaxWidth())
+                        Button(
+                            shape = RoundedCornerShape(100),
+                            onClick = {
+                                mangaViewModel.viewModelScope.launch {
+                                    mangaViewModel.getChapterUrls(uiState.latestChapterReadId)
+                                    mangaViewModel.enterReadMode(true)
+                                    hideTopBar(true)
+                                    mangaViewModel.setFlag(true)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(10.dp, 2.dp)
+                                .width(105.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.inversePrimary
+                            )
+                        ) {
+                            Text(
+                                text = if (uiState.latestChapterReadId == "") "Start" else "Continue",
+                                fontSize = 14.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
             }
