@@ -52,7 +52,7 @@ fun MangaCard(modifier: Modifier = Modifier, type: displayType, manga: mangaInfo
 }
 
 @Composable
-fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit){
+fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit){
     Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp).clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
             AsyncImage(
@@ -67,7 +67,7 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                     .fillMaxHeight()
                     .fillMaxWidth(0.32f)
             )
-            Column(Modifier.fillMaxWidth(0.7f)) {
+            Column(Modifier.fillMaxWidth(0.75f)) {
                 Box(modifier = Modifier
                     .fillMaxWidth()
                     .height(45.dp), contentAlignment = Alignment.Center) {
@@ -78,7 +78,9 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                     items(manga.chapterList?.second ?: listOf()) { chapter ->
                         Box(modifier = Modifier
                             .fillMaxWidth()
-                            .height(35.dp),
+                            .height(35.dp).clickable {
+                                engageChapter(chapter.id)
+                            },
                         ) {
                             Text("Vol.${chapter.volume} Ch. ${chapter.chapter} ${chapter.name}", modifier = Modifier
                                 .align(Alignment.CenterStart)

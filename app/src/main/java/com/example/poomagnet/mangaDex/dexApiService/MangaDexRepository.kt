@@ -27,6 +27,8 @@ import java.time.OffsetDateTime
 import javax.inject.Inject
 
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import java.lang.reflect.Type
@@ -67,7 +69,7 @@ data class Chapter(
     val group: String,
     val type: String,
     val pageCount: Double,
-    val contents: ChapterContents?,
+    val contents: ChapterContents? = null,
     val date: SimpleDate? = null,
     val lastPageRead: Int = 0,
     val finished: Boolean = false,
@@ -86,6 +88,43 @@ val ChapterContents.isDownloaded: Boolean
 val ChapterContents.isOnline: Boolean
     get() = this is ChapterContents.Online
 
+class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
+    override fun serialize(src: ChapterContents, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        val jsonObject = JsonObject()
+
+        when (src) {
+            is ChapterContents.Downloaded -> {
+                jsonObject.addProperty("type", "Downloaded")
+                jsonObject.add("imagePaths", context.serialize(src.imagePaths))
+                jsonObject.addProperty("ifDone", src.ifDone)
+            }
+            is ChapterContents.Online -> {
+                jsonObject.addProperty("type", "Online")
+                jsonObject.add("imagePaths", context.serialize(src.imagePaths))
+                jsonObject.addProperty("ifDone", src.ifDone)
+            }
+        }
+
+        return jsonObject
+    }
+}
+
+class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterContents {
+        val jsonObject = json.asJsonObject
+        val imagePathsType = object : TypeToken<List<Pair<String, Boolean>>>() {}.type
+        val imagePaths: List<Pair<String, Boolean>> = context.deserialize(jsonObject.get("imagePaths"), imagePathsType)
+        val ifDone = jsonObject.get("ifDone").asBoolean
+
+        return when (jsonObject.get("type").asString) {
+            "Downloaded" -> ChapterContents.Downloaded(imagePaths, ifDone)
+            "Online" -> ChapterContents.Online(imagePaths, ifDone)
+            else -> throw JsonParseException("Unknown ChapterContents type")
+        }
+    }
+}
+
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -95,6 +134,8 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val gsonSerializer = GsonBuilder()
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
         .create()
 
     //local persistence is so much easier now, i just backup

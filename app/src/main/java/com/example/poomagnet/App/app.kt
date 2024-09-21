@@ -86,14 +86,24 @@ fun App() {
             ScreenType.Home -> HomeScreen(modifier = Modifier.padding(innerPadding), {},homeViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
-            },)
+            }, readChapter = { chapId, manga ->
+                mangaViewModel.selectCurrentManga(manga)
+                mangaViewModel.viewModelScope.launch {
+                    mangaViewModel.getChapterUrls(chapId)
+                    mangaViewModel.enterReadMode(true)
+                    viewModel.hideTopBar(true)
+                    viewModel.hideBotBar(true)
+                    mangaViewModel.setFlag(true)
+                    viewModel.changeScreen(ScreenType.MangaSpecific)
+                }
+            })
             ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
             }, currentScrollStateSearch)
             ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {})
+                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->})
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

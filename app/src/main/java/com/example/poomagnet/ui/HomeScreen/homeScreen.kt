@@ -50,7 +50,7 @@ import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import java.util.logging.Filter
 
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit) {
+fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.syncLibrary()
@@ -60,8 +60,10 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
             items(uiState.library) { manga ->
                 VerticalCard(manga = manga, modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) })
-                Spacer(Modifier.height(10.dp))
+                    .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) }, engageChapter = { id ->
+                    readChapter(id,manga)
+                }
+                )
             }
         }
     }
