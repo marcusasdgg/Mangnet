@@ -84,7 +84,7 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                         ) {
                             Text("Vol.${chapter.volume} Ch. ${chapter.chapter} ${chapter.name}", modifier = Modifier
                                 .align(Alignment.CenterStart)
-                                .padding(8.dp, 0.dp).fillMaxWidth(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                .padding(8.dp, 0.dp).fillMaxWidth(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (chapter.finished){Color.Gray} else Color.Unspecified)
                             Divider(Modifier.fillMaxWidth(),color = Color.LightGray, thickness =  0.5.dp, )
                         }
                     }
