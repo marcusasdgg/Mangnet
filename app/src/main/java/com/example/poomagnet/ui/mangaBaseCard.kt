@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -182,7 +183,7 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                         onClick = {openLast()},
                         Modifier.align(Alignment.CenterEnd)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.OpenInNew, "", Modifier.padding(0.dp,0.dp,9.dp,0.dp))
+                        Icon(Icons.Default.History, "", Modifier.padding(0.dp,0.dp,9.dp,0.dp))
                     }
 
                 }
