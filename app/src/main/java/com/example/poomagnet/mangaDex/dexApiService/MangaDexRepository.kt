@@ -526,6 +526,25 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         backUpManga(context)
     }
 
+    suspend fun updateWholeLibrary(){
+        Log.d("TAG", "updateWholeLibrary: called")
+        library.map { its ->
+            val result = chapList(its.id).first
+            val current = its.chapterList?.second?.toMutableList()
+            if (current !== null){
+                result.forEach { el ->
+                    if (!current.any { t -> t.id == el.id }){
+                        current.add(el)
+                    }
+                }
+                its.copy(chapterList = Pair(Date(), current.toList()) )
+            }else {
+                its
+            }
+        }
+        backUpManga(context)
+    }
+
 
 
 }

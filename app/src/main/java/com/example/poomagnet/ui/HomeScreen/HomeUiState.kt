@@ -6,7 +6,8 @@ data class HomeUiState(
     val typeView: displayType = displayType.VERTICALCARD,
     val expandedMenu: Boolean = false,
     val currentMenuOption: FilterOptions = FilterOptions.All,
-    val library: List<MangaInfo> = listOf()
+    val library: List<MangaInfo> = listOf(),
+    val ifLoading: Boolean = false,
     //val followed manga = ???
 )
 

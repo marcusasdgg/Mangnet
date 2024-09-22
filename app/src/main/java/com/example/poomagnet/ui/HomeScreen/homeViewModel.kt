@@ -18,6 +18,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val mangaDexRepository: MangaDexRepository
     ): ViewModel() {
+
     private val _uistate = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uistate
 
@@ -29,6 +30,20 @@ class HomeViewModel @Inject constructor(
             )
         }
     }
+
+    fun loadIt(boolean: Boolean){
+        _uistate.update {
+            it.copy(
+                ifLoading = boolean
+            )
+        }
+    }
+
+    suspend fun updateAll(){
+        mangaDexRepository.updateWholeLibrary()
+        syncLibrary()
+    }
+
 
     public fun toggleDropDown(boolean: Boolean){
         _uistate.update {
