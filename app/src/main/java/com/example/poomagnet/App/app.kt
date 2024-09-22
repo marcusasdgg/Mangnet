@@ -101,7 +101,11 @@ fun App() {
                     mangaViewModel.viewModelScope.launch {
                         mangaViewModel.selectCurrentManga(manga)
                         if (mangaViewModel.uiState.value.currentManga !== null){
-                            mangaViewModel.getChapterUrls(mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first ?: mangaViewModel.uiState.value.currentManga!!.chapterList?.second?.last()!!.id)
+                            var id =  mangaViewModel.uiState.value.currentManga!!.chapterList?.second?.last()!!.id
+                            if (mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first != "" && mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first !== null){
+                                id = mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first!!
+                            }
+                            mangaViewModel.getChapterUrls(id)
                         }
                         mangaViewModel.enterReadMode(true)
                         viewModel.hideTopBar(true)

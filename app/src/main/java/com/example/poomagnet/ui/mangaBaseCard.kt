@@ -50,7 +50,6 @@ import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.mangaState
 import com.example.poomagnet.ui.HomeScreen.displayType
-import com.example.poomagnet.ui.HomeScreen.mangaInfo
 
 //this should work for both versions of mangaInfo, i.e the one including the covertArturl and the one with the downloaded image.
 @Composable
@@ -157,15 +156,6 @@ fun DoubleStackCardPreviewScreen() {
 
 
 
-@Composable
-fun MangaCard(modifier: Modifier = Modifier, type: displayType, manga: mangaInfo) {
-    when (type) {
-        displayType.VERTICALCARD -> {}
-        displayType.LISTSCROLL -> {}
-        displayType.SINGLESCREEN -> {}
-        displayType.TWOGRID -> {}
-    }
-}
 
 @Composable
 fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit, openLast: () -> Unit){

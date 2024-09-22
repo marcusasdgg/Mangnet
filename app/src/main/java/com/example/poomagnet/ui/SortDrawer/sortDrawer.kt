@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.poomagnet.R
 import com.example.poomagnet.ui.HomeScreen.HomeViewModel
-import com.example.poomagnet.ui.HomeScreen.mangaInfo
 import com.example.poomagnet.ui.SearchScreen.Direction
 import com.example.poomagnet.ui.SearchScreen.SearchUiState
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel

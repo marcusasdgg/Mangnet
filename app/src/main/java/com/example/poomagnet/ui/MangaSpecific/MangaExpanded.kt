@@ -148,14 +148,17 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             onClick = {
                                 mangaViewModel.viewModelScope.launch {
                                     var currentManga = uiState.currentManga!!.chapterList?.second?.lastOrNull()?.id
-                                    if (uiState.currentManga?.lastReadChapter?.first !== ""){
+                                    if (uiState.currentManga?.lastReadChapter?.first != ""  && uiState.currentManga?.lastReadChapter?.first !== null){
                                         currentManga = uiState.currentManga?.lastReadChapter?.first
                                     }
                                     if (currentManga !== null){
+                                        Log.d("TAG", "MangaScreen: found chapteriD $currentManga")
                                         mangaViewModel.getChapterUrls(currentManga)
                                         mangaViewModel.enterReadMode(true)
                                         hideTopBar(true)
                                         mangaViewModel.setFlag(true)
+                                    } else {
+                                        Log.d("TAG", "MangaScreen: wtf result is null")
                                     }
                                 }
                             },

@@ -178,6 +178,8 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
         viewModel.toggleReadBar(false)
     }
 
+
+
     val list = remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
     LaunchedEffect(uiState.nextFlag) {
         delay(80)
@@ -216,6 +218,8 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
     val pagerState = rememberPagerState {list.value.size}
 
 
+
+
     BackHandler {
         viewModel.viewModelScope.launch {
             viewModel.toggleHomeBar(true)
@@ -240,18 +244,28 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
 
 
 
+
+
     Scaffold(
         topBar = { MangaTopBar(Modifier, viewModel,returner)},
         bottomBar = { MangaBotBar(Modifier,viewModel, { pagerState.scrollToPage(0) })}
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()){
             ReadingScreen(Modifier.fillMaxSize(), viewModel, pagerState,context, list)
-            if (uiState.currentPage <= uiState.currentChapter!!.pageCount.toInt()){
+            if (uiState.currentPage <= (uiState.currentChapter?.pageCount?.toInt() ?: 0)){
                 Text("${uiState.currentPage}/${uiState.currentChapter?.pageCount?.toInt()}",
                     Modifier
                         .align(Alignment.BottomCenter)
                         .padding(innerPadding))
             }
+        }
+    }
+    LaunchedEffect(Unit) {
+        delay(80)
+        Log.d("TAG", "ReadScreen: current id is ${uiState.currentChapter?.id} and latest read is ${uiState.currentManga?.lastReadChapter?.first}")
+        if (uiState.currentManga?.lastReadChapter?.first == uiState.currentChapter?.id ){
+            Log.d("TAG", "ReadScreen: this si latest")
+            pagerState.scrollToPage(uiState.currentManga?.lastReadChapter?.second?.minus(1) ?: 0)
         }
     }
 }
