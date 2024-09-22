@@ -74,7 +74,23 @@ data class Chapter(
     val date: SimpleDate? = null,
     val lastPageRead: Int = 0,
     val finished: Boolean = false,
+
 )
+
+data class slimChapter(
+    val id: String,
+    val name: String,
+    val chapter: Double,
+    val volume: Double,
+    val mangaId: String,
+    val imageUrl: String,
+    val mangaName: String,
+)
+
+
+
+
+
 
 
 
@@ -128,12 +144,13 @@ class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
 }
 
 
-
+//need to store, chapter and volume name
 
 @RequiresApi(Build.VERSION_CODES.O)
 class MangaDexRepository @Inject constructor(private val context: Context)  {
     private val apiService = RetrofitInstance.api
-    //add local database jargon blah blah later. learn SQL.
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val gsonSerializer = GsonBuilder()
@@ -209,9 +226,10 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 Log.d("TAG", "loadMangaFromBackup: backup is $jsonString")
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
                 val listType = object : TypeToken<Pair<Set<MangaInfo>, Set<String>>>() {}.type
-                val r: Pair<Set<MangaInfo>, Set<String>> = gsonSerializer.fromJson(jsonString, listType)
+                val r: Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>> = gsonSerializer.fromJson(jsonString, listType)
                 library = r.first.toMutableSet()
                 idSet = r.second.toMutableSet()
+                newUpdatedChapters = r.third.toMutableList()
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
             }
@@ -231,7 +249,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 OutputStreamWriter(fos).use { writer ->
                     // Write the data to the file
                     writer.write(
-                        gsonSerializer.toJson(Pair(library,idSet))
+                        gsonSerializer.toJson(Triple(library,idSet, newUpdatedChapters))
                     )
                 }
             }
@@ -268,6 +286,9 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     suspend fun removeFromLibrary(manga: MangaInfo?){
         library.remove(manga)
         idSet.remove(manga?.id)
+        newUpdatedChapters.removeIf { elm->
+            elm.second.mangaId == manga?.id
+        }
         backUpManga(context)
     }
 
@@ -535,6 +556,8 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 result.forEach { el ->
                     if (!current.any { t -> t.id == el.id }){
                         current.add(el)
+                        val currentDate = SimpleDate(OffsetDateTime.now().toString())
+                        newUpdatedChapters.add(Pair(currentDate, slimChapter(el.id,el.name,el.chapter,el.volume, its.id, its.coverArtUrl, its.title )))
                     }
                 }
                 its.copy(chapterList = Pair(Date(), current.toList()) )
@@ -548,6 +571,8 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
 
 }
+
+// nut
 
 data class SimpleDate(
     val day: Int,
@@ -568,3 +593,12 @@ data class SimpleDate(
 //right now for library swapped mangaInfo objects, it doesnt properly work? as in it tries to load the chapters but gets a http 400?
 //fixed it by increasing limit, must be a rate limti issue i reckon.
 //now need to link library/home page to mangadex repo.
+
+// nut
+// nut
+// nut
+// nut
+// nut
+// nut
+// nut
+// nut

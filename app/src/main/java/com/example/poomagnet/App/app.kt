@@ -28,6 +28,9 @@ import com.example.poomagnet.ui.MangaSpecific.MangaSpecificViewModel
 import com.example.poomagnet.ui.SearchScreen.SearchScreen
 import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
+import com.example.poomagnet.ui.UpdateScreen.UpdateScreen
+import com.example.poomagnet.ui.UpdateScreen.UpdateTopBar
+import com.example.poomagnet.ui.UpdateScreen.updateViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -41,6 +44,7 @@ fun App() {
     val homeUiState = homeViewModel.uiState.collectAsState().value
     val searchViewModel: SearchViewModel =  hiltViewModel()
     val mangaViewModel: MangaSpecificViewModel = hiltViewModel()
+    val updateViewModel: updateViewModel = hiltViewModel()
 
 
     val simpleBack: () -> Unit = { viewModel.viewModelScope.launch {
@@ -81,6 +85,7 @@ fun App() {
                 ScreenType.Home -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown, uiState.currentScreen)
                 ScreenType.Search -> SearchTopBar(Modifier.fillMaxWidth(), searchViewModel)
                 ScreenType.MangaSpecific -> MangaAppBar(Modifier.fillMaxWidth(), simpleBack, mangaViewModel)
+                ScreenType.Update -> UpdateTopBar()
                 else -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown, uiState.currentScreen)
             }
         } }
@@ -117,18 +122,36 @@ fun App() {
                         mangaViewModel.setFlag(true)
                         viewModel.changeScreen(ScreenType.MangaSpecific)
                     }
-                }, snackbarHostState)
+                }, snackbarHostState, updateViewModel::syncLibrary)
             ScreenType.Search -> SearchScreen(modifier = Modifier.padding(innerPadding), searchViewModel = searchViewModel, setCurrentManga =  { elm ->
                 viewModel.changeScreen(ScreenType.MangaSpecific)
                 mangaViewModel.selectCurrentManga(elm)
             }, currentScrollStateSearch)
-            ScreenType.Update -> Text("Update", Modifier.padding(innerPadding))
+            ScreenType.Update -> UpdateScreen(Modifier.padding(innerPadding), updateViewModel, onChapterClick = { id, chapId ->
+                val manga = updateViewModel.findMangaInLibrary(id)
+                if (manga !== null){
+                    mangaViewModel.selectCurrentManga(manga)
+                    mangaViewModel.viewModelScope.launch {
+                        mangaViewModel.getChapterUrls(chapId)
+                        mangaViewModel.enterReadMode(true)
+                        viewModel.hideTopBar(true)
+                        viewModel.hideBotBar(true)
+                        mangaViewModel.setFlag(true)
+                        viewModel.changeScreen(ScreenType.MangaSpecific)
+                    }
+                } else {
+                    Log.d("TAG", "App: Id was invalid?")
+                }
+            })
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->}, ScreenType.Settings, {}, snackbarHostState)
+                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->}, ScreenType.Settings, {}, snackbarHostState, updateViewModel::syncLibrary)
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)
-                MangaScreen(Modifier.padding(innerPadding),mangaViewModel, searchViewModel::addManga, viewModel::hideTopBar)
+                MangaScreen(Modifier.padding(innerPadding),mangaViewModel,
+                    { searchViewModel.addManga()
+                        updateViewModel.syncLibrary()
+                    }, viewModel::hideTopBar)
             }
         }
     }

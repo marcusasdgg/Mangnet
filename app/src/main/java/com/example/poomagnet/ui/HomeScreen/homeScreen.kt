@@ -66,7 +66,7 @@ import java.util.logging.Filter
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType, openLast: (MangaInfo)-> Unit, snackBar: SnackbarHostState) {
+fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType, openLast: (MangaInfo)-> Unit, snackBar: SnackbarHostState, onUpdate: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
