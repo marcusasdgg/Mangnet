@@ -420,6 +420,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
             responses.forEach { res ->
                 val reponse = res["data"]
+                Log.d(TAG, "chapList: $reponse")
                 if (reponse is List<*>){
                     reponse.forEach { response ->
                         if (response is Map<*,*>){
@@ -427,6 +428,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                             val attributes = response["attributes"]
                             if (attributes is Map<*,*>){
                                 if (attributes["translatedLanguage"] != "en"){
+                                    Log.d(TAG, "chapList: found non english chapter")
                                     return@forEach
                                 }
                                 val volume = attributes["volume"].toString().toDoubleOrNull() ?: -1.0

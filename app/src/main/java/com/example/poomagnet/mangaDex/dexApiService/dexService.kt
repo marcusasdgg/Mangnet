@@ -32,7 +32,7 @@ interface MangaDexApiService {
 
 
     @GET("/manga/{id}/feed?limit=500")
-    suspend fun getChapterList(@Path("id") mangaId: String, @Query("offset") offset: Int): Map<String,Any?>
+    suspend fun getChapterList(@Path("id") mangaId: String, @Query("offset") offset: Int, @Query("contentRating[]") contentRating: List<String> = listOf("safe", "suggestive", "erotica", "pornographic")): Map<String,Any?>
 
     @GET("manga/tag")
     suspend fun getTagList(): Map<String,Any?>
