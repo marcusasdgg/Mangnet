@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -88,7 +89,7 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
     )
 
     Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
-        LazyColumn(modifier = modifier.fillMaxWidth()) {
+        LazyColumn(modifier = modifier.fillMaxWidth().fillMaxHeight()) {
             items(uiState.library) { manga ->
                 VerticalCard(manga = manga, modifier = Modifier
                     .fillMaxWidth()
