@@ -225,7 +225,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 val jsonString = file.readText()
                 Log.d("TAG", "loadMangaFromBackup: backup is $jsonString")
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
-                val listType = object : TypeToken<Pair<Set<MangaInfo>, Set<String>>>() {}.type
+                val listType = object : TypeToken<Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>>>() {}.type
                 val r: Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>> = gsonSerializer.fromJson(jsonString, listType)
                 library = r.first.toMutableSet()
                 idSet = r.second.toMutableSet()
