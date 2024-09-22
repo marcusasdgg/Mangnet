@@ -87,8 +87,7 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
         refreshingOffset = 180.dp
     )
 
-    Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState), contentAlignment = Alignment.Center) {
-
+    Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
         LazyColumn(modifier = modifier.fillMaxWidth()) {
             items(uiState.library) { manga ->
                 VerticalCard(manga = manga, modifier = Modifier
@@ -105,6 +104,7 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
         PullRefreshIndicator(
             refreshing = uiState.ifLoading,
             state = pullRefreshState,
+            Modifier.align(Alignment.TopCenter)
         )
     }
 
