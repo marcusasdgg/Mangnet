@@ -87,7 +87,7 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
         refreshingOffset = 180.dp
     )
 
-    Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
+    Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState), contentAlignment = Alignment.Center) {
 
         LazyColumn(modifier = modifier.fillMaxWidth()) {
             items(uiState.library) { manga ->
