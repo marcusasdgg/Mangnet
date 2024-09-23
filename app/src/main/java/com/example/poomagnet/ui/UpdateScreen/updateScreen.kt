@@ -99,7 +99,7 @@ fun ChapterListing(modifier: Modifier = Modifier, chapter: slimChapter, onChapte
                 modifier = Modifier
                     .fillMaxHeight() // Set the width as a fraction of the parent width
                     .aspectRatio(1f)
-                    .padding(20.dp,15.dp)
+                    .padding(15.dp,8.dp)
             )
             Column(Modifier.fillMaxWidth(0.8f), horizontalAlignment = Alignment.Start) {
                 Text(chapter.name, fontSize = 14.sp, modifier = Modifier, textAlign = TextAlign.Start)
@@ -107,7 +107,6 @@ fun ChapterListing(modifier: Modifier = Modifier, chapter: slimChapter, onChapte
                 Text("Vol. ${chapter.volume} Ch. ${chapter.chapter} - ${chapter.name}", fontSize = 14.sp, modifier = Modifier.padding(10.dp,0.dp,0.dp,0.dp), textAlign = TextAlign.Start)
             }
         }
-        Divider(Modifier.height(1.dp).align(Alignment.BottomCenter), color = Color.Blue)
     }
 }
 
