@@ -557,9 +557,11 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             if (current !== null){
                 result.forEach { el ->
                     if (!current.any { t -> t.id == el.id }){
-                        current.add(el)
-                        val currentDate = SimpleDate(OffsetDateTime.now().toString())
-                        newUpdatedChapters.add(Pair(currentDate, slimChapter(el.id,el.name,el.chapter,el.volume, its.id, its.coverArtUrl, its.title )))
+                        if (!newUpdatedChapters.any { s -> s.second.id == el.id  }){
+                            val currentDate = SimpleDate(OffsetDateTime.now().toString())
+                            newUpdatedChapters.add(Pair(currentDate, slimChapter(el.id,el.name,el.chapter,el.volume, its.id, its.coverArtUrl, its.title )))
+
+                        }
                     }
                 }
                 its.copy(chapterList = Pair(Date(), current.toList()) )
