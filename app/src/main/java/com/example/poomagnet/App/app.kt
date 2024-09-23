@@ -50,6 +50,7 @@ fun App() {
     val simpleBack: () -> Unit = { viewModel.viewModelScope.launch {
         mangaViewModel.makeVisible(false)
         mangaViewModel.updateLibraryEquivalent()
+        searchViewModel.updateOldSearchText()
         delay(80)
         viewModel.hideBotBar(false)
         viewModel.changeToPrevious()

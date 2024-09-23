@@ -36,6 +36,14 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun updateOldSearchText(){
+        _uiState.update {
+            it.copy(
+                oldText = it.searchText
+            )
+        }
+    }
+
     fun expandSearchBar(ifExpanded: Boolean) {
         _uiState.update {
             it.copy(

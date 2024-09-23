@@ -242,8 +242,8 @@ fun SearchScreen(
             searchViewModel.changeSecondLoad()
         } else {
             Log.d("TAG", "Normal Load detected: ${uiState.somethingChanged}")
-            if (uiState.oldText != uiState.searchText|| uiState.somethingChanged){
-                Log.d("TAG", "SearchScreen: old text !== new test and something changed")
+            if (uiState.oldText != uiState.searchText || uiState.somethingChanged){
+                Log.d("TAG", "SearchScreen: old text !== new test and something changed ${uiState.oldText} and ${uiState.searchText}")
                 currentScrollState.scrollToItem(0)
                 searchViewModel.executeSearch()
                 searchViewModel.setFlag(false)

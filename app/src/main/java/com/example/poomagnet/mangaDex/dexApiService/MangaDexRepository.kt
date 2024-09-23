@@ -240,7 +240,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun backUpManga(context: Context){
+    suspend fun backUpManga(){
         Log.d("TAG", "commencing backup: $library")
         val file = File(context.filesDir, "backup.txt")
         withContext(Dispatchers.IO) {
@@ -272,13 +272,13 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             library.add(mang)
             idSet.add(manga.id)
             printLibrary()
-            backUpManga(context)
+            backUpManga()
             Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
         } else {
             library.add(mang)
             idSet.add(manga.id)
             printLibrary()
-            backUpManga(context)
+            backUpManga()
             Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
         }
     }
@@ -289,7 +289,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         newUpdatedChapters.removeIf { elm->
             elm.second.mangaId == manga?.id
         }
-        backUpManga(context)
+        backUpManga()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -481,7 +481,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                     }
                 }
             }
-            backUpManga(context)
+
             library.map { elm ->
                 if (elm.id == id){
                     elm.copy(chapterList = Pair(Date(),chapterObjects))
@@ -489,6 +489,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                     elm
                 }
             }
+            backUpManga()
             return Pair(chapterObjects, Date())
 
         } catch(e: HttpException){
@@ -544,7 +545,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
             }
         }.toMutableSet()
 
-        backUpManga(context)
+        backUpManga()
     }
 
     suspend fun updateWholeLibrary(){
@@ -565,7 +566,11 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 its
             }
         }
-        backUpManga(context)
+        backUpManga()
+    }
+
+    fun addToList(chapter: Chapter, mangaId: String, url: String, name: String){
+        newUpdatedChapters.add(Pair(SimpleDate(OffsetDateTime.now().toString()), slimChapter(chapter.id, chapter.name,chapter.chapter,chapter.volume,mangaId,url,name)))
     }
 
 

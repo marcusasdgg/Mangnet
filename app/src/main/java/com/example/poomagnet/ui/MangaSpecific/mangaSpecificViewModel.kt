@@ -208,9 +208,15 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             val chapterList = mangaDexRepository.chapList(id)
             val list = uiState.value.currentManga?.chapterList?.second?.toMutableList()
             if (list !== null && uiState.value.currentManga?.inLibrary == true){
+                Log.d("TAG", "getChapterInfo: updating in library chapter list")
                 for (i in chapterList.first){
                     if (!list.any{elm -> elm.id == i.id}){
-                        list.add(i)
+                        val currentManga = uiState.value.currentManga
+                        if (currentManga !== null){
+                            list.add(i)
+                            mangaDexRepository.addToList(i,currentManga.id, currentManga.coverArtUrl, currentManga.title )
+                            // adds newchapters to repositories new chapters.
+                        }
                     }
                 }
                 _uiState.update {
@@ -223,6 +229,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                 if (uiState.value.currentManga !== null){
                     mangaDexRepository.updateInLibrary(uiState.value.currentManga!!)
                 }
+                mangaDexRepository.backUpManga()
                 return
             } else {
                 Log.d("TAG", "getChapterInfo: Chapter is not in library")
