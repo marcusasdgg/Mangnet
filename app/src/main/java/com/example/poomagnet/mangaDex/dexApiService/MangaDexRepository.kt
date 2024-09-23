@@ -573,7 +573,9 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
 
     fun addToList(chapter: Chapter, mangaId: String, url: String, name: String){
-        newUpdatedChapters.add(Pair(SimpleDate(OffsetDateTime.now().toString()), slimChapter(chapter.id, chapter.name,chapter.chapter,chapter.volume,mangaId,url,name)))
+        if (!newUpdatedChapters.any { elm -> elm.second.id == chapter.id }){
+            newUpdatedChapters.add(Pair(SimpleDate(OffsetDateTime.now().toString()), slimChapter(chapter.id, chapter.name,chapter.chapter,chapter.volume,mangaId,url,name)))
+        }
     }
 
 
