@@ -423,7 +423,7 @@ fun MangaTopBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
         exit = fadeOut(animationSpec = tween(50))
     ) {
         TopAppBar(
-            title = {Text("${if (uiState.currentChapter?.volume == -1.0) "" else "Vol. ${uiState.currentChapter?.volume}"} Ch. ${if (uiState.currentChapter?.chapter == -1.0)"Undefined" else uiState.currentChapter?.chapter == -1.0} ${uiState.currentChapter?.name}")},
+            title = {Text("${if (uiState.currentChapter?.volume == -1.0) "" else "Vol. ${uiState.currentChapter?.volume}"} Ch. ${if (uiState.currentChapter?.chapter == -1.0)"Undefined" else uiState.currentChapter?.chapter} ${uiState.currentChapter?.name}")},
             navigationIcon = {
                 IconButton(onClick = { viewModel.viewModelScope.launch {
                     viewModel.toggleHomeBar(true)
