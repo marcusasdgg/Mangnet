@@ -207,7 +207,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         if (id !== null){
             val chapterList = mangaDexRepository.chapList(id)
             val list = uiState.value.currentManga?.chapterList?.second?.toMutableList()
-            if (list !== null && uiState.value.currentManga?.inLibrary == true && list.size != 0){
+            if (list !== null && uiState.value.currentManga?.inLibrary == true){
                 Log.d("TAG", "getChapterInfo: updating in library chapter list")
                 for (i in chapterList.first){
                     if (!list.any{elm -> elm.id == i.id}){
