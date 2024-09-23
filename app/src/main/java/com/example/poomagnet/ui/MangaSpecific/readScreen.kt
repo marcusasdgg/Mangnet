@@ -148,12 +148,27 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
             contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxWidth()
         )
-        Box(Modifier.align(Alignment.CenterStart).fillMaxHeight().fillMaxWidth(0.3f).clickable { leftZone(coroutineScope.coroutineContext) })
-        Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(0.3f).clickable { rightZone(coroutineScope.coroutineContext) })
-        Box(Modifier.align(Alignment.Center).fillMaxHeight().fillMaxWidth(0.4f).clickable(
-            onClick = { onClick() },
-            indication = null,
-            interactionSource = remember { MutableInteractionSource() })
+        Box(
+            Modifier
+                .align(Alignment.CenterStart)
+                .fillMaxHeight()
+                .fillMaxWidth(0.3f)
+                .clickable { leftZone(coroutineScope.coroutineContext) })
+        Box(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .fillMaxWidth(0.3f)
+                .clickable { rightZone(coroutineScope.coroutineContext) })
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .fillMaxHeight()
+                .fillMaxWidth(0.4f)
+                .clickable(
+                    onClick = { onClick() },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() })
         )
     }
 }
@@ -172,12 +187,27 @@ fun endScreen(modifier: Modifier = Modifier, currentChapter: String, nextChapter
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
             Text(currentChapter)
         }
-        Box(Modifier.align(Alignment.CenterStart).fillMaxHeight().fillMaxWidth(0.3f).clickable { leftZone(co.coroutineContext) })
-        Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(0.3f).clickable { rightZone(co.coroutineContext) })
-        Box(Modifier.align(Alignment.Center).fillMaxHeight().fillMaxWidth(0.4f).clickable(
-            onClick = { onClick() },
-            indication = null,
-            interactionSource = remember { MutableInteractionSource() })
+        Box(
+            Modifier
+                .align(Alignment.CenterStart)
+                .fillMaxHeight()
+                .fillMaxWidth(0.3f)
+                .clickable { leftZone(co.coroutineContext) })
+        Box(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .fillMaxWidth(0.3f)
+                .clickable { rightZone(co.coroutineContext) })
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .fillMaxHeight()
+                .fillMaxWidth(0.4f)
+                .clickable(
+                    onClick = { onClick() },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() })
         )
     }
 
@@ -388,7 +418,7 @@ fun MangaTopBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
         exit = fadeOut(animationSpec = tween(50))
     ) {
         TopAppBar(
-            title = {Text("Vol.${uiState.currentChapter?.volume} Ch. ${uiState.currentChapter?.chapter} ${uiState.currentChapter?.name}")},
+            title = {Text("${if (uiState.currentChapter?.volume == -1.0) "" else "Vol. ${uiState.currentChapter?.volume}"} Ch. ${if (uiState.currentChapter?.chapter == -1.0)"Undefined" else uiState.currentChapter?.chapter == -1.0} ${uiState.currentChapter?.name}")},
             navigationIcon = {
                 IconButton(onClick = { viewModel.viewModelScope.launch {
                     viewModel.toggleHomeBar(true)

@@ -599,11 +599,5 @@ data class SimpleDate(
 //fixed it by increasing limit, must be a rate limti issue i reckon.
 //now need to link library/home page to mangadex repo.
 
-// nut
-// nut
-// nut
-// nut
-// nut
-// nut
-// nut
-// nut
+//final fixes, if offline dont break anything,
+// store tagmap locally.
