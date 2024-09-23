@@ -156,6 +156,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     private val gsonSerializer = GsonBuilder()
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
+        .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
         .create()
 
     //local persistence is so much easier now, i just backup
@@ -593,6 +594,25 @@ data class SimpleDate(
         date.split("-")[1].toInt(),
         date.split("-")[0].toInt()
     )
+}
+
+class SimpleDateAdapter : JsonDeserializer<SimpleDate>, JsonSerializer<SimpleDate> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): SimpleDate {
+        val jsonObject = json?.asJsonObject
+        return SimpleDate(
+            jsonObject?.get("year")?.asInt ?: 0,
+            jsonObject?.get("month")?.asInt ?: 0,
+            jsonObject?.get("day")?.asInt ?: 0
+        )
+    }
+
+    override fun serialize(src: SimpleDate, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("year", src.year)
+        jsonObject.addProperty("month", src.month)
+        jsonObject.addProperty("day", src.day)
+        return jsonObject
+    }
 }
 
 //right now for library swapped mangaInfo objects, it doesnt properly work? as in it tries to load the chapters but gets a http 400?
