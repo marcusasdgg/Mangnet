@@ -157,6 +157,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
         .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
+        .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
         .create()
 
     //local persistence is so much easier now, i just backup
@@ -231,6 +232,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 library = r.first.toMutableSet()
                 idSet = r.second.toMutableSet()
                 newUpdatedChapters = r.third.toMutableList()
+                Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
             }
@@ -615,6 +617,33 @@ class SimpleDateAdapter : JsonDeserializer<SimpleDate>, JsonSerializer<SimpleDat
         jsonObject.addProperty("year", src.year)
         jsonObject.addProperty("month", src.month)
         jsonObject.addProperty("day", src.day)
+        return jsonObject
+    }
+}
+
+class SlimChapterAdapter : JsonDeserializer<slimChapter>, JsonSerializer<slimChapter> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): slimChapter {
+        val jsonObject = json?.asJsonObject
+        return slimChapter(
+            id = jsonObject?.get("id")?.asString ?: "",
+            name = jsonObject?.get("name")?.asString ?: "",
+            chapter = jsonObject?.get("chapter")?.asDouble ?: 0.0,
+            volume = jsonObject?.get("volume")?.asDouble ?: 0.0,
+            mangaId = jsonObject?.get("mangaId")?.asString ?: "",
+            imageUrl = jsonObject?.get("imageUrl")?.asString ?: "",
+            mangaName = jsonObject?.get("mangaName")?.asString ?: ""
+        )
+    }
+
+    override fun serialize(src: slimChapter, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("id", src.id)
+        jsonObject.addProperty("name", src.name)
+        jsonObject.addProperty("chapter", src.chapter)
+        jsonObject.addProperty("volume", src.volume)
+        jsonObject.addProperty("mangaId", src.mangaId)
+        jsonObject.addProperty("imageUrl", src.imageUrl)
+        jsonObject.addProperty("mangaName", src.mangaName)
         return jsonObject
     }
 }
