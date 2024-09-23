@@ -88,7 +88,7 @@ fun ChapterListing(modifier: Modifier = Modifier, chapter: slimChapter, onChapte
             .fillMaxWidth()
             .height(60.dp)
             .clickable { onChapterClick(chapter.mangaId, chapter.id) }){
-        Row(Modifier.fillMaxSize().border(1.dp, Color.Black), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically){
+        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically){
             AsyncImage(
                 model = ImageRequest.Builder(context)
                     .data(chapter.imageUrl)
