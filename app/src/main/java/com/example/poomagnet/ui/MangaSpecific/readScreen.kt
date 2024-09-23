@@ -153,13 +153,13 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                 .align(Alignment.CenterStart)
                 .fillMaxHeight()
                 .fillMaxWidth(0.35f)
-                .clickable { leftZone(coroutineScope.coroutineContext) })
+                .clickable { leftZone(coroutineScope.coroutineContext)})
         Box(
             Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .fillMaxWidth(0.35f)
-                .clickable { rightZone(coroutineScope.coroutineContext) })
+                .clickable { rightZone(coroutineScope.coroutineContext)})
         Box(
             Modifier
                 .align(Alignment.Center)
@@ -245,7 +245,12 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                     when (contents){
                         is ChapterContents.Online -> {
                             val firstList: List<@Composable () -> Unit> = contents.imagePaths.map { elm ->
-                                {ImageView(Modifier, imageUrl = elm.first, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
+                                {
+                                    LaunchedEffect(Unit) {
+                                        viewModel.toggleHomeBar(false)
+                                        viewModel.toggleReadBar(false)
+                                    }
+                                    ImageView(Modifier, imageUrl = elm.first, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
                                     viewModel.viewModelScope.launch {
                                         if (pagerState.currentPage >= pagerState.pageCount - 2){
                                             if (uiState.nextChapter == null){
