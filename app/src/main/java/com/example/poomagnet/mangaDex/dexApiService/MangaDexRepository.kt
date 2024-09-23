@@ -229,9 +229,9 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
                 val listType = object : TypeToken<Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>>>() {}.type
                 val r: Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>> = gsonSerializer.fromJson(jsonString, listType)
-                library = r.first.toMutableSet()
-                idSet = r.second.toMutableSet()
-                newUpdatedChapters = r.third.toMutableList()
+                library = r.first.toMutableSet() as MutableSet<MangaInfo>
+                idSet = r.second.toMutableSet() as MutableSet<String>
+                newUpdatedChapters = r.third.toMutableList() as MutableList<Pair<SimpleDate, slimChapter>>
                 Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
@@ -553,31 +553,42 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     suspend fun updateWholeLibrary(){
         Log.d("TAG", "updateWholeLibrary: called")
-        library.map { its ->
-            val result = chapList(its.id).first
-            val current = its.chapterList?.second?.toMutableList()
-            if (current !== null){
-                result.forEach { el ->
-                    if (!current.any { t -> t.id == el.id }){
-                        if (!newUpdatedChapters.any { s -> s.second.id == el.id  }){
-                            val currentDate = SimpleDate(OffsetDateTime.now().toString())
-                            newUpdatedChapters.add(Pair(currentDate, slimChapter(el.id,el.name,el.chapter,el.volume, its.id, its.coverArtUrl, its.title )))
+        try {
+            library.map { its ->
+                val result = chapList(its.id).first
+                val current = its.chapterList?.second?.toMutableList()
+                if (current !== null){
+                    result.forEach { el ->
+                        if (!current.any { t -> t.id == el.id }){
+                            if (!newUpdatedChapters.any { s -> s.second.id == el.id  }){
+                                val currentDate = SimpleDate(OffsetDateTime.now().toString())
+                                newUpdatedChapters.add(Pair(currentDate, slimChapter(el.id,el.name,el.chapter,el.volume, its.id, its.coverArtUrl, its.title )))
 
+                            }
                         }
                     }
+                    its.copy(chapterList = Pair(Date(), current.toList()) )
+                }else {
+                    its
                 }
-                its.copy(chapterList = Pair(Date(), current.toList()) )
-            }else {
-                its
             }
+            backUpManga()
+        } catch (e: Exception){
+            Log.d("TAG", "updateWholeLibrary: $e")
         }
-        backUpManga()
+
     }
 
     fun addToList(chapter: Chapter, mangaId: String, url: String, name: String){
-        if (!newUpdatedChapters.any { elm -> elm.second.id == chapter.id }){
-            newUpdatedChapters.add(Pair(SimpleDate(OffsetDateTime.now().toString()), slimChapter(chapter.id, chapter.name,chapter.chapter,chapter.volume,mangaId,url,name)))
+        try {
+            if (!newUpdatedChapters.any { elm -> elm.second.id == chapter.id }){
+                newUpdatedChapters.add(Pair(SimpleDate(OffsetDateTime.now().toString()), slimChapter(chapter.id, chapter.name,chapter.chapter,chapter.volume,mangaId,url,name)))
+            }
+
+        } catch (e: Exception){
+            Log.d("TAG", "addToList: $e")
         }
+
     }
 
 
