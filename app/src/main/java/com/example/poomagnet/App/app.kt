@@ -1,5 +1,6 @@
 package com.example.poomagnet.App
 
+import android.Manifest
 import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
@@ -7,6 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,13 +33,16 @@ import com.example.poomagnet.ui.SearchScreen.SearchViewModel
 import com.example.poomagnet.ui.UpdateScreen.UpdateScreen
 import com.example.poomagnet.ui.UpdateScreen.UpdateTopBar
 import com.example.poomagnet.ui.UpdateScreen.updateViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun App() {
+
     val viewModel: AppViewModel = viewModel()
     val uiState = viewModel.uiState.collectAsState().value
     val homeViewModel: HomeViewModel = hiltViewModel()
@@ -45,6 +50,10 @@ fun App() {
     val searchViewModel: SearchViewModel =  hiltViewModel()
     val mangaViewModel: MangaSpecificViewModel = hiltViewModel()
     val updateViewModel: updateViewModel = hiltViewModel()
+
+    val notificationPermission = rememberPermissionState(
+        permission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
+    )
 
 
     val simpleBack: () -> Unit = { viewModel.viewModelScope.launch {
@@ -64,7 +73,7 @@ fun App() {
 
     val currentScrollStateSearch = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     Scaffold(
         modifier = Modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -145,7 +154,9 @@ fun App() {
                 }
             })
             ScreenType.Settings -> {
-                HomeScreen(modifier = Modifier.padding(innerPadding),{}, homeViewModel, {}, {a, b ->}, ScreenType.Settings, {}, snackbarHostState, updateViewModel::syncLibrary)
+                Button(onClick = { Log.d("TAG", "App: note request");notificationPermission.launchPermissionRequest()}, Modifier.padding(innerPadding)) {
+                    Text(notificationPermission.permission + notificationPermission.status.toString())
+                }
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

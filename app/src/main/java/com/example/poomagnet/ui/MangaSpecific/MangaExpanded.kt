@@ -1,5 +1,7 @@
 package com.example.poomagnet.ui.MangaSpecific
 
+import android.Manifest
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
@@ -33,8 +35,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.outlined.DownloadForOffline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -67,19 +71,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.SimpleDate
+import com.example.poomagnet.mangaDex.dexApiService.isDownloaded
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPermissionsApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificViewModel, onAdd: () -> Unit, hideTopBar: (Boolean) -> Unit) {
     val uiState by mangaViewModel.uiState.collectAsState()
     val scrollstate = rememberScrollState()
+
+
+
+
     LaunchedEffect(Unit) {
         mangaViewModel.getChapterInfo()
     }
@@ -192,7 +206,9 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             mangaViewModel.setFlag(true)
                         }
                         }
-                        ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished)
+                        ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished, elm.contents?.isDownloaded?:false, onDownload = {mangaViewModel.viewModelScope.launch {
+
+                        }})
                 }
             }
         }
@@ -222,13 +238,15 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Boolean){
+
     Box(
         modifier
             .clip(RoundedCornerShape(10)) // Clip first to apply rounded corners
             .background(MaterialTheme.colorScheme.background) // Background after clipping
-            .clickable { onclick() } ){
+            .clickable {  ; onclick() } ){
         Column(Modifier.fillMaxSize()) {
                 Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "",
                     Modifier
@@ -243,7 +261,7 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
 }
 
 @Composable
-fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?, ifRead: Boolean){
+fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?, ifRead: Boolean, ifDownloaded: Boolean, onDownload: () -> Unit){
     Box(
         modifier
             .fillMaxWidth()
@@ -255,11 +273,13 @@ fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: 
                 .fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1,
             color = if (ifRead) Color.Gray else Color.Unspecified,
         )
+        IconButton(onClick = {onDownload()},
+            modifier = Modifier.align(Alignment.CenterEnd)
+                .padding(0.dp, 0.dp, 15.dp, 0.dp)
+            ) {
+            Icon(if(ifDownloaded) Icons.Filled.DownloadForOffline else Icons.Outlined.DownloadForOffline, "", tint = if (ifRead) Color.DarkGray else Color.Gray)
+        }
 
-        Icon(Icons.AutoMirrored.Filled.OpenInNew, "",
-            Modifier
-                .align(Alignment.CenterEnd)
-                .padding(0.dp, 0.dp, 15.dp, 0.dp), tint = if (ifRead) Color.DarkGray else Color.Gray)
         Text(date.toString(),
             Modifier
                 .align(Alignment.BottomStart)
@@ -326,3 +346,4 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
     }
 
 }
+

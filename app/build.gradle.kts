@@ -76,6 +76,9 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.common)
+
+    implementation("androidx.work:work-runtime:2.8.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -98,6 +101,9 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("com.google.accompanist:accompanist-permissions:0.31.0-alpha")
+
+
 }
 
 kapt {

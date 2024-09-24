@@ -1,5 +1,6 @@
 package com.example.poomagnet.App
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.DrawableRes
@@ -29,6 +30,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.poomagnet.R
 import com.example.poomagnet.ui.theme.AppTheme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 
 data class BottomNavInfo(
     @StringRes val name: Int,
@@ -42,6 +45,7 @@ enum class ScreenType{
 }
 
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun BottomNavBar(
     modifier: Modifier = Modifier,
@@ -49,6 +53,9 @@ fun BottomNavBar(
     currentTab: ScreenType,
     onButtonPressed: (ScreenType) -> Unit,
     ) {
+    val notificationPermission = rememberPermissionState(
+        permission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
+    )
     Log.d("APPMAIN", currentTab.name)
     NavigationBar(modifier) {
         for (item in infoList)

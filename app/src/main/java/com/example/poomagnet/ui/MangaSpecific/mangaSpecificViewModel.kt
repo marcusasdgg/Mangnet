@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.MangaSpecific
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -8,13 +9,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.CoroutineWorker
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import com.example.poomagnet.App.ScreenType
 import com.example.poomagnet.mangaDex.dexApiService.Chapter
 import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.isOnline
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +35,8 @@ import javax.inject.Inject
 
 //make sure to not overwrite the old chapter list objects and add the new ones in.
 @HiltViewModel
-class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository: MangaDexRepository) : ViewModel() {
+class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository: MangaDexRepository,
+                                                  @ApplicationContext private val context: Context) : ViewModel() {
     private val _uiState = MutableStateFlow(mangaUiState())
     val uiState: StateFlow<mangaUiState> = _uiState
 
@@ -416,7 +425,24 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
     }
 
 
-
+//    suspend fun downloadChapter(chapterId: String){
+//        val inputData = Data.Builder()
+//            .putString("mangaId", uiState.value.currentManga?.id)
+//            .putString("chapterId", chapterId)
+//            .build()
+//        val workRequest = OneTimeWorkRequestBuilder<MangaWorker>()
+//            .setInputData(inputData)
+//            .build()
+//
+//        WorkManager.getInstance(context) // Use context directly
+//            .enqueue(workRequest)
+//        delay(8000)
+//        _uiState.update {
+//            it.copy(
+//                currentManga = mangaDexRepository.library.firstOrNull { its -> its.id == it.currentManga?.id }
+//            )
+//        }
+//    }
 
     fun loadPreviousChapter(){
         _uiState.update {
@@ -431,6 +457,28 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
 
 }
+
+//class MangaWorker @Inject constructor(
+//    appContext: Context,
+//    workerParams: WorkerParameters,
+//    private val mangaDexRepository: MangaDexRepository
+//) : CoroutineWorker(appContext, workerParams) {
+//
+//    override suspend fun doWork(): Result {
+//        // Retrieve parameters
+//        val mangaId = inputData.getString("mangaId") ?: return Result.failure()
+//        val id = inputData.getString("chapterId") ?: return Result.failure()
+//
+//        // Call the repository method you need
+//        return try {
+//            mangaDexRepository.downloadChapterContents(mangaId, id) // Replace with your actual method
+//            Result.success()
+//        } catch (e: Exception) {
+//            Result.failure()
+//        }
+//    }
+//}
+
 
 //when moving to read chapter view, we need to edit the app.kt's backhandler such that
 //it now navigates us back to the mangaScreen page? Since backhandler is triggerred by

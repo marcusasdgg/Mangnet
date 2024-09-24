@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.ImageBitmap
+import com.example.poomagnet.downloadService.DownloadService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
@@ -146,13 +147,12 @@ class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
 
 //need to store, chapter and volume name
 
-@RequiresApi(Build.VERSION_CODES.O)
-class MangaDexRepository @Inject constructor(private val context: Context)  {
+
+class MangaDexRepository @Inject constructor(private val context: Context, private val downloadService: DownloadService)  {
     private val apiService = RetrofitInstance.api
     var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private val gsonSerializer = GsonBuilder()
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
@@ -213,7 +213,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
     }
     
     private fun printLibrary(){
-        Log.d("TAG", "printLibrary: $library")
+        Log.d("TAG", "printLibrary: ${library.map { elm -> elm.coverArtUrl }}")
     }
 
 
@@ -233,6 +233,7 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
                 idSet = r.second.toMutableSet() as MutableSet<String>
                 newUpdatedChapters = r.third.toMutableList() as MutableList<Pair<SimpleDate, slimChapter>>
                 Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
+                printLibrary()
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
             }
@@ -271,14 +272,16 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         if(manga.chapterList?.second?.size  == 0){
             val chapterList = chapList(mang.id)
             Log.d("TAG", "no chapters found trying again")
-            mang = manga.copy(chapterList = Pair(chapterList.second, chapterList.first))
+            mang = manga.copy(chapterList = Pair(chapterList.second, chapterList.first), coverArtUrl = downloadService.downloadCoverUrl(manga.id, manga.coverArtUrl))
             library.add(mang)
             idSet.add(manga.id)
             printLibrary()
             backUpManga()
             Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
         } else {
-            library.add(mang)
+            val d = downloadService.downloadCoverUrl(manga.id, manga.coverArtUrl)
+            Log.d("TAG", "addToLibrary: found url $d")
+            library.add(mang.copy(coverArtUrl = d))
             idSet.add(manga.id)
             printLibrary()
             backUpManga()
@@ -521,6 +524,40 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
         return ChapterContents.Online(list.map {elm -> Pair(elm, false) }, false)
     }
 
+//    suspend fun downloadChapterContents(mangaId: String, id: String): ChapterContents.Downloaded{
+//        val contents = getChapterContents(id)
+//        if (contents is ChapterContents.Online){
+//            val imagePaths = contents.imagePaths.map { its -> its.first }.toList()
+//            val downloadedContents = downloadService.downloadChapter(id, mangaId, imagePaths)
+//            val curinLib = library.find { its -> its.id == id }
+//            if (curinLib !== null){
+//                val List = curinLib.chapterList
+//                if (List !== null){
+//                    val index: Int = List.second.indexOfFirst { chap -> chap.id == id }
+//                    val newList = List.second.toMutableList()
+//                    if (index != -1) {
+//                        newList[index] = newList[index].copy(contents = downloadedContents)
+//                    }
+//                    val newLib = curinLib.copy(
+//                        chapterList = Pair(Date(),newList)
+//                    )
+//
+//                    library.removeIf { ot -> ot.id == mangaId }
+//                    library.add(newLib)
+//                    backUpManga()
+//                    return downloadedContents
+//                }
+//
+//            } else {
+//                return ChapterContents.Downloaded(listOf(), false)
+//            }
+//
+//        } else {
+//            return ChapterContents.Downloaded(listOf(), false)
+//        }
+//        return ChapterContents.Downloaded(listOf(), false)
+//    }
+
     private suspend fun downloadImage(url: String, id: String): Bitmap? {
         return try {
             val response = apiService.downloadFile("https://uploads.mangadex.org/covers/$id/$url")
@@ -539,10 +576,18 @@ class MangaDexRepository @Inject constructor(private val context: Context)  {
 
     suspend fun updateInLibrary(manga: MangaInfo){
         Log.d("TAG", "updateInLibrary: receieved $manga")
+        val currentDate = SimpleDate(OffsetDateTime.now().toString())
         library = library.map { elm ->
             if (manga.id == elm.id){
                 Log.d("TAG", "updateInLibrary: found manga")
-                manga
+                val oldChapters = elm.chapterList?.second?.toMutableList()
+                manga.chapterList?.second?.forEach { t ->
+                    if (!oldChapters?.any{ e -> e.id == t.id }!!){
+                        oldChapters.add(t)
+                        newUpdatedChapters.add(Pair(currentDate, slimChapter(t.id,t.name,t.chapter,t.volume, elm.id, elm.coverArtUrl, elm.title )))
+                    }
+                }
+                elm.copy(chapterList = Pair(Date(),oldChapters ?: listOf()))
             }else {
                 elm
             }

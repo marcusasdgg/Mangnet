@@ -55,7 +55,7 @@ import com.example.poomagnet.ui.HomeScreen.displayType
 //this should work for both versions of mangaInfo, i.e the one including the covertArturl and the one with the downloaded image.
 @Composable
 fun VerticalCardTest(modifier: Modifier = Modifier, manga: MangaInfo){
-    Log.d("TAG", manga.coverArtUrl)
+    Log.d("TAG", "url given is "+ manga.coverArtUrl)
     if (true) { //manga.coverArt != null
         Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp)) {
             Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
@@ -84,6 +84,7 @@ fun VerticalCardTest(modifier: Modifier = Modifier, manga: MangaInfo){
 
 @Composable
 fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (MangaInfo) -> Unit) {
+    Log.d("TAG", "url given is "+ manga.coverArtUrl)
     Card(modifier = modifier
         .height(250.dp)
         .width(110.dp), shape = CardDefaults.shape, onClick = { click(manga) }){

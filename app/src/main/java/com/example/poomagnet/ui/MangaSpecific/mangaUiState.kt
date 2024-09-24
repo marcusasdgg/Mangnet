@@ -15,6 +15,7 @@ data class mangaUiState(
     val nextChapter: Chapter? = null,
     val nextFlag: Boolean = true,
     val latestChapterReadId: String = "",
+    val callRefresh: Boolean = false,
 )
 
 
