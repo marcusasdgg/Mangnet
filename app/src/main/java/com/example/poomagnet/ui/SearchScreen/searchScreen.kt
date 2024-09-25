@@ -297,7 +297,8 @@ fun SearchScreen(
             items(uiState.searchListing) { manga ->
                 DoubleStackCard(
                     manga = manga,
-                    click = setCurrentManga
+                    click = setCurrentManga,
+                    loadImage = {elm1, elm2 -> searchViewModel.loadImageFromLibrary(elm1,elm2) }
                 )
             }
         }

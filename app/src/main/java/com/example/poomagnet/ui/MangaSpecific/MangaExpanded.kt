@@ -57,6 +57,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,18 +115,37 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     Modifier
                         .weight(1.8f)
                         .fillMaxHeight()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(uiState.currentManga?.coverArtUrl)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(R.drawable.prevthumbnail),
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(15.dp))
-                    )
+                    if (uiState.currentManga?.inLibrary == true){
+                        var image by remember { mutableStateOf("")}
+                        LaunchedEffect(Unit) {
+                            image = mangaViewModel.loadImageFromLibrary(uiState.currentManga!!.id, uiState.currentManga!!.coverArtUrl)
+                        }
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(image)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.prevthumbnail),
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(15.dp))
+                        )
+                    }else {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(uiState.currentManga?.coverArtUrl)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.prevthumbnail),
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(15.dp))
+                        )
+                    }
                 }
                 Spacer(Modifier.width(15.dp))
                 Column(

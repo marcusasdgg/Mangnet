@@ -21,7 +21,7 @@ const val APPFOLDERNAME = "pooMAgnet"
 
 public class DownloadService @Inject constructor(@ApplicationContext val context: Context) {
 
-    private var pooMagFolderURI: Uri? = null
+    private var pooMagFolderURI: Uri? = null //potenitally wont be used.
     private val resolver: ContentResolver
 
 
@@ -32,7 +32,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         updateRootURI()
     }
 
-    fun updateRootURI(){
+    private fun updateRootURI(){
         val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
@@ -60,7 +60,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     private suspend fun addImageToFolder(folderName: String, imageName: String, imageUrl: String): Uri?{
         val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, imageName)
+            put(MediaStore.Images.Media.DISPLAY_NAME, "$imageName.jpeg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
             put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$folderName")
         }
@@ -110,10 +110,41 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         val image = addImageToFolder(mangaId, mangaId, url)
         if (image !== null){
             Log.d("TAG", "downloadCoverUrl: iamge given was $image")
-            return image.toString()
+            return "$mangaId.jpeg"
         } else {
             return ""
         }
+    }
+
+    suspend fun retrieveImage(mangaId: String, imageName: String): Uri?{
+        val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ? AND ${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf(imageName, "%${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId%")
+
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID, // The ID of the image
+            MediaStore.Images.Media.DISPLAY_NAME, // The display name (file name)
+            MediaStore.Images.Media.RELATIVE_PATH // The relative path to the file (in this case, "Pictures/")
+        )
+
+        resolver.query(folderDirectory, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                // Get the ID of the image file
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val id = cursor.getLong(idColumn)
+
+                // Create the URI for the image using the ID
+                return Uri.withAppendedPath(folderDirectory, id.toString())
+            } else {
+                Log.d("TAG", "retrieveImage: no image found with name $imageName in path ${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId")
+                return null
+            }
+        }
+        Log.d("TAG", "retrieveImage: no image found with name $imageName")
+        return null
+
     }
 
     private suspend fun addChapter(folderName: String, imageNames: List<String>): Boolean{

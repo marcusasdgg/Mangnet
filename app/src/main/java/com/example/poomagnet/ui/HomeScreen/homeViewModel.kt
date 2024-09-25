@@ -31,6 +31,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
+        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+    }
+
     fun loadIt(boolean: Boolean){
         _uistate.update {
             it.copy(

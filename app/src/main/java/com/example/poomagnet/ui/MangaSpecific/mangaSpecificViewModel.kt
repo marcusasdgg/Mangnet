@@ -410,6 +410,10 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+    suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
+        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+    }
+
     fun loadNextChapter(){
         Log.d("TAG", "loadNextChapter:started")
         _uiState.update {

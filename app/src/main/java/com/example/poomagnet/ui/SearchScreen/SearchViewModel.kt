@@ -4,6 +4,7 @@ import ContentRating
 import Demographic
 import Ordering
 import Tag
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -42,6 +43,10 @@ class SearchViewModel @Inject constructor(
                 oldText = it.searchText
             )
         }
+    }
+
+    suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
+        return mangaDexRepository.getImageUri(mangaId, coverUrl)
     }
 
     fun expandSearchBar(ifExpanded: Boolean) {

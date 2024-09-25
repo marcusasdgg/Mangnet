@@ -97,7 +97,8 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
                     readChapter(id,manga)
                 }, openLast = {
                     openLast(manga)
-                }
+                },
+                    loadImage = {elm1, elm2 -> viewModel.loadImageFromLibrary(elm1,elm2)}
                 )
                 Spacer(Modifier.fillMaxWidth().height(10.dp))
             }

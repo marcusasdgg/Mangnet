@@ -34,6 +34,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -83,28 +88,35 @@ fun VerticalCardTest(modifier: Modifier = Modifier, manga: MangaInfo){
 
 
 @Composable
-fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (MangaInfo) -> Unit) {
+fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (MangaInfo) -> Unit, loadImage: suspend (String, String) -> String) {
     Log.d("TAG", "url given is "+ manga.coverArtUrl)
     Card(modifier = modifier
         .height(250.dp)
         .width(110.dp), shape = CardDefaults.shape, onClick = { click(manga) }){
         Box {
             // Main content of the card
-            if (manga.coverArt == null) {
+            if (manga.inLibrary) {
+                var uri by remember{ mutableStateOf("")}
+                LaunchedEffect(Unit){
+                    uri = loadImage(manga.id, manga.coverArtUrl)
+                    Log.d("TAG", "VerticalCard: iamge loaded with uri $uri")
+                }
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(manga.coverArtUrl)
+                        .data(uri)
                         .crossfade(true)
                         .build(),
                     placeholder = painterResource(R.drawable.prevthumbnail),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxHeight().fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth()
                 )
             } else {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(manga.coverArt)
+                        .data(manga.coverArtUrl)
                         .crossfade(true)
                         .build(),
                     placeholder = painterResource(R.drawable.prevthumbnail),
@@ -130,56 +142,81 @@ fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (Man
     }
 }
 
-@Preview
+//@Preview
+//@Composable
+//fun DoubleStackCardPreviewScreen() {
+//    val list: MutableList<MangaInfo> = mutableListOf()
+//    val dbl = MangaInfo("a","b","c",listOf("d"), "e",mangaState.IN_PROGRESS,"f",listOf("g"),null,"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMdM9MEQ0ExL1PmInT3U5I8v63YXBEdoIT0Q&s",0)
+//    for(i in 0..11){
+//        list.add(dbl)
+//    }
+//
+//    LazyVerticalGrid(
+//        columns = GridCells.Fixed(2), // 2 items per row
+//        modifier = Modifier.fillMaxSize(),
+//        contentPadding = PaddingValues(16.dp),
+//        horizontalArrangement = Arrangement.spacedBy(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(16.dp)
+//    ) {
+//        items(list) { manga ->
+//            DoubleStackCard(
+//                manga = manga,
+//                click = {}
+//            )
+//        }
+//    }
+//}
+
+
+
+
+
 @Composable
-fun DoubleStackCardPreviewScreen() {
-    val list: MutableList<MangaInfo> = mutableListOf()
-    val dbl = MangaInfo("a","b","c",listOf("d"), "e",mangaState.IN_PROGRESS,"f",listOf("g"),null,"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMdM9MEQ0ExL1PmInT3U5I8v63YXBEdoIT0Q&s",0)
-    for(i in 0..11){
-        list.add(dbl)
-    }
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2), // 2 items per row
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(list) { manga ->
-            DoubleStackCard(
-                manga = manga,
-                click = {}
-            )
-        }
-    }
-}
-
-
-
-
-
-@Composable
-fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit, openLast: () -> Unit){
-    Card(modifier = modifier.sizeIn(300.dp,160.dp,300.dp,160.dp).clickable { onclick() }) {
+fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit, openLast: () -> Unit, loadImage: suspend (String, String) -> String){
+    Card(modifier = modifier
+        .sizeIn(300.dp, 160.dp, 300.dp, 160.dp)
+        .clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(manga.coverArtUrl)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.prevthumbnail),
-                contentDescription = "",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.32f)
-            )
+            if (manga.inLibrary){
+                var image by remember { mutableStateOf("") }
+                LaunchedEffect(Unit) {
+                    image = loadImage(manga.id, manga.coverArtUrl)
+                    Log.d("TAG", "VerticalCard: iamge loaded with uri $image")
+                }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(image)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.prevthumbnail),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.32f)
+                )
+            }else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(manga.coverArtUrl)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.prevthumbnail),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.32f)
+                )
+            }
             Column(Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp), contentAlignment = Alignment.Center) {
-                    Text(manga.title, fontSize = 18.sp, modifier = Modifier.fillMaxWidth(0.82f).align(Alignment.CenterStart).padding(11.dp,0.dp,0.dp,0.dp), overflow = TextOverflow.Ellipsis, maxLines = 2)
+                    Text(manga.title, fontSize = 18.sp, modifier = Modifier
+                        .fillMaxWidth(0.82f)
+                        .align(Alignment.CenterStart)
+                        .padding(11.dp, 0.dp, 0.dp, 0.dp), overflow = TextOverflow.Ellipsis, maxLines = 2)
                     IconButton(
                         onClick = {openLast()},
                         Modifier.align(Alignment.CenterEnd)
@@ -188,18 +225,22 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                     }
 
                 }
-                LazyColumn(modifier = Modifier.fillMaxWidth(0.82f).fillMaxHeight()) {
+                LazyColumn(modifier = Modifier
+                    .fillMaxWidth(0.82f)
+                    .fillMaxHeight()) {
                     Log.d("TAG", "VerticalCard: found ${manga.chapterList?.second?.size} chapters")
                     items(manga.chapterList?.second ?: listOf()) { chapter ->
                         Box(modifier = Modifier
                             .fillMaxWidth()
-                            .height(35.dp).clickable {
+                            .height(35.dp)
+                            .clickable {
                                 engageChapter(chapter.id)
                             },
                         ) {
                             Text("Ch. ${chapter.chapter} ${chapter.name}", modifier = Modifier
                                 .align(Alignment.CenterStart)
-                                .padding(8.dp, 0.dp).fillMaxWidth(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (chapter.finished){Color.Gray} else Color.Unspecified)
+                                .padding(8.dp, 0.dp)
+                                .fillMaxWidth(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (chapter.finished){Color.Gray} else Color.Unspecified)
                             Divider(Modifier.fillMaxWidth(),color = Color.LightGray, thickness =  0.5.dp, )
                         }
                     }
