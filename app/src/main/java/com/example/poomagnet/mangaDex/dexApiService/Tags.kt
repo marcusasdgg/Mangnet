@@ -1,9 +1,14 @@
 import coil.request.Tags
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import java.lang.reflect.Type
 
 enum class Tag(val full_name: String){
     Romance("Romance"),
     Magical_Girls("Magical Girls"),
-    Boys_Love("Boys' Love"),
+    Boys_Love("Boys Love"),
     Animals("Animals"),
     Monsters("Monsters"),
     Demons("Demons"),
@@ -20,11 +25,11 @@ enum class Tag(val full_name: String){
     Crime("Crime"),
     Survival("Survival"),
     Office_Workers("Office Workers"),
-    Sci_Fi("Sci-Fi"),
+    Sci_Fi("Sci Fi"),
     Gyaru("Gyaru"),
     Ghosts("Ghosts"),
     Villainess("Villainess"),
-    Post_Apocalyptic("Post-Apocalyptic"),
+    Post_Apocalyptic("Post Apocalyptic"),
     Vampires("Vampires"),
     Video_Games("Video Games"),
     Magic("Magic"),
@@ -36,12 +41,12 @@ enum class Tag(val full_name: String){
     Time_Travel("Time Travel"),
     Reincarnation("Reincarnation"),
     Action("Action"),
-    Self_Published("Self-Published"),
+    Self_Published("Self Published"),
     Isekai("Isekai"),
     Martial_Arts("Martial Arts"),
     Official_Colored("Official Colored"),
     Loli("Loli"),
-    Four_Koma("4-Koma"),
+    Four_Koma("Four Koma"),
     Horror("Horror"),
     Superhero("Superhero"),
     Drama("Drama"),
@@ -66,7 +71,7 @@ enum class Tag(val full_name: String){
     Oneshot("Oneshot"),
     Mafia("Mafia"),
     Adaptation("Adaptation"),
-    Girls_Love("Girls' Love"),
+    Girls_Love("Girls Love"),
     Monster_Girls("Monster Girls"),
     Award_Winning("Award Winning"),
     Historical("Historical"),
@@ -86,6 +91,13 @@ enum class Tag(val full_name: String){
 
     override fun toString(): String {
         return super.toString().replace("_", " ")
+    }
+}
+
+class TagDeserializer : JsonDeserializer<Tag> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Tag {
+        val value = json.asString
+        return Tag.fromValue(value) ?: throw JsonParseException("Unknown tag: $value")
     }
 }
 

@@ -2,6 +2,7 @@ package com.example.poomagnet.mangaDex.dexApiService
 
 
 import Tag
+import TagDeserializer
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -167,6 +168,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
         .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
         .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
+        .registerTypeAdapter(Tag::class.java, TagDeserializer())
         .create()
 
     //local persistence is so much easier now, i just backup
@@ -210,6 +212,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                         }
                     }
                 }
+                Log.d("TAG", "setupTags: $tagMap")
 
             } catch (e: Exception) {
                 Log.d("TAG", "setupTags: failed due to $e")
@@ -245,15 +248,14 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                 library = r.library
                 idSet = r.idSet
                 newUpdatedChapters = r.newUpdatedChapters
-                tagMap = r.tagMap
+                //tagMap = r.tagMap
                 Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
                 printLibrary()
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
             }
         } catch (e: Exception) {
-            Log.e("TAG", "Error loading manga from backup.txt: ${e.message}")
-
+            Log.e("TAG", "Error loading manga from backup.txt", e)
         }
     }
 
@@ -399,7 +401,12 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                                 var mangaTitle = "n/a"
                                 val titleSearch = attributes["title"]
                                 if (titleSearch is Map<*, *>) {
-                                    mangaTitle = if (titleSearch["en"] !== null) titleSearch["en"].toString() else titleSearch["ja"].toString()
+                                   if (titleSearch["en"] == null){
+                                       Log.d("TAG", "searchAllManga found titles: $titleSearch")
+                                        mangaTitle = titleSearch["ja-ro"].toString()
+                                   } else {
+                                       mangaTitle = titleSearch["en"].toString()
+                                   }
                                 }
 
                                 val tagSon = attributes["tags"]

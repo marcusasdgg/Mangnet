@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -284,6 +285,7 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
 
 @Composable
 fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: Double, volume: Double, name: String, date: SimpleDate?, ifRead: Boolean, ifDownloaded: Boolean, onDownload: () -> Unit){
+    val context = LocalContext.current
     Box(
         modifier
             .fillMaxWidth()
@@ -295,12 +297,14 @@ fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: 
                 .fillMaxWidth(0.85f), overflow = TextOverflow.Ellipsis, maxLines = 1,
             color = if (ifRead) Color.Gray else Color.Unspecified,
         )
-        IconButton(onClick = {onDownload()},
+        IconButton(onClick = {
+            Toast.makeText(context,"Downloading Chapter Come Back Later", Toast.LENGTH_LONG).show()
+            onDownload()},
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(0.dp, 0.dp, 15.dp, 0.dp)
             ) {
-            Icon(if(ifDownloaded) Icons.Filled.DownloadForOffline else Icons.Outlined.DownloadForOffline, "", tint = if (ifRead) Color.DarkGray else Color.Gray)
+            Icon(if(ifDownloaded) Icons.Filled.DownloadForOffline else Icons.Outlined.DownloadForOffline, "", tint = if (ifDownloaded) Color.White else Color.Gray)
         }
 
         Text(date.toString(),
