@@ -116,6 +116,47 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         }
     }
 
+    suspend fun downloadContent(mangaId: String, chapterId: String, url: String): String{
+        val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url)
+        if (image !== null){
+            Log.d("TAG", "downloadContent: storing image name as ${
+                url.split("/").last()}")
+            return url.split("/").last().substringBeforeLast(".")+".jpeg"
+        } else {
+            return ""
+        }
+    }
+
+    suspend fun retrieveMangaImage(mangaId: String, chapterId: String, name: String) : Uri?{
+        val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ? AND ${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf(name, "%${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId/$chapterId%")
+
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID, // The ID of the image
+            MediaStore.Images.Media.DISPLAY_NAME, // The display name (file name)
+            MediaStore.Images.Media.RELATIVE_PATH // The relative path to the file (in this case, "Pictures/")
+        )
+
+        resolver.query(folderDirectory, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                // Get the ID of the image file
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val id = cursor.getLong(idColumn)
+
+                // Create the URI for the image using the ID
+                return Uri.withAppendedPath(folderDirectory, id.toString())
+            } else {
+                Log.d("TAG", "retrieveImage: no image found with name $name in path ${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId/$chapterId")
+                return null
+            }
+        }
+        Log.d("TAG", "retrieveImage: no image found with name $name")
+        return null
+    }
+
     suspend fun retrieveImage(mangaId: String, imageName: String): Uri?{
         val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 

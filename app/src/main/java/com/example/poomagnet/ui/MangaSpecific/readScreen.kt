@@ -132,34 +132,50 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
 }
 
 @Composable
-fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit){
+fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String){
     val coroutineScope = rememberCoroutineScope()
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.Black)
             , contentAlignment = Alignment.Center){
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(imageUrl)
-                .crossfade(true)
-                .build(),
-            contentDescription = "Image",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (ifDownloaded){
+            var image by remember { mutableStateOf("")}
+            LaunchedEffect(Unit) {
+                image = loadImage()
+            }
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(image)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Image",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }else {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Image",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         Box(
             Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxHeight()
                 .fillMaxWidth(0.35f)
-                .clickable { leftZone(coroutineScope.coroutineContext)})
+                .clickable { leftZone(coroutineScope.coroutineContext) })
         Box(
             Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .fillMaxWidth(0.35f)
-                .clickable { rightZone(coroutineScope.coroutineContext)})
+                .clickable { rightZone(coroutineScope.coroutineContext) })
         Box(
             Modifier
                 .align(Alignment.Center)
@@ -292,12 +308,13 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                             }
                                         }
                                     }
-                                })}
+                                }, ifDownloaded = false, loadImage = {""})}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
                                 Log.d("TAG", "chapter has no pages ")
                             }
+                            Log.d("TAG", "ReadScreen has : ${firstList.size}")
                             list.value = firstList + { endScreen(Modifier, "End of Chapter", "",
                                 {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()},
                                 { its ->
@@ -348,7 +365,114 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                     .fillMaxSize())}
                         }
                         is ChapterContents.Downloaded -> {
-                            //deal with later
+                            Log.d("TAG", "ReadScreen: is downloaded chapter and: ${contents.imagePaths}")
+                            val firstList: List<@Composable () -> Unit> = contents.imagePaths.map { elm ->
+                                {
+                                    LaunchedEffect(Unit) {
+                                        viewModel.toggleHomeBar(false)
+                                        viewModel.toggleReadBar(false)
+                                    }
+                                    ImageView(Modifier, imageUrl = elm.first, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
+                                        viewModel.viewModelScope.launch {
+                                            if (pagerState.currentPage >= pagerState.pageCount - 2){
+                                                if (uiState.nextChapter == null){
+                                                    viewModel.markThisAsDone()
+                                                    viewModel.getNextChapter(context = context)
+                                                    viewModel.loadNextChapter()
+                                                    pagerState.scrollToPage(0)
+                                                } else {
+                                                    viewModel.markThisAsDone()
+                                                    viewModel.loadNextChapter()
+                                                    viewModel.setFlag(true)
+                                                    pagerState.scrollToPage(0)
+                                                }
+                                            } else {
+                                                withContext(its){
+                                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                                    viewModel.setPage(pagerState.currentPage + 1)
+                                                }
+                                            }
+                                        }
+                                    }, { its ->
+                                        viewModel.viewModelScope.launch(Dispatchers.Main) {
+                                            if (pagerState.currentPage == 0){
+                                                if (uiState.previousChapter == null){
+                                                    viewModel.markThisAsDone()
+                                                    viewModel.getPreviousChapter(context)
+                                                    viewModel.loadPreviousChapter()
+                                                    pagerState.scrollToPage(0)
+                                                } else {
+                                                    viewModel.markThisAsDone()
+                                                    viewModel.loadPreviousChapter()
+                                                    viewModel.setFlag(true)
+                                                    pagerState.scrollToPage(0)
+                                                }
+                                            } else {
+                                                withContext(its) {
+                                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                                    viewModel.setPage(pagerState.currentPage - 1)
+                                                }
+                                            }
+                                        }
+                                    }, ifDownloaded = true, loadImage = {
+                                        val s = viewModel.loadContentimage(uiState.currentManga!!.id ,uiState.currentChapter!!.id, elm.first)
+                                        Log.d("TAG", "ReadScreen: $s")
+                                        s
+                                    })}
+                            }
+                            if (firstList.size == 0){
+                                //inject warning for now but who cares.
+                                Log.d("TAG", "chapter has no pages ")
+                            }
+                            Log.d("TAG", "ReadScreen has : ${firstList.size}")
+                            list.value = firstList + { endScreen(Modifier, "End of Chapter", "",
+                                {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()},
+                                { its ->
+                                    viewModel.viewModelScope.launch(Dispatchers.Main) {
+                                        if (pagerState.currentPage >= pagerState.pageCount - 2){
+                                            if (uiState.nextChapter == null){
+                                                viewModel.markThisAsDone()
+                                                viewModel.getNextChapter(context = context)
+                                                viewModel.loadNextChapter()
+                                                pagerState.scrollToPage(0)
+                                            } else {
+                                                viewModel.markThisAsDone()
+                                                viewModel.loadNextChapter()
+                                                viewModel.setFlag(true)
+                                                pagerState.scrollToPage(0)
+                                            }
+                                        } else {
+                                            withContext(its) {
+                                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                                viewModel.setPage(pagerState.currentPage + 1)
+                                            }
+                                        }
+                                    }
+                                },
+                                {its -> viewModel.viewModelScope.launch(Dispatchers.Main) {
+                                    if (pagerState.currentPage == 0){
+                                        if (uiState.previousChapter == null){
+                                            viewModel.markThisAsDone()
+                                            viewModel.getPreviousChapter(context)
+                                            viewModel.loadPreviousChapter()
+                                            pagerState.scrollToPage(0)
+                                        } else {
+                                            viewModel.markThisAsDone()
+                                            viewModel.loadPreviousChapter()
+                                            viewModel.setFlag(true)
+                                            pagerState.scrollToPage(0)
+                                        }
+                                    } else {
+                                        withContext(its) {
+                                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                            viewModel.setPage(pagerState.currentPage - 1)
+                                        }
+                                    }
+                                }}
+                            )} + {Box(
+                                Modifier
+                                    .background(Color.Black)
+                                    .fillMaxSize())}
                         }
                     }
 
@@ -405,6 +529,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
     }
     LaunchedEffect(Unit) {
         delay(80)
+        Log.d("TAG", "ReadScreen: number of pages is ${list.value.size}")
         Log.d("TAG", "ReadScreen: current id is ${uiState.currentChapter?.id} and latest read is ${uiState.currentManga?.lastReadChapter?.first}")
         if (uiState.currentManga?.lastReadChapter?.first == uiState.currentChapter?.id ){
             Log.d("TAG", "ReadScreen: this si latest")

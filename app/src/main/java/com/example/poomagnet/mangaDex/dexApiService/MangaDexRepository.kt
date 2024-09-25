@@ -90,6 +90,14 @@ data class slimChapter(
 )
 
 
+data class BackUpInstance(
+    val library: MutableSet<MangaInfo>,
+    val idSet: MutableSet<String>,
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>>,
+    val tagMap: MutableMap<Tag,String>
+)
+
+
 
 
 
@@ -232,11 +240,12 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                 val jsonString = file.readText()
                 Log.d("TAG", "loadMangaFromBackup: backup is $jsonString")
                 // Deserialize the JSON string into a list of MangaInfo objects using Gson
-                val listType = object : TypeToken<Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>>>() {}.type
-                val r: Triple<Set<MangaInfo>, Set<String>, List<Pair<SimpleDate, slimChapter>>> = gsonSerializer.fromJson(jsonString, listType)
-                library = r.first.toMutableSet() as MutableSet<MangaInfo>
-                idSet = r.second.toMutableSet() as MutableSet<String>
-                newUpdatedChapters = r.third.toMutableList() as MutableList<Pair<SimpleDate, slimChapter>>
+                val listType = object : TypeToken<BackUpInstance>() {}.type
+                val r: BackUpInstance = gsonSerializer.fromJson(jsonString, listType)
+                library = r.library
+                idSet = r.idSet
+                newUpdatedChapters = r.newUpdatedChapters
+                tagMap = r.tagMap
                 Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
                 printLibrary()
             } else {
@@ -251,6 +260,12 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun backUpManga(){
         Log.d("TAG", "commencing backup: $library")
+
+        val libraryShouldBe = library.map {element ->
+            element.copy(chapterList = Pair(Date(), element.chapterList?.second?.map { chapter ->
+                chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
+            } ?: listOf()))
+        }
         val file = File(context.filesDir, "backup.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
@@ -258,7 +273,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                 OutputStreamWriter(fos).use { writer ->
                     // Write the data to the file
                     writer.write(
-                        gsonSerializer.toJson(Triple(library,idSet, newUpdatedChapters))
+                        gsonSerializer.toJson(BackUpInstance(library, idSet, newUpdatedChapters, tagMap))
                     )
                 }
             }
@@ -266,6 +281,50 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         withContext(Dispatchers.IO) {
             printBackUp()
         }
+    }
+
+    suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
+        val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
+        val chapterContents = getChapterContents(chapterId).imagePaths
+        val list: MutableList<Pair<String,Boolean>> = mutableListOf()
+        for (i in chapterContents){
+            val p = Pair(downloadService.downloadContent(mangaId, chapterId, i.first),false)
+            Log.d("TAG", "downloadChapter: $p")
+           list.add(p)
+        }
+
+        var manga = library.find { elm -> elm.id == mangaId }
+
+        val chapList = manga?.chapterList?.second?.toMutableList()
+
+
+        val chapterIndex: Int = manga?.chapterList?.second?.indexOfFirst { elm ->
+            elm.id == chapterId
+        } ?: -1
+
+        var chapter = manga?.chapterList?.second?.find { elm ->
+            elm.id == chapterId
+        }
+
+        chapter = chapter?.copy(
+            contents = ChapterContents.Downloaded(list, ifDone = false)
+        )
+
+        if (chapter != null) {
+            chapList!![chapterIndex] = chapter
+        }
+
+        manga = manga?.copy(
+            chapterList = Pair(Date(),chapList!!)
+        )
+
+
+        library.removeIf { elm -> elm.id == mangaId }
+        library.add(manga!!)
+
+        backUpManga()
+
+        return true
     }
 
     suspend fun addToLibrary(manga: MangaInfo) {
@@ -340,7 +399,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                                 var mangaTitle = "n/a"
                                 val titleSearch = attributes["title"]
                                 if (titleSearch is Map<*, *>) {
-                                    mangaTitle = titleSearch["en"].toString()
+                                    mangaTitle = if (titleSearch["en"] !== null) titleSearch["en"].toString() else titleSearch["ja"].toString()
                                 }
 
                                 val tagSon = attributes["tags"]
@@ -510,7 +569,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     }
 
     //add support for datasaver later.
-   suspend fun getChapterContents(id: String): ChapterContents {
+   suspend fun getChapterContents(id: String): ChapterContents.Online {
         val response = apiService.getChapterPagesInfo(id)
         val baseUrl = response["baseUrl"]
         val chapterInfo = response["chapter"]
@@ -639,6 +698,10 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             Log.d("TAG", "addToList: $e")
         }
 
+    }
+    
+    suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String): String{
+        return downloadService.retrieveMangaImage(mangaId, chapterId, url).toString()
     }
 
 

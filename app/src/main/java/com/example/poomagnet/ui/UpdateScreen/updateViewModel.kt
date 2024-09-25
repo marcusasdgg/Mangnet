@@ -43,6 +43,10 @@ class updateViewModel @Inject constructor(
         return manga
     }
 
+    suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
+        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+    }
+
 
     suspend fun performUpdate(){
         mangaDexRepository.updateWholeLibrary()

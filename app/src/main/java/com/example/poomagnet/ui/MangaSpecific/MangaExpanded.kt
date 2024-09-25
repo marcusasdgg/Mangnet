@@ -115,10 +115,12 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     Modifier
                         .weight(1.8f)
                         .fillMaxHeight()) {
-                    if (uiState.currentManga?.inLibrary == true){
+                    if (uiState.currentManga?.inLibrary == true && !uiState.currentManga!!.coverArtUrl.startsWith("https://")){
+                        Log.d("TAG", "MangaScreen: in library mode")
                         var image by remember { mutableStateOf("")}
-                        LaunchedEffect(Unit) {
+                        LaunchedEffect(uiState.currentManga!!.inLibrary) {
                             image = mangaViewModel.loadImageFromLibrary(uiState.currentManga!!.id, uiState.currentManga!!.coverArtUrl)
+                            Log.d("TAG", "MangaScreen: new uri is $image")
                         }
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -227,7 +229,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                         }
                         }
                         ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished, elm.contents?.isDownloaded?:false, onDownload = {mangaViewModel.viewModelScope.launch {
-
+                            mangaViewModel.downloadChapter(chapterId = elm.id)
                         }})
                 }
             }
@@ -266,7 +268,7 @@ fun AddToButton(modifier: Modifier = Modifier, onclick: () -> Unit, selected: Bo
         modifier
             .clip(RoundedCornerShape(10)) // Clip first to apply rounded corners
             .background(MaterialTheme.colorScheme.background) // Background after clipping
-            .clickable {  ; onclick() } ){
+            .clickable { ; onclick() } ){
         Column(Modifier.fillMaxSize()) {
                 Icon(imageVector = if (selected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "",
                     Modifier
@@ -294,7 +296,8 @@ fun ChapterListing(modifier: Modifier = Modifier, onclick: () -> Unit, chapter: 
             color = if (ifRead) Color.Gray else Color.Unspecified,
         )
         IconButton(onClick = {onDownload()},
-            modifier = Modifier.align(Alignment.CenterEnd)
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
                 .padding(0.dp, 0.dp, 15.dp, 0.dp)
             ) {
             Icon(if(ifDownloaded) Icons.Filled.DownloadForOffline else Icons.Outlined.DownloadForOffline, "", tint = if (ifRead) Color.DarkGray else Color.Gray)

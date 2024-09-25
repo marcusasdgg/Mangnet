@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.work.HiltWorker
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.CoroutineWorker
@@ -20,6 +21,8 @@ import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import com.example.poomagnet.mangaDex.dexApiService.isOnline
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -131,7 +134,14 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
                 t = elm.copy(contents =s)
                 elm.copy(contents =s)
             }else {
+                Log.d("TAG", "getChapterUrls: ")
                 elm
+            }
+        }
+
+        if (t == null ) {
+            t = uiState.value.currentManga?.chapterList?.second?.find {elm ->
+                elm.id == chapterId
             }
         }
 
@@ -429,24 +439,24 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
     }
 
 
-//    suspend fun downloadChapter(chapterId: String){
-//        val inputData = Data.Builder()
-//            .putString("mangaId", uiState.value.currentManga?.id)
-//            .putString("chapterId", chapterId)
-//            .build()
-//        val workRequest = OneTimeWorkRequestBuilder<MangaWorker>()
-//            .setInputData(inputData)
-//            .build()
-//
-//        WorkManager.getInstance(context) // Use context directly
-//            .enqueue(workRequest)
-//        delay(8000)
-//        _uiState.update {
-//            it.copy(
-//                currentManga = mangaDexRepository.library.firstOrNull { its -> its.id == it.currentManga?.id }
-//            )
-//        }
-//    }
+    suspend fun downloadChapter(chapterId: String){
+        val inputData = Data.Builder()
+            .putString("mangaId", uiState.value.currentManga?.id)
+            .putString("chapterId", chapterId)
+            .build()
+        val workRequest = OneTimeWorkRequestBuilder<MangaWorker>()
+            .setInputData(inputData)
+            .build()
+
+        WorkManager.getInstance(context) // Use context directly
+            .enqueue(workRequest)
+        delay(8000)
+        _uiState.update {
+            it.copy(
+                currentManga = mangaDexRepository.library.firstOrNull { its -> its.id == it.currentManga?.id }
+            )
+        }
+    }
 
     fun loadPreviousChapter(){
         _uiState.update {
@@ -457,31 +467,38 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         }
     }
 
+    suspend fun loadContentimage(mangaId: String, chapterId: String, url: String): String{
+        return mangaDexRepository.retrieveImageContent(mangaId, chapterId, url)
+    }
 
 
 
 }
 
-//class MangaWorker @Inject constructor(
-//    appContext: Context,
-//    workerParams: WorkerParameters,
-//    private val mangaDexRepository: MangaDexRepository
-//) : CoroutineWorker(appContext, workerParams) {
-//
-//    override suspend fun doWork(): Result {
-//        // Retrieve parameters
-//        val mangaId = inputData.getString("mangaId") ?: return Result.failure()
-//        val id = inputData.getString("chapterId") ?: return Result.failure()
-//
-//        // Call the repository method you need
-//        return try {
-//            mangaDexRepository.downloadChapterContents(mangaId, id) // Replace with your actual method
-//            Result.success()
-//        } catch (e: Exception) {
-//            Result.failure()
-//        }
-//    }
-//}
+@HiltWorker
+class MangaWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    @Assisted val mangaDexRepository: MangaDexRepository
+) : CoroutineWorker(appContext, workerParams) {
+
+    override suspend fun doWork(): Result {
+        // Retrieve parameters
+        val mangaId = inputData.getString("mangaId") ?: return Result.failure()
+        val id = inputData.getString("chapterId") ?: return Result.failure()
+
+        // Call the repository method you need
+        return try {
+            Log.d("TAG", "downloading chapter: ")
+            mangaDexRepository.downloadChapter(mangaId, id)
+            // Replace with your actual method
+            Log.d("TAG", "downloaded chapter: ")
+            Result.success()
+        } catch (e: Exception) {
+            Result.failure()
+        }
+    }
+}
 
 
 //when moving to read chapter view, we need to edit the app.kt's backhandler such that
