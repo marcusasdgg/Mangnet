@@ -30,6 +30,8 @@ import com.example.poomagnet.ui.MangaSpecific.MangaSpecificViewModel
 import com.example.poomagnet.ui.SearchScreen.SearchScreen
 import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
+import com.example.poomagnet.ui.SettingsScreen.SettingsScreen
+import com.example.poomagnet.ui.SettingsScreen.SettingsTopBar
 import com.example.poomagnet.ui.UpdateScreen.UpdateScreen
 import com.example.poomagnet.ui.UpdateScreen.UpdateTopBar
 import com.example.poomagnet.ui.UpdateScreen.updateViewModel
@@ -86,6 +88,9 @@ fun App() {
                     if (uiState.currentScreen == ScreenType.Search && item == ScreenType.Search) {
                         searchViewModel.revealBottomSheet(true)
                     }
+                    if (uiState.currentScreen == ScreenType.Home && item == ScreenType.Home) {
+                        homeViewModel.revealBottomSheet(true)
+                    }
                     viewModel.changeScreen(item)
                 },
             )
@@ -96,7 +101,7 @@ fun App() {
                 ScreenType.Search -> SearchTopBar(Modifier.fillMaxWidth(), searchViewModel)
                 ScreenType.MangaSpecific -> MangaAppBar(Modifier.fillMaxWidth(), simpleBack, mangaViewModel)
                 ScreenType.Update -> UpdateTopBar()
-                else -> HomeTopBarV2(homeViewModel::toggleDropDown, homeUiState,homeViewModel::changeDropDown, uiState.currentScreen)
+                ScreenType.Settings -> SettingsTopBar()
             }
         } }
 
@@ -154,9 +159,7 @@ fun App() {
                 }
             })
             ScreenType.Settings -> {
-                Button(onClick = { Log.d("TAG", "App: note request");notificationPermission.launchPermissionRequest()}, Modifier.padding(innerPadding)) {
-                    Text(notificationPermission.permission + notificationPermission.status.toString())
-                }
+               SettingsScreen(Modifier.padding(innerPadding))
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

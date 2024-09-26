@@ -84,17 +84,34 @@ fun sortDrawer(modifier: Modifier = Modifier, viewModel: SearchViewModel){
     }
 }
 
-//OrderBy(Modifier,viewModel)
-//                    Row(Modifier.fillMaxWidth().height(150.dp)) {
-//                        //demographic and content rating
-//                        Demographic(Modifier.weight(1f),viewModel)
-//                        Demographic(Modifier.weight(1f),viewModel)
-//                    }
-//                Spacer(Modifier.height(30.dp))
-//                    TagListing(Modifier, viewModel)
-//                    //tag list in shape of dual column following check box -> Text format.
-//
-//                    //content rating at the end.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeSortDrawer(modifier: Modifier = Modifier, viewModel: HomeViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+
+    if (uiState.showDrawer){ //uiState.showDrawer
+        ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}, Modifier.height(600.dp)) { //viewModel.revealBottomSheet(false)
+            LazyColumn(modifier.fillMaxSize()) {
+                item{
+                    Row(Modifier.fillMaxWidth().height(150.dp)) {
+                        //demographic and content rating
+                        Demographic(Modifier.weight(1f).fillMaxHeight(),viewModel)
+                        ContentRating(Modifier.weight(1f).fillMaxHeight(),viewModel)
+                    }
+                    Spacer(Modifier.height(30.dp))
+                }
+
+                item {
+                    TagListing(Modifier, viewModel)
+                }
+                //tag list in shape of dual column following check box -> Text format.
+
+                //content rating at the end.
+            }
+        }
+    }
+}
+         //content rating at the end.
 
 //make entire thing clickable
 @Composable
@@ -120,7 +137,39 @@ fun ContentRating(modifier: Modifier = Modifier, viewModel: SearchViewModel){
 }
 
 @Composable
+fun ContentRating(modifier: Modifier = Modifier, viewModel: HomeViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    Column(modifier = modifier.fillMaxWidth().fillMaxHeight()){
+        Text("Content Rating:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+        for ((rating, state) in uiState.contentRating.entries){
+            CheckATitle(Modifier.fillMaxWidth().weight(1f), rating.toString(),state) { viewModel.setContentRating(rating, state)}
+        }
+    }
+
+}
+
+@Composable
 fun TagListing(modifier: Modifier = Modifier, viewModel: SearchViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    val halfindex = uiState.tagsIncluded.size/2
+    val list = uiState.tagsIncluded.toList()
+    Text("Genres:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+    Row(modifier){
+        Column(Modifier.weight(1f)){
+            for (i in 0..halfindex-1){
+                CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) {viewModel.setTag(list[i].first, list[i].second) }
+            }
+        }
+        Column(Modifier.weight(1f)){
+            for (i in halfindex..uiState.tagsIncluded.size-1){
+                CheckATitle(Modifier.fillMaxSize(),list[i].first.toString(),list[i].second) { viewModel.setTag(list[i].first, list[i].second) }
+            }
+        }
+    }
+}
+
+@Composable
+fun TagListing(modifier: Modifier = Modifier, viewModel: HomeViewModel){
     val uiState by viewModel.uiState.collectAsState()
     val halfindex = uiState.tagsIncluded.size/2
     val list = uiState.tagsIncluded.toList()
@@ -167,9 +216,54 @@ fun OrderBy(modifier: Modifier = Modifier, viewModel: SearchViewModel){
 
 }
 
+@Composable
+fun OrderBy(modifier: Modifier = Modifier, viewModel: HomeViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    Text("Order By:", modifier = Modifier.padding(10.dp,0.dp,0.dp,5.dp))
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2), // Two columns
+        modifier = Modifier.fillMaxWidth().height(150.dp)
+    ) {
+        items(uiState.sortTags.entries.toList()){ (order, state) ->
+            Row(Modifier.fillMaxWidth().height(150.dp/4) ) {
+                Box(Modifier.fillMaxSize().clickable { viewModel.selectOrder(order,state) }, contentAlignment = Alignment.Center){
+                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.fillMaxHeight().width(30.dp), contentAlignment = Alignment.Center) {
+                            if (state.first){
+                                Icon(if (state.second == Direction.Descending) Icons.Outlined.South else Icons.Outlined.North, "", tint = Color(0xFF3E8896))
+                            }
+                        }
+                        Text(text = order.toString(), fontWeight = FontWeight.Light)
+                    }
+                }
+            }
+        }
+    }
+
+}
+
 //add text in here
 @Composable
 fun Demographic(modifier: Modifier = Modifier, viewModel: SearchViewModel){
+    val uiState by viewModel.uiState.collectAsState()
+    Column(modifier.fillMaxWidth().fillMaxHeight()){
+        Text("Demographic:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+        Column(modifier.fillMaxWidth().fillMaxHeight()) {
+            for(demo in uiState.demographics){
+                CheckATitle(
+                    Modifier.fillMaxWidth().weight(1f),
+                    title = demo.key.toString(),
+                    checkboxState = demo.value,
+                    onclick = {viewModel.setDemo(demo.key,demo.value)}
+                )
+            }
+        }
+    }
+
+}
+
+@Composable
+fun Demographic(modifier: Modifier = Modifier, viewModel: HomeViewModel){
     val uiState by viewModel.uiState.collectAsState()
     Column(modifier.fillMaxWidth().fillMaxHeight()){
         Text("Demographic:", Modifier.padding(10.dp,0.dp,0.dp,0.dp))

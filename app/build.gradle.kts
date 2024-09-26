@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.androidx.hilt.common)
 
     implementation("androidx.work:work-runtime:2.8.1")
+    implementation(libs.firebase.database.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

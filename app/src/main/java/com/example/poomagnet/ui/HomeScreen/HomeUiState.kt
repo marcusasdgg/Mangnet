@@ -1,6 +1,12 @@
 package com.example.poomagnet.ui.HomeScreen
 
+import ContentRating
+import Demographic
+import Ordering
+import Tag
+import androidx.compose.ui.state.ToggleableState
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.ui.SearchScreen.Direction
 
 data class HomeUiState(
     val typeView: displayType = displayType.VERTICALCARD,
@@ -8,7 +14,13 @@ data class HomeUiState(
     val currentMenuOption: FilterOptions = FilterOptions.All,
     val library: List<MangaInfo> = listOf(),
     val ifLoading: Boolean = false,
+    val showDrawer: Boolean = false,
     //val followed manga = ???
+    val sortTags: Map<Ordering, Pair<Boolean, Direction>> = Ordering.entries.associateWith { Pair(false, Direction.Descending) }.toMutableMap().apply { this[Ordering.Relevance] = Pair(true,Direction.Descending) },
+    val somethingChanged: Boolean = false,
+    val demographics: Map<Demographic, ToggleableState> = Demographic.entries.associateWith { ToggleableState.Off },
+    val contentRating: Map<ContentRating, ToggleableState> = ContentRating.entries.associateWith { ToggleableState.Off },
+    val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off},
 )
 
 enum class FilterOptions{

@@ -26,7 +26,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -61,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import com.example.poomagnet.App.ScreenType
 import com.example.poomagnet.R
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.ui.SortDrawer.HomeSortDrawer
 import com.example.poomagnet.ui.VerticalCard
 import java.util.logging.Filter
 
@@ -68,6 +71,7 @@ import java.util.logging.Filter
 @Composable
 fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType, openLast: (MangaInfo)-> Unit, snackBar: SnackbarHostState, onUpdate: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
         viewModel.syncLibrary()
@@ -80,6 +84,13 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
         }
     }
 
+    LaunchedEffect(uiState.somethingChanged) {
+        if (uiState.somethingChanged){
+            viewModel.recompose()
+            viewModel.resetFlag()
+        }
+    }
+
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = uiState.ifLoading,
@@ -89,19 +100,20 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
     )
 
     Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
-        LazyColumn(modifier = modifier.fillMaxWidth().fillMaxHeight()) {
-            items(uiState.library) { manga ->
-                VerticalCard(manga = manga, modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) }, engageChapter = { id ->
-                    readChapter(id,manga)
-                }, openLast = {
-                    openLast(manga)
-                },
-                    loadImage = {elm1, elm2 -> viewModel.loadImageFromLibrary(elm1,elm2)}
-                )
-                Spacer(Modifier.fillMaxWidth().height(10.dp))
-            }
+        Column(modifier = modifier.fillMaxWidth().fillMaxHeight().verticalScroll(scrollState)) {
+                uiState.library.forEach { manga ->
+                    VerticalCard(manga = manga, modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) }, engageChapter = { id ->
+                        readChapter(id,manga)
+                    }, openLast = {
+                        openLast(manga)
+                    },
+                        loadImage = {elm1, elm2 -> viewModel.loadImageFromLibrary(elm1,elm2)},
+                        somethingChanged = uiState.somethingChanged
+                    )
+                    Spacer(Modifier.fillMaxWidth().height(10.dp))
+                }
         }
         PullRefreshIndicator(
             refreshing = uiState.ifLoading,
@@ -110,6 +122,7 @@ fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, v
         )
     }
 
+    HomeSortDrawer(Modifier,viewModel)
 }
 
 

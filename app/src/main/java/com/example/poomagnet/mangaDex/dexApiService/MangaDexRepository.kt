@@ -1,6 +1,7 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
 
+import Demographic
 import Tag
 import TagDeserializer
 import android.content.Context
@@ -59,7 +60,8 @@ data class MangaInfo(
     var inLibrary: Boolean = false,
     var chapterList: Pair<Date, List<Chapter>>? = null,
     val tagList: MutableList<String> = mutableListOf(),
-    val lastReadChapter: Pair<String,Int> = Pair("",0)
+    val lastReadChapter: Pair<String,Int> = Pair("",0),
+    val demographic: String
 )
 // on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
 //the null to a MutableList.
@@ -356,7 +358,8 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     }
 
     suspend fun removeFromLibrary(manga: MangaInfo?){
-        library.remove(manga)
+        library.removeIf { elm -> elm.id == manga?.id }
+        Log.d("TAG", "removeFromLibrary: removed ${manga?.id}")
         idSet.remove(manga?.id)
         newUpdatedChapters.removeIf { elm->
             elm.second.mangaId == manga?.id
@@ -425,6 +428,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                                     }
                                 }
 
+
                                 val altTitles = attributes["altTitles"]
                                 if (altTitles is List<*>) {
                                     altTitles.forEach { titl ->
@@ -462,6 +466,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                                         }
                                     }
                                 }
+                                val demographic = attributes["publicationDemographic"].toString()
 
                                 //val image = downloadImage(coverUrl, id)
                                 val contructedUrl =
@@ -482,7 +487,8 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                                         offSet,
                                         false,
                                         Pair(Date(0),mutableListOf()),
-                                        tags
+                                        tags,
+                                        demographic = demographic
                                     )
                                 )
                                 altlist = mutableListOf()
@@ -569,30 +575,35 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             backUpManga()
             return Pair(chapterObjects, Date())
 
-        } catch(e: HttpException){
-            Log.d("TAG", "chapList: failed to get chapters ${e.message} ${e.response()?.errorBody()?.string()}")
+        } catch(e: Exception){
+            Log.d("TAG", "chapList: failed to get chapters ${e.message}}")
             return Pair(listOf(), Date())
         }
     }
 
     //add support for datasaver later.
    suspend fun getChapterContents(id: String): ChapterContents.Online {
-        val response = apiService.getChapterPagesInfo(id)
-        val baseUrl = response["baseUrl"]
-        val chapterInfo = response["chapter"]
-        Log.d("TAG", "getChapterContents: response is $response")
-        var hash = ""
-        val list: MutableList<String> = mutableListOf()
-        if (chapterInfo is Map<*,*>){
-            hash = chapterInfo["hash"].toString()
-            val data = chapterInfo["data"]
-            if (data is List<*>){
-                data.forEach { elm->
-                    list.add("$baseUrl/data/$hash/$elm")
-                }
-            }
-        }
-        return ChapterContents.Online(list.map {elm -> Pair(elm, false) }, false)
+       try {
+           val response = apiService.getChapterPagesInfo(id)
+           val baseUrl = response["baseUrl"]
+           val chapterInfo = response["chapter"]
+           Log.d("TAG", "getChapterContents: response is $response")
+           var hash = ""
+           val list: MutableList<String> = mutableListOf()
+           if (chapterInfo is Map<*,*>){
+               hash = chapterInfo["hash"].toString()
+               val data = chapterInfo["data"]
+               if (data is List<*>){
+                   data.forEach { elm->
+                       list.add("$baseUrl/data/$hash/$elm")
+                   }
+               }
+           }
+           return ChapterContents.Online(list.map {elm -> Pair(elm, false) }, false)
+       } catch (e: Exception) {
+           return ChapterContents.Online(listOf(), false)
+       }
+
     }
 
 //    suspend fun downloadChapterContents(mangaId: String, id: String): ChapterContents.Downloaded{

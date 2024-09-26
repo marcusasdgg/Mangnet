@@ -20,6 +20,7 @@ import com.example.poomagnet.mangaDex.dexApiService.Chapter
 import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaDex.dexApiService.isDownloaded
 import com.example.poomagnet.mangaDex.dexApiService.isOnline
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -126,35 +127,40 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getChapterUrls(chapterId: String){
-        var t: Chapter? = null;
-        val new_chapter = uiState.value.currentManga?.chapterList?.second?.map { elm ->
-            if (elm.id == chapterId && (elm.contents == null || elm.contents.isOnline)){
-                val s =  mangaDexRepository.getChapterContents(chapterId)
-                Log.d("TAG", "getChapterUrls: $s")
-                t = elm.copy(contents =s)
-                elm.copy(contents =s)
-            }else {
-                Log.d("TAG", "getChapterUrls: ")
-                elm
+        var currentManga = uiState.value.currentManga
+        var chapterFound = currentManga?.chapterList?.second?.firstOrNull { elm -> elm.id == chapterId }
+        var chapterlist = currentManga?.chapterList
+        if (chapterFound !== null && currentManga !== null){
+            //chapter exists
+            Log.d("TAG", "getChapterUrls: found chapter in manga and found manga")
+            if (chapterFound.contents?.isDownloaded == true){
+                _uiState.update {
+                    it.copy(
+                        currentChapter = chapterFound
+                    )
+                }
+            } else {
+                val chapContents = mangaDexRepository.getChapterContents(chapterId)
+                chapterlist = chapterlist?.copy(
+                    second = chapterlist.second.map {elm ->
+                        if (elm.id == chapterId){
+                            elm.copy(contents = chapContents)
+                        } else {
+                            elm
+                        }
+
+                    }.toList()
+                )
+                chapterFound = chapterFound.copy(contents = chapContents)
+                currentManga = currentManga.copy(chapterList = chapterlist)
+                _uiState.update {
+                    it.copy(
+                        currentChapter = chapterFound,
+                        currentManga = currentManga
+                    )
+                }
             }
         }
-
-        if (t == null ) {
-            t = uiState.value.currentManga?.chapterList?.second?.find {elm ->
-                elm.id == chapterId
-            }
-        }
-
-        Log.d("TAG", "getChapterUrls: $new_chapter")
-
-        _uiState.update {
-            it.copy(
-                currentManga = it.currentManga?.copy(chapterList = Pair(Date(),new_chapter?: listOf())),
-                currentChapter = t?:it.currentChapter
-            )
-        }
-
-        Log.d("TAG", "current one: ${_uiState.value.currentChapter}")
     }
 
     fun makeVisible(boolean: Boolean){
@@ -274,6 +280,13 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
             if (firstNextChapter !== null){
                 val chapterUrls = mangaDexRepository.getChapterContents(firstNextChapter.id)
+                if (chapterUrls.imagePaths.isEmpty()){
+                    _uiState.update {
+                        it.copy(
+                            nextChapter = null
+                        )
+                    }
+                }
                 Log.d("TAG", "getNextChapter: $chapterUrls")
                 if (chapterUrls is ChapterContents.Online){
                     firstNextChapter = firstNextChapter.copy(contents = chapterUrls)

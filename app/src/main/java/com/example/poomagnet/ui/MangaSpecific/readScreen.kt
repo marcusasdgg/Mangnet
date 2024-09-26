@@ -1,4 +1,4 @@
-package com.example.poomagnet.ui.MangaSpecific
+ package com.example.poomagnet.ui.MangaSpecific
 
 import android.app.Activity
 import android.content.Context
@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -140,6 +141,7 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
             .background(Color.Black)
             , contentAlignment = Alignment.Center){
         if (ifDownloaded){
+            Log.d("TAG", "ImageView: loading image")
             var image by remember { mutableStateOf("")}
             LaunchedEffect(Unit) {
                 image = loadImage()
@@ -245,6 +247,15 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
         viewModel.toggleReadBar(false)
     }
 
+    LaunchedEffect(uiState.currentChapter) {
+        Log.d("TAG", "ReadScreen: next chapter not found?")
+        if (uiState.currentChapter == null){
+            viewModel.toggleHomeBar(true)
+            viewModel.toggleReadBar(true)
+            returner()
+        }
+    }
+
 
 
     val list = remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
@@ -252,6 +263,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
     LaunchedEffect(uiState.nextFlag) {
         delay(80)
         Log.d("TAG", "ReadingScreen: flag hook triggered")
+        Log.d("TAG", "ReadScreen: current chapter now is ${uiState.currentChapter}")
         if (uiState.nextFlag){
             val chapter = uiState.currentChapter
             if (chapter !== null){
@@ -312,7 +324,10 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
-                                Log.d("TAG", "chapter has no pages ")
+                                viewModel.toggleHomeBar(true)
+                                viewModel.toggleReadBar(true)
+                                Toast.makeText(context, "Next chapter was unable to be loaded", Toast.LENGTH_SHORT).show()
+                                returner()
                             }
                             Log.d("TAG", "ReadScreen has : ${firstList.size}")
                             list.value = firstList + { endScreen(Modifier, "End of Chapter", "",

@@ -172,14 +172,14 @@ fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (Man
 
 
 @Composable
-fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit, openLast: () -> Unit, loadImage: suspend (String, String) -> String){
+fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () -> Unit, engageChapter: (String) -> Unit, openLast: () -> Unit, loadImage: suspend (String, String) -> String, somethingChanged: Boolean){
     Card(modifier = modifier
         .sizeIn(300.dp, 160.dp, 300.dp, 160.dp)
         .clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
             if (manga.inLibrary){
                 var image by remember { mutableStateOf("") }
-                LaunchedEffect(Unit) {
+                LaunchedEffect(somethingChanged) {
                     image = loadImage(manga.id, manga.coverArtUrl)
                     Log.d("TAG", "VerticalCard: iamge loaded with uri $image")
                 }
