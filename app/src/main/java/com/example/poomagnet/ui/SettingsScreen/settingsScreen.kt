@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -19,13 +21,18 @@ fun SettingsTopBar(){
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier){
-    Column(modifier = modifier.fillMaxSize()) {
+    val scrollState = rememberScrollState()
+    Column(modifier = modifier.fillMaxSize().verticalScroll(scrollState)) {
         Text("About:")
+        Spacer(Modifier.height(20.dp))
         Text("Version: beta 0.5")
+        Spacer(Modifier.height(20.dp))
         Text("About me: ")
         Text("Hi users of the app, My name is Marcus and I am a 2nd year computer science student in Australia. ")
+        Spacer(Modifier.height(20.dp))
         Text("The current controls are very limited due this project being in beta but if you click on the search button it pulls up a filtering system," +
                 "to go to the next page scroll naturally or press the left side of the screen and conversely the same for scrolling to the previous page. to download chapters press the download button")
+        Spacer(Modifier.height(20.dp))
         Text("About this Project:")
         Text("This project all started at the start of 2024 when a lot of you might remember Tachiyomi going down completely, with the source code etc," +
                 "Back then in my first year I thought about starting doing my own Coding projects to have something to put in my resume. I really did not " +
