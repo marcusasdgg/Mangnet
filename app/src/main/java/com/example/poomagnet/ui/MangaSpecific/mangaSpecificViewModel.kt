@@ -278,6 +278,14 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             var firstNextChapter = uiState.value.currentManga?.chapterList?.second?.reversed()?.firstOrNull { elm  -> elm.chapter > currentChapter }
             Log.d("TAG", "getNextChapter: next chapter is $firstNextChapter")
 
+            if (firstNextChapter?.contents?.isDownloaded == true){
+                _uiState.update {
+                    it.copy(
+                        nextChapter = firstNextChapter
+                    )
+                }
+            }
+
             if (firstNextChapter !== null){
                 val chapterUrls = mangaDexRepository.getChapterContents(firstNextChapter.id)
                 if (chapterUrls.imagePaths.isEmpty()){
