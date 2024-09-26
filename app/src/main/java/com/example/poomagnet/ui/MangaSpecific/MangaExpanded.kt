@@ -44,6 +44,8 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,6 +87,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.exp
+import kotlin.math.max
+import kotlin.math.min
 
 @OptIn(ExperimentalPermissionsApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -332,6 +337,7 @@ fun tagIt(modifier: Modifier = Modifier, name: String = "Preview"){
 @Composable
 fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewModel: MangaSpecificViewModel){
     val state by mangaViewModel.uiState.collectAsState()
+    var open by remember{ mutableStateOf(false)}
 
     LaunchedEffect(Unit) {
         Log.d("TAG", "MangaAppBar: launchedEffect ${state.visible}")
@@ -362,12 +368,54 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = null
-                        )
+                    Box{
+                        IconButton(onClick = {open = true}) {
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = null
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = open,
+                            onDismissRequest = { open = false } // Dismiss the menu when clicked outside
+                        ) {
+                            // Menu items, dynamically created based on the options list
+                            DropdownMenuItem(text = {Text("first 5 chapters")}, onClick = {open = false; mangaViewModel.viewModelScope.launch {
+                                val maxSize = state.currentManga?.chapterList?.second?.size ?: 0
+                                val chapterList = state.currentManga?.chapterList?.second?.reversed()?.subList(0,min(maxSize,5))
+                                chapterList?.forEach { elm->
+                                    Log.d("TAG", "MangaAppBar: ${elm.id}")
+                                    mangaViewModel.downloadChapter(chapterId = elm.id)
+                                }
+                                open = false
+                            }})
+                            DropdownMenuItem(text = {Text("first 10 chapters")}, onClick = {open = false; mangaViewModel.viewModelScope.launch {
+                                val maxSize = state.currentManga?.chapterList?.second?.size ?: 0
+                                val chapterList = state.currentManga?.chapterList?.second?.reversed()?.subList(
+                                    0,
+                                    min(maxSize, 10)
+                                )
+                                chapterList?.forEach { elm ->
+                                    mangaViewModel.downloadChapter(chapterId = elm.id)
+                                }
+                            }
+                            })
+                            DropdownMenuItem(text = {Text("All chapters")}, onClick = {open = false ; mangaViewModel.viewModelScope.launch {
+                                val maxSize = state.currentManga?.chapterList?.second?.size ?: 0
+                                val chapterList = state.currentManga?.chapterList?.second?.reversed()?.subList(
+                                    0,
+                                    maxSize
+                                )
+                                chapterList?.forEach { elm ->
+                                    mangaViewModel.downloadChapter(chapterId = elm.id)
+                                }
+
+                            }
+                            })
+                        }
                     }
+
+
                 }
             )
     }

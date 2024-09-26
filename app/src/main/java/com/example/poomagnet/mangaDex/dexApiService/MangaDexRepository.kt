@@ -35,6 +35,9 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.lang.reflect.Type
 import java.util.Date
 
@@ -287,14 +290,37 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         }
     }
 
+
+    fun CoroutineScope.downloadChapterConcurrently(
+        chapterContents: List<Pair<String, Any>>,
+        mangaId: String,
+        chapterId: String
+    ): List<Pair<Deferred<String>, Boolean>> {  // Change to Deferred<String>
+        val deferredList = mutableListOf<Pair<Deferred<String>, Boolean>>()
+
+        // Launch all download tasks asynchronously
+        for (i in chapterContents) {
+            val deferred = async(Dispatchers.IO) {
+                downloadService.downloadContent(mangaId, chapterId, i.first) // This returns a String
+            }
+            deferredList.add(Pair(deferred, false))
+            Log.d("TAG", "downloadChapter: Task launched for $i")
+        }
+
+        return deferredList
+    }
+
+
+
     suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
         val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
         val chapterContents = getChapterContents(chapterId).imagePaths
-        val list: MutableList<Pair<String,Boolean>> = mutableListOf()
-        for (i in chapterContents){
-            val p = Pair(downloadService.downloadContent(mangaId, chapterId, i.first),false)
-            Log.d("TAG", "downloadChapter: $p")
-           list.add(p)
+        var list: List<Pair<String,Boolean>> = listOf()
+        coroutineScope {
+            val lists = downloadChapterConcurrently(chapterContents, mangaId, chapterId)
+            list = lists.map { (deferred, flag) ->
+                Pair(deferred.await(), flag)  // Await the result and pair it with the flag
+            }
         }
 
         var manga = library.find { elm -> elm.id == mangaId }
