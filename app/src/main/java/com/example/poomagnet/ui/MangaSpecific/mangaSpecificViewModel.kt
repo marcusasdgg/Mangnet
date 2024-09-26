@@ -279,11 +279,13 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             Log.d("TAG", "getNextChapter: next chapter is $firstNextChapter")
 
             if (firstNextChapter?.contents?.isDownloaded == true){
+                Log.d("TAG", "is downloaded: ")
                 _uiState.update {
                     it.copy(
                         nextChapter = firstNextChapter
                     )
                 }
+                return
             }
 
             if (firstNextChapter !== null){

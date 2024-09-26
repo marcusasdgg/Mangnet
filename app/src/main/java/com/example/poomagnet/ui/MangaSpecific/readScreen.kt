@@ -619,6 +619,7 @@ fun MangaBotBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
                 IconButton(onClick = {
                     viewModel.viewModelScope.launch {
                         if (uiState.nextChapter == null){
+                            Log.d("TAG", "MangaBotBar: pressed forawrd")
                             viewModel.markThisAsDone()
                             viewModel.getNextChapter(context = context)
                             viewModel.loadNextChapter()
