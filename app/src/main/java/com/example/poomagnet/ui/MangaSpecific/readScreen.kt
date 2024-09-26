@@ -530,7 +530,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
 
     Scaffold(
         topBar = { MangaTopBar(Modifier, viewModel,returner)},
-        bottomBar = { MangaBotBar(Modifier,viewModel, { pagerState.scrollToPage(0) })}
+        bottomBar = { MangaBotBar(Modifier,viewModel, { pagerState.scrollToPage(1);pagerState.scrollToPage(0) })}
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()){
             ReadingScreen(Modifier.fillMaxSize(), viewModel, pagerState,context, list)

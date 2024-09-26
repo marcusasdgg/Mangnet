@@ -693,9 +693,16 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                     if (!oldChapters?.any{ e -> e.id == t.id }!!){
                         oldChapters.add(t)
                         newUpdatedChapters.add(Pair(currentDate, slimChapter(t.id,t.name,t.chapter,t.volume, elm.id, elm.coverArtUrl, elm.title )))
+                    } else {
+                        val old = oldChapters.indexOfFirst { m -> m.id == t.id }
+                        if (old != -1){
+                            if (t.finished){
+                                oldChapters[old] = t
+                            }
+                        }
                     }
                 }
-                elm.copy(chapterList = Pair(Date(),oldChapters ?: listOf()))
+                manga.copy(chapterList = Pair(Date(),oldChapters ?: listOf()))
             }else {
                 elm
             }
