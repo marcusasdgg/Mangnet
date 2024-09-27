@@ -19,7 +19,7 @@ The releases are able to be found in the releases tab of this repository but not
 - Storing manga reading history for easy continuation of reading.
 
 # App design
-<img src="Screenshot_20240927_155353_pooMAgnet.jpg" alt="Alt text" width="400" height="800"/>
+<img src="Screenshot_20240927_155353_pooMAgnet.jpg" alt="Alt text" width="390" height="800"/>
 
 # Support
 If anybody has any issues or suggested critisicm/features email me at marcusolachan@gmail.com
