@@ -271,6 +271,7 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
     }
 
     suspend fun getNextChapter(context: Context){
+
         val currentChapter = uiState.value.currentChapter?.chapter
         val currentVolume = uiState.value.currentChapter?.volume
         if (currentVolume !== null && currentChapter !== null){
@@ -291,24 +292,25 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
             if (firstNextChapter !== null){
                 val chapterUrls = mangaDexRepository.getChapterContents(firstNextChapter.id)
                 if (chapterUrls.imagePaths.isEmpty()){
+                    Log.d("TAG", "getNextChapter: no images found in getchapter contents")
                     _uiState.update {
                         it.copy(
                             nextChapter = null
                         )
                     }
                 }
-                Log.d("TAG", "getNextChapter: $chapterUrls")
-                if (chapterUrls is ChapterContents.Online){
-                    firstNextChapter = firstNextChapter.copy(contents = chapterUrls)
-                    for (i in chapterUrls.imagePaths){
-                        preloadImage(context, i.first)
-                    }
+                Log.d("TAG", "getNextChapter: urls are $chapterUrls")
+                firstNextChapter = firstNextChapter.copy(contents = chapterUrls)
+                for (i in chapterUrls.imagePaths){
+                    preloadImage(context, i.first)
                 }
                 _uiState.update {
                     it.copy(
                         nextChapter = firstNextChapter
                     )
                 }
+            } else {
+                Log.d("TAG", "getNextChapter: no next chapter found")
             }
             Log.d("TAG", "getNextChapter: finished $firstNextChapter")
         }

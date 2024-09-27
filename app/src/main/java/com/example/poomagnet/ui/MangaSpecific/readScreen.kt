@@ -618,19 +618,46 @@ fun MangaBotBar(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel
 
                 IconButton(onClick = {
                     viewModel.viewModelScope.launch {
-                        if (uiState.nextChapter == null){
-                            Log.d("TAG", "MangaBotBar: pressed forawrd")
+                        if (uiState.nextChapter !== null){
+                            val contents = uiState.nextChapter!!.contents
+                            if (contents !== null){
+                                when (contents){
+                                    is ChapterContents.Online -> {
+                                        if (contents.imagePaths.isEmpty()){
+                                            viewModel.getNextChapter(context = context)
+                                            viewModel.loadNextChapter()
+                                            viewModel.setFlag(true)
+                                            scrolltoZero()
+                                        } else {
+                                            viewModel.markThisAsDone()
+                                            viewModel.loadNextChapter()
+                                            viewModel.setFlag(true)
+                                            scrolltoZero()
+                                        }
+                                    }
+                                    is ChapterContents.Downloaded -> {
+                                        viewModel.markThisAsDone()
+                                        viewModel.loadNextChapter()
+                                        viewModel.setFlag(true)
+                                        scrolltoZero()
+                                    }
+                                }
+                            } else {
+                                // contents is null load it
+                                viewModel.markThisAsDone()
+                                viewModel.getNextChapter(context = context)
+                                viewModel.loadNextChapter()
+                                viewModel.setFlag(true)
+                                scrolltoZero()
+                            }
+                        } else {
                             viewModel.markThisAsDone()
                             viewModel.getNextChapter(context = context)
                             viewModel.loadNextChapter()
                             viewModel.setFlag(true)
                             scrolltoZero()
-                        } else {
-                            viewModel.markThisAsDone()
-                            viewModel.loadNextChapter()
-                            viewModel.setFlag(true)
-                            scrolltoZero()
                         }
+
                     }
                 },Modifier.align(Alignment.CenterEnd)) {
                     Icon(
