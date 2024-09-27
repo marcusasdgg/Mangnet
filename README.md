@@ -16,6 +16,7 @@ The releases are able to be found in the releases tab of this repository but not
 - Downloading chapters to storage for offline reading
 - offline searching and filtering of library.
 - periodic as well as forced updates to check for new chapters in library
+- Storing manga reading history for easy continuation of reading.
 
 # Support
 If anybody has any issues or suggested critisicm/features email me at marcusolachan@gmail.com
