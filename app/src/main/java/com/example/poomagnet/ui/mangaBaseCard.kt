@@ -98,7 +98,7 @@ fun DoubleStackCard(modifier: Modifier = Modifier, manga: MangaInfo, click: (Man
             if (manga.inLibrary) {
                 var uri by remember{ mutableStateOf("")}
                 LaunchedEffect(Unit){
-                    uri = loadImage(manga.id, manga.coverArtUrl)
+                    uri = loadImage(manga.id, manga.id+".jpeg")
                     Log.d("TAG", "VerticalCard: iamge loaded with uri $uri")
                 }
                 AsyncImage(
@@ -178,9 +178,10 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
         .clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
             if (manga.inLibrary){
+                Log.d("TAG", "VerticalCard: sending uri ${manga.coverArtUrl.split("/").last().substringBeforeLast(".")+".jpeg"}")
                 var image by remember { mutableStateOf("") }
                 LaunchedEffect(somethingChanged) {
-                    image = loadImage(manga.id, manga.coverArtUrl)
+                    image = loadImage(manga.id,manga.id+".jpeg")
                     Log.d("TAG", "VerticalCard: iamge loaded with uri $image")
                 }
                 AsyncImage(
@@ -196,6 +197,7 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
                         .fillMaxWidth(0.32f)
                 )
             }else {
+
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(manga.coverArtUrl)

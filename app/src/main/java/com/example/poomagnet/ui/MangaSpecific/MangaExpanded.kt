@@ -126,7 +126,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                         var image by remember { mutableStateOf("")}
                         LaunchedEffect(uiState.currentManga!!.inLibrary) {
                             image = mangaViewModel.loadImageFromLibrary(uiState.currentManga!!.id, uiState.currentManga!!.coverArtUrl)
-                            Log.d("TAG", "MangaScreen: new uri is $image")
+                            Log.d("TAG", "MangaScreen: new uri is $image searched with url ${uiState.currentManga!!.coverArtUrl}")
                         }
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -141,6 +141,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                                 .clip(RoundedCornerShape(15.dp))
                         )
                     }else {
+                        Log.d("TAG", "MangaScreen: new uri is searched with url ${uiState.currentManga!!.coverArtUrl}")
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(uiState.currentManga?.coverArtUrl)
