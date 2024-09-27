@@ -1,4 +1,4 @@
-# Mangnet
+# Mangnet ![Alt text](Untitled.png)
 Mangnet is a Android native manga reading app inspired by Tachiyomi (RIP 🙏), so far it reads off of Mangadex's REST API to provide a way to download and read manga, allowing a few customizations to the search parameters, genre filtering etc.
 
 # Installation
