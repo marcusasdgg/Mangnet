@@ -62,14 +62,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.poomagnet.App.ScreenType
 import com.example.poomagnet.R
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.ui.SortDrawer.HomeSortDrawer
 import com.example.poomagnet.ui.VerticalCard
 import java.util.logging.Filter
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun HomeScreen( modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType, openLast: (MangaInfo)-> Unit, snackBar: SnackbarHostState, onUpdate: () -> Unit) {
+fun HomeScreen(modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, viewModel: HomeViewModel, setCurrentManga: (MangaInfo) -> Unit, readChapter: (String, MangaInfo) -> Unit, currentScreen: ScreenType, openLast: (MangaInfo)-> Unit, snackBar: SnackbarHostState, onUpdate: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 

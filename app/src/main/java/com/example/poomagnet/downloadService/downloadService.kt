@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -58,14 +57,14 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         }
     }
 
-    private suspend fun addImageToFolder(folderName: String, imageName: String, imageUrl: String): Uri?{
+    private suspend fun addImageToFolder(folderName: String, imageName: String, imageUrl: String, refererUrl: String = ""): Uri?{
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "$imageName.jpeg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
             put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$folderName")
         }
         Log.d("TAG", "addImageToFolder: sending request to $imageUrl")
-        val image = downloadImage(imageUrl)
+        val image = downloadImage(imageUrl, refererUrl)
 
         if (image == null){
             Log.d("TAG", "addImageToFolder: download fialed")
@@ -87,9 +86,9 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         return null
     }
 
-    private suspend fun downloadImage(url: String): Bitmap?{
+    private suspend fun downloadImage(url: String, refererUrl: String =""): Bitmap?{
         try {
-            val response = apiService.downloadFile(url)
+            val response = apiService.downloadFile(url, refererUrl)
             Log.d("TAG", "downloadImage: $response")
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
@@ -106,6 +105,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         return null
     }
 
+
     suspend fun downloadCoverUrl(mangaId: String, url: String): String {
         val image = addImageToFolder(mangaId, mangaId, url)
         if (image !== null){
@@ -118,6 +118,17 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     suspend fun downloadContent(mangaId: String, chapterId: String, url: String): String{
         val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url)
+        if (image !== null){
+            Log.d("TAG", "downloadContent: storing image name as ${
+                url.split("/").last()}")
+            return url.split("/").last().substringBeforeLast(".")+".jpeg"
+        } else {
+            return ""
+        }
+    }
+
+    suspend fun downloadContent(mangaId: String, chapterId: String, url: String, refererUrl: String): String{
+        val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url, refererUrl)
         if (image !== null){
             Log.d("TAG", "downloadContent: storing image name as ${
                 url.split("/").last()}")

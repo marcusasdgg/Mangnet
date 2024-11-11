@@ -7,6 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
+import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -16,7 +17,7 @@ import javax.inject.Inject
 class MyWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    @Assisted private val mangaDexRepository: MangaDexRepository
+    @Assisted private val repo: MangaRepositoryManager
 ) : CoroutineWorker(appContext, workerParams) {
 
     init {
@@ -32,6 +33,6 @@ class MyWorker @AssistedInject constructor(
     }
 
     private suspend fun updateFunction() {
-        mangaDexRepository.updateWholeLibrary()
+        repo.updateAll()
     }
 }

@@ -1,15 +1,16 @@
 package com.example.poomagnet.ui.SearchScreen
 
-import ContentRating
-import Demographic
-import Ordering
-import Tag
 import androidx.compose.ui.state.ToggleableState
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.ContentRating
+import com.example.poomagnet.mangaRepositoryManager.Demographic
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.Ordering
+import com.example.poomagnet.mangaRepositoryManager.Sources
+import com.example.poomagnet.mangaRepositoryManager.Tag
 
 
 data class SearchUiState (
-    val sourceSelected: Sources = Sources.ALL,
+    val sourceSelected: Sources = Sources.MANGADEX,
     val sourceExpanded: Boolean = false,
     val searchExpanded: Boolean = false,
     val searchText: String = "",

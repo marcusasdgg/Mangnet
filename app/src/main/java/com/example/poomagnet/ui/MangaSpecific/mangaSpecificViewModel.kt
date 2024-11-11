@@ -1,12 +1,9 @@
 package com.example.poomagnet.ui.MangaSpecific
 
-import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.work.HiltWorker
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,35 +12,29 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.example.poomagnet.App.ScreenType
-import com.example.poomagnet.mangaDex.dexApiService.Chapter
-import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
-import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
-import com.example.poomagnet.mangaDex.dexApiService.isDownloaded
-import com.example.poomagnet.mangaDex.dexApiService.isOnline
+import com.example.poomagnet.mangaRepositoryManager.Chapter
+import com.example.poomagnet.mangaRepositoryManager.ChapterContents
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
+import com.example.poomagnet.mangaRepositoryManager.isDownloaded
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.OffsetDateTime
-import java.util.Date
 import javax.inject.Inject
 
 //make sure to not overwrite the old chapter list objects and add the new ones in.
 @HiltViewModel
-class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository: MangaDexRepository,
+class MangaSpecificViewModel @Inject constructor( private val repo: MangaRepositoryManager,
                                                   @ApplicationContext private val context: Context) : ViewModel() {
     private val _uiState = MutableStateFlow(mangaUiState())
     val uiState: StateFlow<mangaUiState> = _uiState
-
+    private val mangaDexRepository = repo.getMangaDexRepo()
     fun selectCurrentManga(manga: MangaInfo?){
         if (manga == null){ //shouldnt happen?
             _uiState.update{
@@ -230,39 +221,11 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
         val id = uiState.value.currentManga?.id
         Log.d("TAG", "id passed was this: \"$id\"")
         if (id !== null){
-            val chapterList = mangaDexRepository.chapList(id)
-            val list = uiState.value.currentManga?.chapterList?.second?.toMutableList()
-            if (list !== null && uiState.value.currentManga?.inLibrary == true){
-                Log.d("TAG", "getChapterInfo: updating in library chapter list")
-                for (i in chapterList.first){
-                    if (!list.any{elm -> elm.id == i.id}){
-                        val currentManga = uiState.value.currentManga
-                        if (currentManga !== null){
-                            list.add(i)
-                            mangaDexRepository.addToList(i,currentManga.id, currentManga.coverArtUrl, currentManga.title )
-                            // adds newchapters to repositories new chapters.
-                        }
-                    }
-                }
-                _uiState.update {
-                    it.copy(
-                        currentManga = it.currentManga?.copy(chapterList = Pair(Date(), list))
-                    )
-                }
-                filterSame()
-                orderManga()
-                if (uiState.value.currentManga !== null){
-                    mangaDexRepository.updateInLibrary(uiState.value.currentManga!!)
-                }
-                mangaDexRepository.backUpManga()
-                return
-            } else {
-                Log.d("TAG", "getChapterInfo: Chapter is not in library")
-            }
+            val result = uiState.value.currentManga?.let { mangaDexRepository.getChapters(it) }
 
             _uiState.update {
                 it.copy(
-                    currentManga = it.currentManga?.copy(chapterList = Pair(Date(),chapterList.first))
+                    currentManga = result
                 )
             }
             filterSame()
@@ -500,11 +463,12 @@ class MangaSpecificViewModel @Inject constructor( private val mangaDexRepository
 
 }
 
+//worker which taakes paramters mangaId, chapterId and sourceId, will implement in future
 @HiltWorker
 class MangaWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    @Assisted val mangaDexRepository: MangaDexRepository
+    @Assisted val repo: MangaRepositoryManager
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -512,11 +476,9 @@ class MangaWorker @AssistedInject constructor(
         val mangaId = inputData.getString("mangaId") ?: return Result.failure()
         val id = inputData.getString("chapterId") ?: return Result.failure()
 
-        // Call the repository method you need
         return try {
             Log.d("TAG", "downloading chapter: ")
-            mangaDexRepository.downloadChapter(mangaId, id)
-            // Replace with your actual method
+            repo.getMangaDexRepo().downloadChapter(mangaId, id)
             Log.d("TAG", "downloaded chapter: ")
             Result.success()
         } catch (e: Exception) {

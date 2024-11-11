@@ -1,7 +1,7 @@
 package com.example.poomagnet.ui.MangaSpecific
 
-import com.example.poomagnet.mangaDex.dexApiService.Chapter
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.Chapter
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 
 data class mangaUiState(
     val currentManga: MangaInfo? = null,

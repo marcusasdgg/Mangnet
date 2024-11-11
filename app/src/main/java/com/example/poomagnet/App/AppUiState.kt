@@ -1,6 +1,7 @@
 package com.example.poomagnet.App
 
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+
 
 data class AppUiState(
     val isShowingHomepage: Boolean = true,
@@ -11,4 +12,4 @@ data class AppUiState(
     val currentManga: MangaInfo? = null,
     val previousScreen: ScreenType = ScreenType.Home,
 
-)
+    )

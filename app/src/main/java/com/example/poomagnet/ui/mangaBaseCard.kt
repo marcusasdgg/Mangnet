@@ -53,8 +53,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
-import com.example.poomagnet.mangaDex.dexApiService.mangaState
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.ui.HomeScreen.displayType
 
 //this should work for both versions of mangaInfo, i.e the one including the covertArturl and the one with the downloaded image.

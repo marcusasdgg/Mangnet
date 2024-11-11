@@ -1,31 +1,31 @@
     package com.example.poomagnet.ui.HomeScreen
 
 
-import ContentRating
-import Demographic
-import Ordering
-import Tag
+import com.example.poomagnet.mangaRepositoryManager.ContentRating
+import com.example.poomagnet.mangaRepositoryManager.Demographic
+import com.example.poomagnet.mangaRepositoryManager.Ordering
+import com.example.poomagnet.mangaRepositoryManager.Tag
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.ViewModel
-import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
 import com.example.poomagnet.ui.SearchScreen.Direction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import java.util.logging.Filter
 import javax.inject.Inject
 
     //make this a hilt view model and inject mangadex api object in.
 @HiltViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 class HomeViewModel @Inject constructor(
-    private val mangaDexRepository: MangaDexRepository
+    private val repo: MangaRepositoryManager
     ): ViewModel() {
+        private val mangaDexRepository = repo.getMangaDexRepo()
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState

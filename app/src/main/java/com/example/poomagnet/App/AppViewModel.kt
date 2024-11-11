@@ -4,7 +4,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

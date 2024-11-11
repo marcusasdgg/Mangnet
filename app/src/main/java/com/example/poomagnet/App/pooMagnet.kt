@@ -9,6 +9,7 @@ import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.example.poomagnet.MyWorker
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
+import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
 import com.example.poomagnet.ui.MangaSpecific.MangaWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -26,7 +27,7 @@ class pooMagnet() : Application(), Configuration.Provider{
 
 }
 
-class CustomWorkerFactory @Inject constructor(private val api: MangaDexRepository): WorkerFactory(){
+class CustomWorkerFactory @Inject constructor(private val api: MangaRepositoryManager): WorkerFactory(){
     override fun createWorker(
         appContext: Context,
         workerClassName: String,

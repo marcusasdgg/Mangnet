@@ -3,8 +3,9 @@ package com.example.poomagnet.ui.UpdateScreen
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
-import com.example.poomagnet.mangaDex.dexApiService.slimChapter
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
+import com.example.poomagnet.mangaRepositoryManager.slimChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,8 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class updateViewModel @Inject constructor(
-    private val mangaDexRepository: MangaDexRepository
+    private val repo: MangaRepositoryManager
 ): ViewModel() {
+    private val mangaDexRepository: MangaDexRepository = repo.getMangaDexRepo()
     val _uiState: MutableStateFlow<updateUiState> = MutableStateFlow(updateUiState())
     val uiState: StateFlow<updateUiState> = _uiState
 

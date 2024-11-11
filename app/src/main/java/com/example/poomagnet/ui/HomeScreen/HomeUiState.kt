@@ -1,11 +1,11 @@
 package com.example.poomagnet.ui.HomeScreen
 
-import ContentRating
-import Demographic
-import Ordering
-import Tag
+import com.example.poomagnet.mangaRepositoryManager.ContentRating
+import com.example.poomagnet.mangaRepositoryManager.Demographic
+import com.example.poomagnet.mangaRepositoryManager.Ordering
+import com.example.poomagnet.mangaRepositoryManager.Tag
 import androidx.compose.ui.state.ToggleableState
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.ui.SearchScreen.Direction
 
 data class HomeUiState(

@@ -1,4 +1,5 @@
-import coil.request.Tags
+package com.example.poomagnet.mangaRepositoryManager
+
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -85,7 +86,7 @@ enum class Tag(val full_name: String){
 
     companion object {
         fun fromValue(value: String): Tag? {
-            return entries.find { it.full_name == value }
+            return entries.find { it.full_name.lowercase() == value.lowercase() }
         }
     }
 

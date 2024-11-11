@@ -80,9 +80,8 @@ import androidx.work.WorkerParameters
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
-import com.example.poomagnet.mangaDex.dexApiService.MangaInfo
-import com.example.poomagnet.mangaDex.dexApiService.SimpleDate
-import com.example.poomagnet.mangaDex.dexApiService.isDownloaded
+import com.example.poomagnet.mangaRepositoryManager.SimpleDate
+import com.example.poomagnet.mangaRepositoryManager.isDownloaded
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay

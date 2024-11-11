@@ -73,7 +73,7 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.example.poomagnet.mangaDex.dexApiService.ChapterContents
+import com.example.poomagnet.mangaRepositoryManager.ChapterContents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

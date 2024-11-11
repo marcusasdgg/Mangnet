@@ -1,99 +1,45 @@
 package com.example.poomagnet.mangaDex.dexApiService
 
 
-import Demographic
-import Tag
-import TagDeserializer
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.ui.graphics.ImageBitmap
 import com.example.poomagnet.downloadService.DownloadService
-import com.google.gson.Gson
+import com.example.poomagnet.mangaRepositoryManager.Chapter
+import com.example.poomagnet.mangaRepositoryManager.ChapterContents
+import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.SimpleDate
+import com.example.poomagnet.mangaRepositoryManager.Tag
+import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
+import com.example.poomagnet.mangaRepositoryManager.isOnline
+import com.example.poomagnet.mangaRepositoryManager.mangaState
+import com.example.poomagnet.mangaRepositoryManager.slimChapter
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
-import com.google.gson.JsonSerializer
-import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.HttpException
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
-import java.time.OffsetDateTime
-import javax.inject.Inject
-
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
-import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.lang.reflect.Type
+import java.time.OffsetDateTime
 import java.util.Date
-
-
-
-enum class mangaState {
-    IN_PROGRESS,
-    FINISHED,
-}
-
-data class MangaInfo(
-    val id: String,
-    val type: String,
-    val title: String,
-    val alternateTitles: List<String>,
-    val description: String,
-    val state: mangaState,
-    val contentRating: String,
-    val availableLanguages: List<String>,
-    val coverArt: ImageBitmap?,
-    val coverArtUrl: String,
-    val offSet: Int,
-    var inLibrary: Boolean = false,
-    var chapterList: Pair<Date, List<Chapter>>? = null,
-    val tagList: MutableList<String> = mutableListOf(),
-    val lastReadChapter: Pair<String,Int> = Pair("",0),
-    val demographic: String
-)
-// on entering MangaPage, we will trigger a request to load chapters for chapterList that will turn,
-//the null to a MutableList.
-
-
-data class Chapter(
-    val name: String,
-    val id: String,
-    val volume: Double,
-    val chapter: Double,
-    val group: String,
-    val type: String,
-    val pageCount: Double,
-    val contents: ChapterContents? = null,
-    val date: SimpleDate? = null,
-    val lastPageRead: Int = 0,
-    val finished: Boolean = false,
-
-)
-
-data class slimChapter(
-    val id: String,
-    val name: String,
-    val chapter: Double,
-    val volume: Double,
-    val mangaId: String,
-    val imageUrl: String,
-    val mangaName: String,
-)
+import javax.inject.Inject
 
 
 data class BackUpInstance(
@@ -110,16 +56,6 @@ data class BackUpInstance(
 
 
 
-sealed class ChapterContents {
-    data class Downloaded(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
-    data class Online(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
-}
-
-val ChapterContents.isDownloaded: Boolean
-    get() = this is ChapterContents.Downloaded
-
-val ChapterContents.isOnline: Boolean
-    get() = this is ChapterContents.Online
 
 class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
     override fun serialize(src: ChapterContents, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
@@ -236,6 +172,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     private fun printLibrary(){
         Log.d("TAG", "printLibrary: ${library.map { elm -> elm.coverArtUrl }}")
     }
+
 
 
 
@@ -364,9 +301,8 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         }
         var mang = manga
         if(manga.chapterList?.second?.size  == 0){
-            val chapterList = chapList(mang.id)
+            val chapterList = getChapters(mang)
             Log.d("TAG", "no chapters found trying again")
-            mang = manga.copy(chapterList = Pair(chapterList.second, chapterList.first), coverArtUrl = downloadService.downloadCoverUrl(manga.id, manga.coverArtUrl))
             library.add(mang)
             idSet.add(manga.id)
             printLibrary()
@@ -535,9 +471,11 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     }
 
     // make it so that it can pull off library autmatically instead of calling a get request.
+    //make this return mangainfo with teh new chapters!!!
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun chapList(id: String): Pair<List<Chapter>, Date> {
+    suspend fun getChapters(manga: MangaInfo): MangaInfo {
         val TAG = "TAG"
+        val id = manga.id
         try {
             val responses = mutableListOf(apiService.getChapterList(id,0))
             val totalChapters = responses[0]["total"] as Double
@@ -590,20 +528,27 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                     }
                 }
             }
-
-            library.map { elm ->
-                if (elm.id == id){
-                    elm.copy(chapterList = Pair(Date(),chapterObjects))
-                } else {
-                    elm
+            val curChapList = manga.chapterList?.second?.toMutableList() ?: mutableListOf()
+            val list = mutableListOf<Chapter>()
+            for (i in curChapList){
+                list.add(i)
+            }
+            for (i in chapterObjects){
+                if (!list.any{e -> e.id == i.id}){
+                    list.add(i)
                 }
             }
-            backUpManga()
-            return Pair(chapterObjects, Date())
 
+            backUpManga()
+            if (idSet.contains(manga.id)){
+                library.removeIf { elm -> elm.id == manga.id }
+                library.add(manga.copy(chapterList = Pair(Date(),list)))
+            }
+            Log.d(TAG, "getChapters: found ${list.size} elements")
+            return manga.copy(chapterList = Pair(Date(),list))
         } catch(e: Exception){
             Log.d("TAG", "chapList: failed to get chapters ${e.message}}")
-            return Pair(listOf(), Date())
+            throw(e)
         }
     }
 
@@ -713,24 +658,10 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     suspend fun updateWholeLibrary(){
         Log.d("TAG", "updateWholeLibrary: called")
+        //use chapterlist which does everything for u idiot.
         try {
             library.map { its ->
-                val result = chapList(its.id).first
-                val current = its.chapterList?.second?.toMutableList()
-                if (current !== null){
-                    result.forEach { el ->
-                        if (!current.any { t -> t.id == el.id }){
-                            if (!newUpdatedChapters.any { s -> s.second.id == el.id  }){
-                                val currentDate = SimpleDate(OffsetDateTime.now().toString())
-                                newUpdatedChapters.add(Pair(currentDate, slimChapter(el.id,el.name,el.chapter,el.volume, its.id, its.coverArtUrl, its.title )))
-
-                            }
-                        }
-                    }
-                    its.copy(chapterList = Pair(Date(), current.toList()) )
-                }else {
-                    its
-                }
+                getChapters(its)
             }
             backUpManga()
         } catch (e: Exception){
@@ -761,21 +692,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
 // nut
 
-data class SimpleDate(
-    val day: Int,
-    val month: Int,
-    val year: Int,
-){
-    override fun toString(): String {
-        return "$day/$month/$year"
-    }
 
-    constructor(date: String): this(
-        date.split("-")[2].substring(0..1).toInt(),
-        date.split("-")[1].toInt(),
-        date.split("-")[0].toInt()
-    )
-}
 
 class SimpleDateAdapter : JsonDeserializer<SimpleDate>, JsonSerializer<SimpleDate> {
     override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): SimpleDate {

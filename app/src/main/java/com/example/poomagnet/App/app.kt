@@ -32,6 +32,7 @@ import com.example.poomagnet.ui.SearchScreen.SearchTopBar
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
 import com.example.poomagnet.ui.SettingsScreen.SettingsScreen
 import com.example.poomagnet.ui.SettingsScreen.SettingsTopBar
+import com.example.poomagnet.ui.SettingsScreen.SettingsViewModel
 import com.example.poomagnet.ui.UpdateScreen.UpdateScreen
 import com.example.poomagnet.ui.UpdateScreen.UpdateTopBar
 import com.example.poomagnet.ui.UpdateScreen.updateViewModel
@@ -52,6 +53,7 @@ fun App() {
     val searchViewModel: SearchViewModel =  hiltViewModel()
     val mangaViewModel: MangaSpecificViewModel = hiltViewModel()
     val updateViewModel: updateViewModel = hiltViewModel()
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     val notificationPermission = rememberPermissionState(
         permission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
@@ -159,7 +161,7 @@ fun App() {
                 }
             })
             ScreenType.Settings -> {
-               SettingsScreen(Modifier.padding(innerPadding))
+               SettingsScreen(Modifier.padding(innerPadding), settingsViewModel)
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)
