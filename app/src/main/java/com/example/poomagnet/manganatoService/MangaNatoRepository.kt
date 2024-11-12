@@ -45,113 +45,116 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     suspend fun searchAllManga(title: String, page: Int = 1, ordering: String, demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String) : Pair<List<MangaInfo>,Int>{
         var ret = mutableListOf<MangaInfo>()
 
+        try {
+            var tE: String? = null
+            var tI: String? = null
 
+            if (tagsIncluded.isNotEmpty()){
+                tI = "_"
+                for (tag in tagsIncluded){
+                    val temp = tagMap[tag] ?: ""
+                    if (temp != ""){
+                        tI += temp.toString() + "_"
+                    }
+                }
+                for (t in contentRating){
+                    when(t){
+                        "suggestive" -> {
+                            tI += suggestiveRating.toString()
+                        }
+                        "erotica" -> {
+                            tI += eroticaRating.toString()
+                        }
+                        "pornographic" -> {
+                            tI += pornographicRating.toString() + "_"
+                        }
 
-        var tE: String? = null
-        var tI: String? = null
+                    }
+                }
 
-        if (tagsIncluded.isNotEmpty()){
-            tI = "_"
-            for (tag in tagsIncluded){
-                val temp = tagMap[tag] ?: ""
-                if (temp != ""){
-                    tI += temp.toString() + "_"
+                for (t in demo){
+                    when(t){
+                        "shounen" -> {
+                            tI += shounen.toString()+ "_"
+                        }
+                        "shoujo" -> {
+                            tI += shoujo.toString() + "_"
+                        }
+                        "seinen" -> {
+                            tI += seinen.toString() + "_"
+                        }
+                        "josei" -> {
+                            tI += josei.toString() + "_"
+                        }
+
+                    }
                 }
             }
-            for (t in contentRating){
-                when(t){
-                    "suggestive" -> {
-                        tI += suggestiveRating.toString()
-                    }
-                    "erotica" -> {
-                        tI += eroticaRating.toString()
-                    }
-                    "pornographic" -> {
-                        tI += pornographicRating.toString() + "_"
-                    }
 
+            if (tagsExcluded.isNotEmpty()){
+                tE = "_"
+                for (tag in tagsExcluded){
+                    val temp = tagMap[tag] ?: ""
+                    if (temp != ""){
+                        tE += temp.toString() + "_"
+                    }
                 }
             }
 
-            for (t in demo){
-                when(t){
-                    "shounen" -> {
-                        tI += shounen.toString()+ "_"
-                    }
-                    "shoujo" -> {
-                        tI += shoujo.toString() + "_"
-                    }
-                    "seinen" -> {
-                        tI += seinen.toString() + "_"
-                    }
-                    "josei" -> {
-                        tI += josei.toString() + "_"
-                    }
-
-                }
+            val titleE : String? = if (title == "") null else title
+            val statusE: String? = if(status == "") null else status
+            val order = when (ordering){
+                "order[followedCount]" -> "topview"
+                "order[title]" -> "az"
+                else -> ""
             }
-        }
-
-        if (tagsExcluded.isNotEmpty()){
-            tE = "_"
-            for (tag in tagsExcluded){
-                val temp = tagMap[tag] ?: ""
-                if (temp != ""){
-                    tE += temp.toString() + "_"
-                }
-            }
-        }
-
-        val titleE : String? = if (title == "") null else title
-        val statusE: String? = if(status == "") null else status
-        val order = when (ordering){
-            "order[followedCount]" -> "topview"
-            "order[title]" -> "az"
-            else -> ""
-        }
 
 //        Log.d("TAG", "searchAllManga: $tE, $tI, $title")
-        val res = natoApi.mangaSearchSimple(titleE,if (page != 0) page else 1,if (order !== "") order else null,tI,tE,statusE)
+            val res = natoApi.mangaSearchSimple(titleE,if (page != 0) page else 1,if (order !== "") order else null,tI,tE,statusE)
 
-        Log.d("TAG", "searchAllManga prasing html qs: $title")
-        val soupy = Jsoup.parse(res).body().getElementsByTag("div").first{
-            it.hasClass("body-site")
-        }.getElementsByTag("div").first {
-            it.hasClass("container") && it.hasClass("container-main")
-        }. getElementsByTag("div").first {
-            it.hasClass("panel-content-genres")
-        }.getElementsByTag("div").filter {
-                e -> e.hasClass("content-genres-item")
-        }.toList()
+            Log.d("TAG", "searchAllManga prasing html qs: $title")
+            val soupy = Jsoup.parse(res).body().getElementsByTag("div").first{
+                it.hasClass("body-site")
+            }.getElementsByTag("div").first {
+                it.hasClass("container") && it.hasClass("container-main")
+            }. getElementsByTag("div").first {
+                it.hasClass("panel-content-genres")
+            }.getElementsByTag("div").filter {
+                    e -> e.hasClass("content-genres-item")
+            }.toList()
 
-        for (elm in soupy){
-            val img = elm.getElementsByTag("a").first().getElementsByTag("img")
-            val imgUrl = img.attr("src")
-            val itemInfo = elm.getElementsByClass("genres-item-info").first()
-            val tite = itemInfo.getElementsByTag("h3").first().getElementsByTag("a").first().attr("title").toString()
-            val innerUrl = itemInfo.getElementsByTag("h3").first().getElementsByTag("a").first().attr("href").toString()
-            val id = innerUrl.split("/").last()
-            val type = "manga"
+            for (elm in soupy){
+                val img = elm.getElementsByTag("a").first().getElementsByTag("img")
+                val imgUrl = img.attr("src")
+                val itemInfo = elm.getElementsByClass("genres-item-info").first()
+                val tite = itemInfo.getElementsByTag("h3").first().getElementsByTag("a").first().attr("title").toString()
+                val innerUrl = itemInfo.getElementsByTag("h3").first().getElementsByTag("a").first().attr("href").toString()
+                val id = innerUrl.split("/").last()
+                val type = "manga"
 
 
-            val alternateTitles = listOf("")
-            val description = ""
-            val state = mangaState.IN_PROGRESS
-            val tagList = mutableListOf<String>()
-            val demographic = ""
+                val alternateTitles = listOf("")
+                val description = ""
+                val state = mangaState.IN_PROGRESS
+                val tagList = mutableListOf<String>()
+                val demographic = ""
 
-            ret.add(MangaInfo(id, type, tite, alternateTitles, description, state, "noClue", listOf("en"), null, imgUrl, 0, inLibrary =  false, tagList = tagList, demographic = demographic))
+                ret.add(MangaInfo(id, type, tite, alternateTitles, description, state, "noClue", listOf("en"), null, imgUrl, 0, inLibrary =  false, tagList = tagList, demographic = demographic))
+            }
+            val maxElm = Jsoup.parse(res).body().getElementsByTag("div").firstOrNull{
+                it.hasClass("body-site")
+            }?.getElementsByTag("div")?.firstOrNull {
+                it.hasClass("container") && it.hasClass("container-main")
+            }?.getElementsByTag("div")?.firstOrNull{
+                it.hasClass("panel-page-number")
+            }?.getElementsByClass("group-qty")?.firstOrNull()
+                ?.getElementsByTag("a")?.firstOrNull()
+                ?.text()?.split(":")?.lastOrNull()?.trim()?.replace(",", "")?.toInt() ?: 0
+            return Pair(ret,maxElm)
+        } catch (e: Exception){
+            Log.d("TAG", "searchAllManga: $e")
+            return Pair(ret,0)
         }
-        val maxElm = Jsoup.parse(res).body().getElementsByTag("div").firstOrNull{
-            it.hasClass("body-site")
-        }?.getElementsByTag("div")?.firstOrNull {
-            it.hasClass("container") && it.hasClass("container-main")
-        }?.getElementsByTag("div")?.firstOrNull{
-            it.hasClass("panel-page-number")
-        }?.getElementsByClass("group-qty")?.firstOrNull()
-            ?.getElementsByTag("a")?.firstOrNull()
-            ?.text()?.split(":")?.lastOrNull()?.trim()?.replace(",", "")?.toInt() ?: 0
-        return Pair(ret,maxElm)
     }
 
     //allow this function to read off backup file if exists
