@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 import java.io.ByteArrayInputStream
-import java.util.Date
 import java.util.Scanner
 import javax.inject.Inject
 
@@ -383,8 +382,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             }
 
             Log.d("TAG", "getChapters: ${chapArr.size} chapters")
-            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = Pair(
-                Date(),chapArr))
+            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = chapArr)
         } catch (e: Exception){
             Log.d("TAG", "getChapters: failed $e")
             return manga

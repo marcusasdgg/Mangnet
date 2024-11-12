@@ -1,18 +1,14 @@
 package com.example.poomagnet.App
 
 import android.Manifest
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -127,7 +123,7 @@ fun App() {
                     mangaViewModel.viewModelScope.launch {
                         mangaViewModel.selectCurrentManga(manga)
                         if (mangaViewModel.uiState.value.currentManga !== null){
-                            var id =  mangaViewModel.uiState.value.currentManga!!.chapterList?.second?.last()!!.id
+                            var id =  mangaViewModel.uiState.value.currentManga!!.chapterList?.last()!!.id
                             if (mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first != "" && mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first !== null){
                                 id = mangaViewModel.uiState.value.currentManga?.lastReadChapter?.first!!
                             }

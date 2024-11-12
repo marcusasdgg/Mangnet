@@ -2,12 +2,8 @@
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Paint.Align
 import android.os.Build
 import android.util.Log
-import android.view.View
-import android.view.Window
-import android.view.WindowInsets
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
@@ -18,18 +14,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -46,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MonotonicFrameClock
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,13 +50,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -72,17 +61,15 @@ import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.request.SuccessResult
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.log
 
 
-//use accompianist pager.
+ //use accompianist pager.
 //create a list of functions first
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -101,7 +88,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
                     delay(80)
                     pagerState.scrollToPage(0)
                     viewModel.setPage(1)
-                    Log.d("TAG", "ReadingScreen: ${uiState.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
+                    Log.d("TAG", "ReadingScreen: ${uiState.currentManga?.chapterList?.firstOrNull { elm -> elm.finished }}")
                 }else {
                     viewModel.getNextChapter(context)
                     viewModel.loadNextChapter()
@@ -109,7 +96,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
                     delay(80)
                     pagerState.scrollToPage(0)
                     viewModel.setPage(1)
-                    Log.d("TAG", "ReadingScreen: ${uiState.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
+                    Log.d("TAG", "ReadingScreen: ${uiState.currentManga?.chapterList?.firstOrNull { elm -> elm.finished }}")
                 }
             } else {
                 if (pagerState.currentPage == pagerState.pageCount/2){
@@ -278,7 +265,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                         viewModel.toggleHomeBar(false)
                                         viewModel.toggleReadBar(false)
                                     }
-                                    ImageView(Modifier, imageUrl = elm.first, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
+                                    ImageView(Modifier, imageUrl = elm, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
                                     viewModel.viewModelScope.launch {
                                         if (pagerState.currentPage >= pagerState.pageCount - 2){
                                             if (uiState.nextChapter == null){
@@ -387,7 +374,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                         viewModel.toggleHomeBar(false)
                                         viewModel.toggleReadBar(false)
                                     }
-                                    ImageView(Modifier, imageUrl = elm.first, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
+                                    ImageView(Modifier, imageUrl = elm, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
                                         viewModel.viewModelScope.launch {
                                             if (pagerState.currentPage >= pagerState.pageCount - 2){
                                                 if (uiState.nextChapter == null){
@@ -430,7 +417,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                             }
                                         }
                                     }, ifDownloaded = true, loadImage = {
-                                        val s = viewModel.loadContentimage(uiState.currentManga!!.id ,uiState.currentChapter!!.id, elm.first)
+                                        val s = viewModel.loadContentimage(uiState.currentManga!!.id ,uiState.currentChapter!!.id, elm)
                                         Log.d("TAG", "ReadScreen: $s")
                                         s
                                     })}

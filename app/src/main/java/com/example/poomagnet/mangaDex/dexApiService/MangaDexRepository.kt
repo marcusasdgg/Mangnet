@@ -38,7 +38,6 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.lang.reflect.Type
 import java.time.OffsetDateTime
-import java.util.Date
 import javax.inject.Inject
 
 
@@ -75,16 +74,17 @@ class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
             }
         }
 
+        Log.d("TAG", "serialize: $jsonObject")
         return jsonObject
     }
 }
 
 class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterContents {
-        Log.d("TAG", "serialize: ")
         val jsonObject = json.asJsonObject
-        val imagePathsType = object : TypeToken<List<Pair<String, Boolean>>>() {}.type
-        val imagePaths: List<Pair<String, Boolean>> = context.deserialize(jsonObject.get("imagePaths"), imagePathsType)
+        Log.d("TAG", "serialize: $jsonObject")
+        val imagePathsType = object : TypeToken<List<String>>() {}.type
+        val imagePaths: List<String> = context.deserialize(jsonObject.get("imagePaths"), imagePathsType)
         val ifDone = jsonObject.get("ifDone").asBoolean
 
         return when (jsonObject.get("type").asString) {
@@ -203,12 +203,12 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun backUpManga(){
-        Log.d("TAG", "commencing backup: $library")
+        Log.d("TAG", "commencing backup: ${library.map { e -> e.chapterList }}")
 
         val libraryShouldBe = library.map {element ->
-            element.copy(chapterList = Pair(Date(), element.chapterList?.second?.map { chapter ->
+            element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
-            } ?: listOf()))
+            } ?: listOf())
         }
         val file = File(context.filesDir, "backup.txt")
         withContext(Dispatchers.IO) {
@@ -221,6 +221,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                     )
                 }
             }
+            Log.d("TAG", "backUpManga: success")
         }
         withContext(Dispatchers.IO) {
             printBackUp()
@@ -229,7 +230,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
 
     fun CoroutineScope.downloadChapterConcurrently(
-        chapterContents: List<Pair<String, Any>>,
+        chapterContents: List<String>,
         mangaId: String,
         chapterId: String
     ): List<Pair<Deferred<String>, Boolean>> {  // Change to Deferred<String>
@@ -238,7 +239,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         // Launch all download tasks asynchronously
         for (i in chapterContents) {
             val deferred = async(Dispatchers.IO) {
-                downloadService.downloadContent(mangaId, chapterId, i.first) // This returns a String
+                downloadService.downloadContent(mangaId, chapterId, i) // This returns a String
             }
             deferredList.add(Pair(deferred, false))
             Log.d("TAG", "downloadChapter: Task launched for $i")
@@ -251,25 +252,26 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
         val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
-        val chapterContents = getChapterContents(chapterId).imagePaths
-        var list: List<Pair<String,Boolean>> = listOf()
+        val chapterS = library.first { e -> e.id === mangaId }.chapterList?.first { e -> e.id == chapterId }
+        val chapterContents = getChapterContents(chapterS!!).contents?.imagePaths
+        var list: List<String> = listOf()
         coroutineScope {
-            val lists = downloadChapterConcurrently(chapterContents, mangaId, chapterId)
-            list = lists.map { (deferred, flag) ->
-                Pair(deferred.await(), flag)  // Await the result and pair it with the flag
+            val lists = downloadChapterConcurrently(chapterContents!!, mangaId, chapterId)
+            list = lists.map { (deferred) ->
+                deferred.await()  // Await the result and pair it with the flag
             }
         }
 
         var manga = library.find { elm -> elm.id == mangaId }
 
-        val chapList = manga?.chapterList?.second?.toMutableList()
+        val chapList = manga?.chapterList?.toMutableList()
 
 
-        val chapterIndex: Int = manga?.chapterList?.second?.indexOfFirst { elm ->
+        val chapterIndex: Int = manga?.chapterList?.indexOfFirst { elm ->
             elm.id == chapterId
         } ?: -1
 
-        var chapter = manga?.chapterList?.second?.find { elm ->
+        var chapter = manga?.chapterList?.find { elm ->
             elm.id == chapterId
         }
 
@@ -282,7 +284,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         }
 
         manga = manga?.copy(
-            chapterList = Pair(Date(),chapList!!)
+            chapterList = chapList!!
         )
 
 
@@ -300,7 +302,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             return
         }
         var mang = manga
-        if(manga.chapterList?.second?.size  == 0){
+        if(manga.chapterList?.size  == 0){
             val chapterList = getChapters(mang)
             Log.d("TAG", "no chapters found trying again")
             library.add(mang)
@@ -448,7 +450,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                                         contructedUrl,
                                         offSet,
                                         false,
-                                        Pair(Date(0),mutableListOf()),
+                                        mutableListOf(),
                                         tags,
                                         demographic = demographic
                                     )
@@ -528,7 +530,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                     }
                 }
             }
-            val curChapList = manga.chapterList?.second?.toMutableList() ?: mutableListOf()
+            val curChapList = manga.chapterList?.toMutableList() ?: mutableListOf()
             val list = mutableListOf<Chapter>()
             for (i in curChapList){
                 list.add(i)
@@ -542,10 +544,10 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             backUpManga()
             if (idSet.contains(manga.id)){
                 library.removeIf { elm -> elm.id == manga.id }
-                library.add(manga.copy(chapterList = Pair(Date(),list)))
+                library.add(manga.copy(chapterList = list))
             }
             Log.d(TAG, "getChapters: found ${list.size} elements")
-            return manga.copy(chapterList = Pair(Date(),list))
+            return manga.copy(chapterList = list)
         } catch(e: Exception){
             Log.d("TAG", "chapList: failed to get chapters ${e.message}}")
             throw(e)
@@ -553,7 +555,8 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     }
 
     //add support for datasaver later.
-   suspend fun getChapterContents(id: String): ChapterContents.Online {
+   suspend fun getChapterContents(ch: Chapter): Chapter {
+       val id = ch.id
        try {
            val response = apiService.getChapterPagesInfo(id)
            val baseUrl = response["baseUrl"]
@@ -570,9 +573,9 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                    }
                }
            }
-           return ChapterContents.Online(list.map {elm -> Pair(elm, false) }, false)
+           return ch.copy(contents = ChapterContents.Online(list, false))
        } catch (e: Exception) {
-           return ChapterContents.Online(listOf(), false)
+           return ch
        }
 
     }
@@ -633,8 +636,8 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         library = library.map { elm ->
             if (manga.id == elm.id){
                 Log.d("TAG", "updateInLibrary: found manga")
-                val oldChapters = elm.chapterList?.second?.toMutableList()
-                manga.chapterList?.second?.forEach { t ->
+                val oldChapters = elm.chapterList?.toMutableList()
+                manga.chapterList?.forEach { t ->
                     if (!oldChapters?.any{ e -> e.id == t.id }!!){
                         oldChapters.add(t)
                         newUpdatedChapters.add(Pair(currentDate, slimChapter(t.id,t.name,t.chapter,t.volume, elm.id, elm.coverArtUrl, elm.title )))
@@ -647,7 +650,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                         }
                     }
                 }
-                manga.copy(chapterList = Pair(Date(),oldChapters ?: listOf()))
+                manga.copy(chapterList = oldChapters ?: listOf())
             }else {
                 elm
             }

@@ -1,20 +1,15 @@
 package com.example.poomagnet.ui.MangaSpecific
 
-import android.Manifest
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,18 +26,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.outlined.DownloadForOffline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -50,8 +41,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -74,20 +63,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.work.Worker
-import androidx.work.WorkerParameters
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.isDownloaded
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.exp
-import kotlin.math.max
 import kotlin.math.min
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -183,13 +166,13 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 Modifier
                     .fillMaxWidth()
                     .height(40.dp), contentAlignment = Alignment.CenterStart){
-                Text("${uiState.currentManga?.chapterList?.second?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
+                Text("${uiState.currentManga?.chapterList?.size} Chapters", Modifier.padding(10.dp,0.dp,0.dp,0.dp))
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                         Button(
                             shape = RoundedCornerShape(100),
                             onClick = {
                                 mangaViewModel.viewModelScope.launch {
-                                    var currentManga = uiState.currentManga!!.chapterList?.second?.lastOrNull()?.id
+                                    var currentManga = uiState.currentManga!!.chapterList?.lastOrNull()?.id
                                     if (uiState.currentManga?.lastReadChapter?.first != ""  && uiState.currentManga?.lastReadChapter?.first !== null){
                                         currentManga = uiState.currentManga?.lastReadChapter?.first
                                     }
@@ -225,7 +208,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
             }
             Spacer(Modifier.height(20.dp))
             Column(){
-                uiState.currentManga?.chapterList?.second?.forEach { elm ->
+                uiState.currentManga?.chapterList?.forEach { elm ->
                     ChapterListing(Modifier.height(60.dp),
                         {mangaViewModel.viewModelScope.launch {
                             mangaViewModel.getChapterUrls(elm.id)
@@ -254,7 +237,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                 hideTopBar(false)
                 mangaViewModel.enterReadMode(false)
                 mangaViewModel.resetState()
-                Log.d("TAG", "MangaScreen: ${mangaViewModel.uiState.value.currentManga?.chapterList?.second?.firstOrNull { elm -> elm.finished }}")
+                Log.d("TAG", "MangaScreen: ${mangaViewModel.uiState.value.currentManga?.chapterList?.firstOrNull { elm -> elm.finished }}")
             }
         }
 
@@ -381,8 +364,8 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
                         ) {
                             // Menu items, dynamically created based on the options list
                             DropdownMenuItem(text = {Text("first 5 chapters")}, onClick = {open = false; mangaViewModel.viewModelScope.launch {
-                                val maxSize = state.currentManga?.chapterList?.second?.size ?: 0
-                                val chapterList = state.currentManga?.chapterList?.second?.reversed()?.subList(0,min(maxSize,5))
+                                val maxSize = state.currentManga?.chapterList?.size ?: 0
+                                val chapterList = state.currentManga?.chapterList?.reversed()?.subList(0,min(maxSize,5))
                                 chapterList?.forEach { elm->
                                     Log.d("TAG", "MangaAppBar: ${elm.id}")
                                     mangaViewModel.downloadChapter(chapterId = elm.id)
@@ -390,8 +373,8 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
                                 open = false
                             }})
                             DropdownMenuItem(text = {Text("first 10 chapters")}, onClick = {open = false; mangaViewModel.viewModelScope.launch {
-                                val maxSize = state.currentManga?.chapterList?.second?.size ?: 0
-                                val chapterList = state.currentManga?.chapterList?.second?.reversed()?.subList(
+                                val maxSize = state.currentManga?.chapterList?.size ?: 0
+                                val chapterList = state.currentManga?.chapterList?.reversed()?.subList(
                                     0,
                                     min(maxSize, 10)
                                 )
@@ -401,8 +384,8 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
                             }
                             })
                             DropdownMenuItem(text = {Text("All chapters")}, onClick = {open = false ; mangaViewModel.viewModelScope.launch {
-                                val maxSize = state.currentManga?.chapterList?.second?.size ?: 0
-                                val chapterList = state.currentManga?.chapterList?.second?.reversed()?.subList(
+                                val maxSize = state.currentManga?.chapterList?.size ?: 0
+                                val chapterList = state.currentManga?.chapterList?.reversed()?.subList(
                                     0,
                                     maxSize
                                 )

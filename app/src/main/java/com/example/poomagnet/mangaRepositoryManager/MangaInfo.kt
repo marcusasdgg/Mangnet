@@ -1,7 +1,6 @@
 package com.example.poomagnet.mangaRepositoryManager
 
 import androidx.compose.ui.graphics.ImageBitmap
-import java.util.Date
 
 enum class mangaState {
     IN_PROGRESS,
@@ -21,7 +20,7 @@ data class MangaInfo(
     val coverArtUrl: String,
     val offSet: Int,
     var inLibrary: Boolean = false,
-    var chapterList: Pair<Date, List<Chapter>>? = null,
+    var chapterList: List<Chapter>? = null,
     val tagList: MutableList<String> = mutableListOf(),
     val lastReadChapter: Pair<String,Int> = Pair("",0),
     val demographic: String
@@ -55,10 +54,12 @@ data class slimChapter(
     val mangaName: String,
 )
 
-sealed class ChapterContents {
-    data class Downloaded(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
-    data class Online(val imagePaths: List<Pair<String, Boolean>>, val ifDone: Boolean) : ChapterContents()
+sealed class ChapterContents(@Transient open val  imagePaths: List<String>,
+                             @Transient open val ifDone: Boolean) {
+    data class Downloaded(override val imagePaths: List<String>,override val ifDone: Boolean) : ChapterContents(imagePaths, ifDone)
+    data class Online(override val imagePaths: List<String>, override val ifDone: Boolean) : ChapterContents(imagePaths, ifDone)
 }
+
 
 val ChapterContents.isDownloaded: Boolean
     get() = this is ChapterContents.Downloaded
