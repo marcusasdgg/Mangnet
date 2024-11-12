@@ -189,6 +189,7 @@ fun SearchScreen(
     // i need this so that on first load of the search screen, the default tag is follow count, but once
     // changed i need to make it so that it is by Relevance
     LaunchedEffect(uiState.searchText, uiState.somethingChanged, uiState.somethingAdded) {
+        searchViewModel.resetPageNo()
         Log.d("TAG", "SearchScreen: effect launched")
         if (uiState.firstLoad){
             Log.d("TAG", "First Load detected: ")

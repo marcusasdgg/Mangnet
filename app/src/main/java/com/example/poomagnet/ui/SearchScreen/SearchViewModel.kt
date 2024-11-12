@@ -146,6 +146,12 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun resetPageNo(){
+        _uiState.update { it.copy(
+            pageNumber = 0
+        ) }
+    }
+
     suspend fun continueSearch() {
         if (uiState.value.searchListing.size == uiState.value.itemCount-1){
             Log.d("TAG", "continueSearch: failed as search finished")
@@ -174,6 +180,7 @@ class SearchViewModel @Inject constructor(
                 it.copy(
                     searchListing = it.searchListing + result.first,
                     somethingChanged = false,
+                    pageNumber = it.pageNumber + 1
                 )
             }
         }

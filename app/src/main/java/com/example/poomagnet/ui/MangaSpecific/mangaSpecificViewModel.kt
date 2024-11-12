@@ -278,6 +278,8 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
         }
     }
 
+
+
     fun readPage(pageNum: Int){
         val currentChapter = uiState.value.currentChapter?.copy(lastPageRead = pageNum)
         _uiState.update {
