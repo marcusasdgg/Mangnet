@@ -63,9 +63,7 @@ import com.example.poomagnet.mangaRepositoryManager.Ordering
 import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.ui.DoubleStackCard
 import com.example.poomagnet.ui.SortDrawer.sortDrawer
-
-
-
+import kotlinx.coroutines.delay
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -232,6 +230,7 @@ fun SearchScreen(
                     val lastVisibleItemIndex = visibleItems.last().index
                     if (lastVisibleItemIndex == totalItemsCount - 1) {
                         searchViewModel.continueSearch()
+                        delay(400)
                     }
                 }
             }

@@ -15,7 +15,7 @@ data class SearchUiState (
     val searchExpanded: Boolean = false,
     val searchText: String = "",
     val searchListing: List<MangaInfo> = listOf(),
-    val itemCount: Int = 0,
+    val itemCount: Int = 1,
     val sortTags: Map<Ordering, Pair<Boolean, Direction>> = Ordering.entries.associateWith { Pair(false, Direction.Descending) }.toMutableMap().apply { this[Ordering.Relevance] = Pair(true,Direction.Descending) },
     val showDrawer: Boolean = false,
     val tagsIncluded: Map<Tag,ToggleableState> =  Tag.entries.associateWith {ToggleableState.Off},

@@ -111,7 +111,7 @@ class SearchViewModel @Inject constructor(
             it.copy(
                 itemCount = result.second,
                 searchListing = result.first,
-                pageNumber = it.pageNumber+1
+                pageNumber = 1
             )
         }
 
@@ -147,8 +147,9 @@ class SearchViewModel @Inject constructor(
     }
 
     fun resetPageNo(){
+        Log.d("TAG", "resetPageNo: page number was reset")
         _uiState.update { it.copy(
-            pageNumber = 0
+            pageNumber = 1
         ) }
     }
 
@@ -175,7 +176,7 @@ class SearchViewModel @Inject constructor(
                 source = uiState.value.sourceSelected
             )
 
-
+            Log.d("TAG", "continueSearch:  old pageNo is ${uiState.value.pageNumber}")
             _uiState.update{
                 it.copy(
                     searchListing = it.searchListing + result.first,
@@ -183,6 +184,7 @@ class SearchViewModel @Inject constructor(
                     pageNumber = it.pageNumber + 1
                 )
             }
+            Log.d("TAG", "continueSearch: new pageNo is $offset")
         }
     }
 
