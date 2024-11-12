@@ -216,19 +216,18 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getChapterInfo(){
         val id = uiState.value.currentManga?.id
         Log.d("TAG", "id passed was this: \"$id\"")
         if (id !== null){
-            val result = uiState.value.currentManga?.let { mangaDexRepository.getChapters(it) }
-
+            val result = uiState.value.currentManga?.let { repo.getChapters(it) }
+            Log.d("TAG", "getChapterInfo: size of ${result!!.chapterList!!.second.size}")
             _uiState.update {
                 it.copy(
                     currentManga = result
                 )
             }
-            filterSame()
+            //filterSame()
             orderManga()
         }
     }

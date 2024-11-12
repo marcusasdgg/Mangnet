@@ -69,6 +69,7 @@ class SearchViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 sourceSelected = newSource,
+                somethingChanged = true,
             )
         }
     }
@@ -96,21 +97,28 @@ class SearchViewModel @Inject constructor(
 
         val s = getIncludeExclude()
         Log.d("TAG", "executeSearch: tags include exclude are $s")
-        val result = mangaDexRepository.searchAllManga(
-            uiState.value.searchText,
-            ordering = mapOf(res),
-            demo = getDemo().map { it.msg }.toList(),
-            rating = getContentRating().map { it.msg }.toList(),
-            tagsIncluded = s.first,
-            tagsExcluded = s.second
-        )
-
+        val result = uiState.value.sourceSelected.let { t ->
+            repo.searchAllManga(uiState.value.searchText,
+                ordering = mapOf(res),
+                demo = getDemo().map { it.msg }.toList(),
+                rating = getContentRating().map { it.msg }.toList(),
+                tagsIncluded = s.first,
+                tagsExcluded = s.second,
+                source = t
+            )
+        }
         _uiState.update{
             it.copy(
                 itemCount = result.second,
                 searchListing = result.first,
+                pageNumber = it.pageNumber+1
             )
         }
+
+
+
+
+
     }
 
     fun getIncludeExclude(): Pair<List<Tag>, List<Tag>> {
@@ -145,14 +153,22 @@ class SearchViewModel @Inject constructor(
         } else {
             val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
             val s = getIncludeExclude()
-            val result = mangaDexRepository.searchAllManga(uiState.value.searchText,
-                offSet = uiState.value.searchListing.size+1,
+            val offset = when(uiState.value.sourceSelected){
+                Sources.MANGANATO -> {uiState.value.pageNumber + 1}
+                Sources.MANGADEX -> {uiState.value.searchListing.size+1}
+                Sources.ALL -> {0}
+            }
+            val result =  repo.searchAllManga(
+                uiState.value.searchText,
+                offSet = offset,
                 ordering = mapOf(res),
                 demo = getDemo().map { it.msg }.toList(),
                 rating = getContentRating().map { it.msg }.toList(),
                 tagsIncluded = s.first,
-                tagsExcluded = s.second
+                tagsExcluded = s.second,
+                source = uiState.value.sourceSelected
             )
+
 
             _uiState.update{
                 it.copy(

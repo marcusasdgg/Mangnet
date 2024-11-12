@@ -9,7 +9,7 @@ interface natoService {
     suspend fun mangaSearchSimple(
         @Query("keyw") title: String?,
         @Query("page") offset: Int,
-        @Query("orby") orderBy: String,
+        @Query("orby") orderBy: String?,
         @Query("g_i") includedTags: String?,
         @Query("g_e") excludedTags: String?,
         @Query("sts") status: String?

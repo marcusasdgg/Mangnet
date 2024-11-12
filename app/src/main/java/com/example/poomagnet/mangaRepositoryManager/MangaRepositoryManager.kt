@@ -43,8 +43,15 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         //title: String, page: Int = 1, ordering: String, demo: List<String> tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String
         return when(source){
             Sources.MANGADEX -> mangadexRepo.searchAllManga(title, offSet, ordering, demo, tagsIncluded, tagsExcluded, rating)
-            Sources.MANGANATO -> natoRepo.searchAllManga(title, offSet, ordering.values.first(), demo, tagsIncluded, tagsExcluded, rating, "")
+            Sources.MANGANATO -> natoRepo.searchAllManga(title, offSet, ordering.keys.first(), demo, tagsIncluded, tagsExcluded, rating, "")
             Sources.ALL->Pair(listOf(),0)
+        }
+    }
+
+    suspend fun getChapters(manga: MangaInfo) : MangaInfo{
+        return when(getBelongedRepo(manga.id)){
+            "MangaNato" -> {natoRepo.getChapters(manga)}
+            else -> {mangadexRepo.getChapters(manga)}
         }
     }
 

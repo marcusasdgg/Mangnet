@@ -27,6 +27,7 @@ data class SearchUiState (
     val secondLoad: Boolean = true,
     val oldText: String = "",
     val somethingAdded: Boolean = false,
+    val pageNumber: Int = 0,
 )
 
 enum class Direction(val msg: String) {

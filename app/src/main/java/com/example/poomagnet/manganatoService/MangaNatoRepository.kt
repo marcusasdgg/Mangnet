@@ -3,13 +3,18 @@ package com.example.poomagnet.manganatoService
 import android.content.Context
 import android.util.Log
 import com.example.poomagnet.downloadService.DownloadService
+import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
+import java.io.ByteArrayInputStream
+import java.util.Date
+import java.util.Scanner
 import javax.inject.Inject
 
 class MangaNatoRepository @Inject constructor(private val context: Context, private val downloadService: DownloadService) {
@@ -39,6 +44,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     //speed this function up by, if demographic is "" in mangaspecific view, we call updateInfo on this given the url in title
     suspend fun searchAllManga(title: String, page: Int = 1, ordering: String, demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String) : Pair<List<MangaInfo>,Int>{
         var ret = mutableListOf<MangaInfo>()
+
 
 
         var tE: String? = null
@@ -98,11 +104,16 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
         val titleE : String? = if (title == "") null else title
         val statusE: String? = if(status == "") null else status
+        val order = when (ordering){
+            "order[followedCount]" -> "topview"
+            "order[title]" -> "az"
+            else -> ""
+        }
 
-        Log.d("TAG", "searchAllManga: $tE, $tI, $title")
+//        Log.d("TAG", "searchAllManga: $tE, $tI, $title")
+        val res = natoApi.mangaSearchSimple(titleE,if (page != 0) page else 1,if (order !== "") order else null,tI,tE,statusE)
 
-        val res = natoApi.mangaSearchSimple(titleE,page,ordering,tI,tE,statusE)
-        //Log.d("TAG", "searchAllManga $res")
+        Log.d("TAG", "searchAllManga prasing html qs: $title")
         val soupy = Jsoup.parse(res).body().getElementsByTag("div").first{
             it.hasClass("body-site")
         }.getElementsByTag("div").first {
@@ -113,7 +124,6 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 e -> e.hasClass("content-genres-item")
         }.toList()
 
-        Log.d("TAG", "searchAllManga: found mangas : ${soupy.size}")
         for (elm in soupy){
             val img = elm.getElementsByTag("a").first().getElementsByTag("img")
             val imgUrl = img.attr("src")
@@ -123,8 +133,92 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             val id = innerUrl.split("/").last()
             val type = "manga"
 
-            val res = natoApi.getInfo(innerUrl)
-            val innerSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
+
+            val alternateTitles = listOf("")
+            val description = ""
+            val state = mangaState.IN_PROGRESS
+            val tagList = mutableListOf<String>()
+            val demographic = ""
+
+            ret.add(MangaInfo(id, type, tite, alternateTitles, description, state, "noClue", listOf("en"), null, imgUrl, 0, inLibrary =  false, tagList = tagList, demographic = demographic))
+        }
+        val maxElm = Jsoup.parse(res).body().getElementsByTag("div").firstOrNull{
+            it.hasClass("body-site")
+        }?.getElementsByTag("div")?.firstOrNull {
+            it.hasClass("container") && it.hasClass("container-main")
+        }?.getElementsByTag("div")?.firstOrNull{
+            it.hasClass("panel-page-number")
+        }?.getElementsByClass("group-qty")?.firstOrNull()
+            ?.getElementsByTag("a")?.firstOrNull()
+            ?.text()?.split(":")?.lastOrNull()?.trim()?.replace(",", "")?.toInt() ?: 0
+        return Pair(ret,maxElm)
+    }
+
+    //allow this function to read off backup file if exists
+    fun initTags(){
+        CoroutineScope(Dispatchers.IO).launch{
+            try {
+                val result = natoApi.tagInit()
+                val htparse = Jsoup.parse(result).getElementsByTag("body").first().getElementsByTag("div")
+                    .first { it.hasClass("container") && it.hasClass("container-main") }.getElementsByTag("div").first(){
+                        it.hasClass("panel-advanced-search-tool")
+                    }.getElementsByTag("div").first{
+                        it.hasClass("advanced-search-tool-content")
+                    }.getElementsByTag("div").first{
+                        it.hasClass("advanced-search-tool-genres-list")
+                    }.getElementsByTag("span").toList()
+                Log.d("TAG", "initTags: found ${htparse.size} spans")
+                for (i in htparse){
+                    val num = i.attr("data-i").toInt()
+                    val title = i.attr("title").removeSuffix(" Manga")
+
+                    when(title){
+                        "Pornographic" -> {
+                            pornographicRating = num
+                            continue
+                        }
+                        "Ecchi" -> {
+                           suggestiveRating = num
+                            continue
+                        }
+                        "Erotica" -> {
+                            eroticaRating = num
+                            continue
+                        }
+                        "Shounen" -> {
+                            shounen = num
+                        }
+                        "Shoujo" -> {
+                            shoujo = num
+                        }
+                        "Seinen" -> {
+                            seinen = num
+                        }
+                        "Josei" -> {
+                            josei = num
+                        }
+
+                    }
+
+                    Tag.fromValue(title)?.let { tagMap.put(it, num ) }
+                }
+                Log.d("TAG", "initTags: $tagMap with ${tagMap.size} entries")
+
+
+            } catch (e : Exception){
+                Log.d("TAG", "initTags: $e")
+            }
+        }
+
+
+    }
+
+    suspend fun getChapters(manga: MangaInfo): MangaInfo{
+
+        val innerUrl = "https://chapmanganato.to/${manga.id}"
+        Log.d("TAG", "getChapters: $innerUrl")
+        val res = natoApi.getInfo(innerUrl)
+        val innerSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
                 it.hasClass("body-site")
             }.getElementsByTag("div").first{
                 it.hasClass("container") && it.hasClass("container-main")
@@ -178,72 +272,83 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 else -> mangaState.FINISHED
             }
 
-            ret.add(MangaInfo(id, type, tite, alternateTitles, description, state, "noClue", listOf("en"), null, imgUrl, 0, inLibrary =  false, tagList = tagList, demographic = demographic))
+        val chapArr: MutableList<Chapter> = mutableListOf()
+        val chapterSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
+            it.hasClass("body-site")
+        }.getElementsByTag("div").first{
+            it.hasClass("container") && it.hasClass("container-main")
+        }.getElementsByTag("div").first {
+            it.hasClass("container-main-left")
+        }.getElementsByClass("panel-story-chapter-list").first().getElementsByTag("ul").first().getElementsByTag("li").toList()
+
+        fun hasNumber(string: String): Boolean{
+            return Regex(".*\\d.*").containsMatchIn(string)
         }
-        return Pair(ret,ret.size)
-    }
 
-    //allow this function to read off backup file if exists
-    fun initTags(){
-        CoroutineScope(Dispatchers.IO).launch{
-            try {
-                val result = natoApi.tagInit()
-                val htparse = Jsoup.parse(result).getElementsByTag("body").first().getElementsByTag("div")
-                    .first { it.hasClass("container") && it.hasClass("container-main") }.getElementsByTag("div").first(){
-                        it.hasClass("panel-advanced-search-tool")
-                    }.getElementsByTag("div").first{
-                        it.hasClass("advanced-search-tool-content")
-                    }.getElementsByTag("div").first{
-                        it.hasClass("advanced-search-tool-genres-list")
-                    }.getElementsByTag("span").toList()
-                Log.d("TAG", "initTags: found ${htparse.size} spans")
-                for (i in htparse){
-                    val num = i.attr("data-i").toInt()
-                    val title = i.attr("title").removeSuffix(" Manga")
+        for (ch in chapterSoup){
+            val chapterUrl = ch.getElementsByTag("a").first().attr("href").toString()
+            var chapString = ch.getElementsByTag("a").first().text().replace("-", " ").replace(":"," ").replace("Vol.", "Vol ")
+            val chapterId = chapterUrl.split("/").last()
 
-                    when(title){
-                        "Pornographic" -> {
-                            pornographicRating = num
-                            continue
-                        }
-                        "Ecchi" -> {
-                           suggestiveRating = num
-                            continue
-                        }
-                        "Erotica" -> {
-                            eroticaRating = num
-                            continue
-                        }
-                        "Shounen" -> {
-                            shounen = num
-                        }
-                        "Shoujo" -> {
-                            shoujo = num
-                        }
-                        "Seinen" -> {
-                            seinen = num
-                        }
-                        "Josei" -> {
-                            josei = num
-                        }
-
-                    }
-
-                    Tag.fromValue(title)?.let { tagMap.put(it, num ) }
-                }
-                Log.d("TAG", "initTags: $tagMap with ${tagMap.size} entries")
-                val s = searchAllManga(title = "s", page = 1, ordering = "topview", tagsIncluded = listOf(Tag.Action), tagsExcluded = listOf(), contentRating = listOf("suggestive"), status = "", demo = listOf("seinen"))
-                Log.d("TAG", "initTags: testing searchAll : given ${s.first.size} results ")
-                Log.d("TAG", "initTags: testing searchAll :  ${s.first.map { e -> e.title }.toList()}")
-
-
-            } catch (e : Exception){
-                Log.d("TAG", "initTags: $e")
+            val stream = ByteArrayInputStream(chapString.toByteArray())
+            val scanner = Scanner(stream)
+            Log.d("TAG", "getChapters: $chapString")
+            val vol = if (chapString.contains("Vol ")){
+                scanner.next()
+                scanner.nextInt().toDouble()
+            } else {
+                -1.0
             }
+
+            val chapter = if(chapString.contains("Chapter")){
+                try {
+                    scanner.next()
+                    scanner.nextDouble()
+                } catch(e: Exception){
+                    if (scanner.hasNextInt()) scanner.nextInt().toDouble() else -1.0
+                }
+            } else {
+                -1.0
+            }
+
+            val type = "whothefuckcares"
+            val title = if (scanner.hasNext()) scanner.next() else ""
+            val group = "n/a"
+            val pageCount = -1
+            val soupyDoup = ch.getElementsByTag("span").first {
+                it.hasClass("chapter-time")
+            }.text()
+            val monthStr = soupyDoup.substring(0,3)
+            val month = when(soupyDoup){
+                "Jan" -> 1
+                "Feb" -> 2
+                "Mar" -> 3
+                "Apr" -> 4
+                "May" -> 5
+                "Jun" -> 6
+                "Jul" -> 7
+                "Aug" -> 8
+                "Sep" -> 9
+                "Oct" -> 10
+                "Nov" -> 11
+                "Dec" -> 12
+                else -> 13
+            }
+            val day = soupyDoup.substring(4,6)
+            val year = "20" + soupyDoup.substring(7,9)
+            val date = SimpleDate(day.toInt(), month.toInt(), year.toInt())
+
+            chapArr.add(Chapter(title, chapterId, vol, chapter, group, type, pageCount.toDouble(), null, date))
         }
 
+        Log.d("TAG", "getChapters: ${chapArr.size} chapters")
 
+
+        return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = Pair(
+            Date(),chapArr))
     }
+
 
 
 }
+//val res = natoApi.getInfo(innerUrl)
