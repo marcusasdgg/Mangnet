@@ -214,46 +214,67 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     }
 
     suspend fun getChapters(manga: MangaInfo): MangaInfo{
-
-        val innerUrl = "https://chapmanganato.to/${manga.id}"
-        Log.d("TAG", "getChapters: $innerUrl")
-        val res = natoApi.getInfo(innerUrl)
-        val innerSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
+        try {
+            val innerUrl = "https://chapmanganato.to/${manga.id}"
+            Log.d("TAG", "getChapters: $innerUrl")
+            val res = natoApi.getInfo(innerUrl)
+            val innerSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
                 it.hasClass("body-site")
-            }.getElementsByTag("div").first{
+            }.getElementsByTag("div").first {
                 it.hasClass("container") && it.hasClass("container-main")
             }.getElementsByTag("div").first {
                 it.hasClass("container-main-left")
-            }.getElementsByTag("div").first{
+            }.getElementsByTag("div").first {
                 it.hasClass("panel-story-info")
             }
 
 
-            val right = innerSoup.getElementsByClass("story-info-right").first().getElementsByTag("table").first().getElementsByTag("tbody").first().getElementsByTag("tr").toList()
+            val right =
+                innerSoup.getElementsByClass("story-info-right").first().getElementsByTag("table")
+                    .first().getElementsByTag("tbody").first().getElementsByTag("tr").toList()
             var alternateTitles: MutableList<String> = mutableListOf()
             var status = ""
             var tagList: MutableList<String> = mutableListOf()
 
             var demographic = ""
 
-            for (e in right){
-                val label = e.getElementsByClass("table-label").first().getElementsByTag("i").first().className().removeSuffix(" :")
+            for (e in right) {
+                val label =
+                    e.getElementsByClass("table-label").first().getElementsByTag("i").first()
+                        .className().removeSuffix(" :")
 
                 when (label) {
                     "Alternative" -> {
-                        alternateTitles = e.getElementsByClass("table-value").first().getElementsByTag("h2").text().split(";").toMutableList()
+                        alternateTitles =
+                            e.getElementsByClass("table-value").first().getElementsByTag("h2")
+                                .text().split(";").toMutableList()
                     }
+
                     "Status" -> {
                         status = e.getElementsByClass("table-value").text()
                     }
+
                     "Genres" -> {
-                        val lit = e.getElementsByClass("table-value").first().getElementsByTag("a").toList()
-                        for (i in lit){
-                            when (i.text()){
-                                "Seinen" -> {demographic = i.text()}
-                                "Shounen" -> {demographic = i.text()}
-                                "Shoujo" -> {demographic = i.text()}
-                                "Josei" -> {demographic = i.text()}
+                        val lit = e.getElementsByClass("table-value").first().getElementsByTag("a")
+                            .toList()
+                        for (i in lit) {
+                            when (i.text()) {
+                                "Seinen" -> {
+                                    demographic = i.text()
+                                }
+
+                                "Shounen" -> {
+                                    demographic = i.text()
+                                }
+
+                                "Shoujo" -> {
+                                    demographic = i.text()
+                                }
+
+                                "Josei" -> {
+                                    demographic = i.text()
+                                }
+
                                 else -> tagList.add(i.text())
                             }
                             tagList.add(i.text())
@@ -263,89 +284,110 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
             }
 
-            val description = innerSoup.getElementsByClass("panel-story-info-description").first().text()
+            val description =
+                innerSoup.getElementsByClass("panel-story-info-description").first().text()
 
-            val state = when(status){
+            val state = when (status) {
                 "Ongoing" -> {
                     mangaState.IN_PROGRESS
                 }
+
                 else -> mangaState.FINISHED
             }
 
-        val chapArr: MutableList<Chapter> = mutableListOf()
-        val chapterSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
-            it.hasClass("body-site")
-        }.getElementsByTag("div").first{
-            it.hasClass("container") && it.hasClass("container-main")
-        }.getElementsByTag("div").first {
-            it.hasClass("container-main-left")
-        }.getElementsByClass("panel-story-chapter-list").first().getElementsByTag("ul").first().getElementsByTag("li").toList()
+            val chapArr: MutableList<Chapter> = mutableListOf()
+            val chapterSoup = Jsoup.parse(res).body().getElementsByTag("div").first {
+                it.hasClass("body-site")
+            }.getElementsByTag("div").first {
+                it.hasClass("container") && it.hasClass("container-main")
+            }.getElementsByTag("div").first {
+                it.hasClass("container-main-left")
+            }.getElementsByClass("panel-story-chapter-list").first().getElementsByTag("ul").first()
+                .getElementsByTag("li").toList()
 
-        fun hasNumber(string: String): Boolean{
-            return Regex(".*\\d.*").containsMatchIn(string)
-        }
-
-        for (ch in chapterSoup){
-            val chapterUrl = ch.getElementsByTag("a").first().attr("href").toString()
-            var chapString = ch.getElementsByTag("a").first().text().replace("-", " ").replace(":"," ").replace("Vol.", "Vol ")
-            val chapterId = chapterUrl.split("/").last()
-
-            val stream = ByteArrayInputStream(chapString.toByteArray())
-            val scanner = Scanner(stream)
-            Log.d("TAG", "getChapters: $chapString")
-            val vol = if (chapString.contains("Vol ")){
-                scanner.next()
-                scanner.nextInt().toDouble()
-            } else {
-                -1.0
+            fun hasNumber(string: String): Boolean {
+                return Regex(".*\\d.*").containsMatchIn(string)
             }
 
-            val chapter = if(chapString.contains("Chapter")){
-                try {
+            for (ch in chapterSoup) {
+                val chapterUrl = ch.getElementsByTag("a").first().attr("href").toString()
+                var chapString =
+                    ch.getElementsByTag("a").first().text().replace("-", " ").replace(":", " ")
+                        .replace("Vol.", "Vol ")
+                val chapterId = chapterUrl.split("/").last()
+
+                val stream = ByteArrayInputStream(chapString.toByteArray())
+                val scanner = Scanner(stream)
+                Log.d("TAG", "getChapters: $chapString")
+                val vol = if (chapString.contains("Vol ")) {
                     scanner.next()
-                    scanner.nextDouble()
-                } catch(e: Exception){
-                    if (scanner.hasNextInt()) scanner.nextInt().toDouble() else -1.0
+                    scanner.nextInt().toDouble()
+                } else {
+                    -1.0
                 }
-            } else {
-                -1.0
+
+                val chapter = if (chapString.contains("Chapter")) {
+                    try {
+                        scanner.next()
+                        scanner.nextDouble()
+                    } catch (e: Exception) {
+                        if (scanner.hasNextInt()) scanner.nextInt().toDouble() else -1.0
+                    }
+                } else {
+                    -1.0
+                }
+
+                val type = "whothefuckcares"
+                val title = if (scanner.hasNext()) scanner.next() else ""
+                val group = "n/a"
+                val pageCount = -1
+                val soupyDoup = ch.getElementsByTag("span").first {
+                    it.hasClass("chapter-time")
+                }.text()
+                val monthStr = soupyDoup.substring(0, 3)
+                val month = when (soupyDoup) {
+                    "Jan" -> 1
+                    "Feb" -> 2
+                    "Mar" -> 3
+                    "Apr" -> 4
+                    "May" -> 5
+                    "Jun" -> 6
+                    "Jul" -> 7
+                    "Aug" -> 8
+                    "Sep" -> 9
+                    "Oct" -> 10
+                    "Nov" -> 11
+                    "Dec" -> 12
+                    else -> 13
+                }
+                val day = soupyDoup.substring(4, 6)
+                val year = "20" + soupyDoup.substring(7, 9)
+                val date = SimpleDate(day.toInt(), month.toInt(), year.toInt())
+
+                chapArr.add(
+                    Chapter(
+                        title,
+                        chapterId,
+                        vol,
+                        chapter,
+                        group,
+                        type,
+                        pageCount.toDouble(),
+                        null,
+                        date
+                    )
+                )
             }
 
-            val type = "whothefuckcares"
-            val title = if (scanner.hasNext()) scanner.next() else ""
-            val group = "n/a"
-            val pageCount = -1
-            val soupyDoup = ch.getElementsByTag("span").first {
-                it.hasClass("chapter-time")
-            }.text()
-            val monthStr = soupyDoup.substring(0,3)
-            val month = when(soupyDoup){
-                "Jan" -> 1
-                "Feb" -> 2
-                "Mar" -> 3
-                "Apr" -> 4
-                "May" -> 5
-                "Jun" -> 6
-                "Jul" -> 7
-                "Aug" -> 8
-                "Sep" -> 9
-                "Oct" -> 10
-                "Nov" -> 11
-                "Dec" -> 12
-                else -> 13
-            }
-            val day = soupyDoup.substring(4,6)
-            val year = "20" + soupyDoup.substring(7,9)
-            val date = SimpleDate(day.toInt(), month.toInt(), year.toInt())
-
-            chapArr.add(Chapter(title, chapterId, vol, chapter, group, type, pageCount.toDouble(), null, date))
+            Log.d("TAG", "getChapters: ${chapArr.size} chapters")
+            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = Pair(
+                Date(),chapArr))
+        } catch (e: Exception){
+            Log.d("TAG", "getChapters: failed $e")
+            return manga
         }
 
-        Log.d("TAG", "getChapters: ${chapArr.size} chapters")
 
-
-        return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = Pair(
-            Date(),chapArr))
     }
 
 
