@@ -103,8 +103,9 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
 
     fun getBackUpFromFile(): String {
         try {
-            val file = File(context.filesDir, "backup.txt")
-            return file.readText()
+            val file = File(context.filesDir, "backup_mangadex.txt")
+            val file2 = File(context.filesDir, "backup_manganato.txt")
+            return "\"mangadex\" : {${file.readText()} \n \"manganato\": {${file2.readText()}}"
         } catch (e : Exception){
             Log.e("TAG", "error getting backup Instance $e")
             return ""

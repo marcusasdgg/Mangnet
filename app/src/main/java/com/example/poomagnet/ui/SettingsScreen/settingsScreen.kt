@@ -53,7 +53,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
     }
 
     val createFileLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/plain")
+        contract = ActivityResultContracts.CreateDocument("plain/text")
     ) { uri: Uri? ->
         fileUri = uri
         writeToFile(fileUri!!, vm.getBackUp())
@@ -88,7 +88,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
         Spacer(Modifier.height(20.dp))
         Text("There are various things I would love to complete in the future, as you might be aware that this app is currently in its early stages of beta development. That is being" +
                 "increasing the overall stability of this app, notifications when the manga is updated and the support of different sources to search manga for. as well as customization options")
-        Button(onClick = { createFileLauncher.launch("backup.json") }) {
+        Button(onClick = { createFileLauncher.launch("backup.txt") }) {
             Text("Backup App!")
         }
 
