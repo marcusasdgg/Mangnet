@@ -10,21 +10,18 @@ import androidx.annotation.RequiresApi
 import com.example.poomagnet.downloadService.DownloadService
 import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsDeserializer
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsSerializer
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
+import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
 import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import com.example.poomagnet.mangaRepositoryManager.slimChapter
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -36,7 +33,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
-import java.lang.reflect.Type
 import java.time.OffsetDateTime
 import javax.inject.Inject
 
@@ -56,44 +52,7 @@ data class BackUpInstance(
 
 
 
-class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
-    override fun serialize(src: ChapterContents, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        Log.d("TAG", "serialize: ")
-        val jsonObject = JsonObject()
 
-        when (src) {
-            is ChapterContents.Downloaded -> {
-                jsonObject.addProperty("type", "Downloaded")
-                jsonObject.add("imagePaths", context.serialize(src.imagePaths))
-                jsonObject.addProperty("ifDone", src.ifDone)
-            }
-            is ChapterContents.Online -> {
-                jsonObject.addProperty("type", "Online")
-                jsonObject.add("imagePaths", context.serialize(src.imagePaths))
-                jsonObject.addProperty("ifDone", src.ifDone)
-            }
-        }
-
-        Log.d("TAG", "serialize: $jsonObject")
-        return jsonObject
-    }
-}
-
-class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterContents {
-        val jsonObject = json.asJsonObject
-        Log.d("TAG", "serialize: $jsonObject")
-        val imagePathsType = object : TypeToken<List<String>>() {}.type
-        val imagePaths: List<String> = context.deserialize(jsonObject.get("imagePaths"), imagePathsType)
-        val ifDone = jsonObject.get("ifDone").asBoolean
-
-        return when (jsonObject.get("type").asString) {
-            "Downloaded" -> ChapterContents.Downloaded(imagePaths, ifDone)
-            "Online" -> ChapterContents.Online(imagePaths, ifDone)
-            else -> throw JsonParseException("Unknown ChapterContents type")
-        }
-    }
-}
 
 
 //need to store, chapter and volume name
@@ -126,6 +85,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     }
 
     suspend fun getImageUri(mangaId: String, coverUrl: String): String{
+        Log.d("TAG", "getImageUri: with mangaId $mangaId, and coverurl $coverUrl")
         return downloadService.retrieveImage(mangaId,coverUrl).toString()
     }
 
@@ -180,7 +140,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     private fun loadMangaFromBackup(context: Context) {
         try {
             // Read the file content from backup.txt
-            val file = File(context.filesDir, "backup.txt")
+            val file = File(context.filesDir, "backup_mangadex.txt")
             if (file.exists()) {
                 val jsonString = file.readText()
                 Log.d("TAG", "loadMangaFromBackup: backup is $jsonString")
@@ -210,7 +170,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                 chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
             } ?: listOf())
         }
-        val file = File(context.filesDir, "backup.txt")
+        val file = File(context.filesDir, "backup_mangadex.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
                 // Create an OutputStreamWriter to write text data
@@ -697,51 +657,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
 
 
-class SimpleDateAdapter : JsonDeserializer<SimpleDate>, JsonSerializer<SimpleDate> {
-    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): SimpleDate {
-        val jsonObject = json?.asJsonObject
-        return SimpleDate(
-            jsonObject?.get("year")?.asInt ?: 0,
-            jsonObject?.get("month")?.asInt ?: 0,
-            jsonObject?.get("day")?.asInt ?: 0
-        )
-    }
 
-    override fun serialize(src: SimpleDate, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        val jsonObject = JsonObject()
-        jsonObject.addProperty("year", src.year)
-        jsonObject.addProperty("month", src.month)
-        jsonObject.addProperty("day", src.day)
-        return jsonObject
-    }
-}
-
-class SlimChapterAdapter : JsonDeserializer<slimChapter>, JsonSerializer<slimChapter> {
-    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): slimChapter {
-        val jsonObject = json?.asJsonObject
-        return slimChapter(
-            id = jsonObject?.get("id")?.asString ?: "",
-            name = jsonObject?.get("name")?.asString ?: "",
-            chapter = jsonObject?.get("chapter")?.asDouble ?: 0.0,
-            volume = jsonObject?.get("volume")?.asDouble ?: 0.0,
-            mangaId = jsonObject?.get("mangaId")?.asString ?: "",
-            imageUrl = jsonObject?.get("imageUrl")?.asString ?: "",
-            mangaName = jsonObject?.get("mangaName")?.asString ?: ""
-        )
-    }
-
-    override fun serialize(src: slimChapter, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        val jsonObject = JsonObject()
-        jsonObject.addProperty("id", src.id)
-        jsonObject.addProperty("name", src.name)
-        jsonObject.addProperty("chapter", src.chapter)
-        jsonObject.addProperty("volume", src.volume)
-        jsonObject.addProperty("mangaId", src.mangaId)
-        jsonObject.addProperty("imageUrl", src.imageUrl)
-        jsonObject.addProperty("mangaName", src.mangaName)
-        return jsonObject
-    }
-}
 
 //right now for library swapped mangaInfo objects, it doesnt properly work? as in it tries to load the chapters but gets a http 400?
 //fixed it by increasing limit, must be a rate limti issue i reckon.

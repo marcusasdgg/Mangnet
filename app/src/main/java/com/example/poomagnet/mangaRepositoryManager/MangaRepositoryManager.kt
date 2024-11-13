@@ -31,11 +31,11 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         }
     }
 
-    fun getBelongedRepo(mangaId: String): String{
+    fun getBelongedRepo(mangaId: String): Sources{
         if (mangaId.startsWith("manga")){
-            return "MangaNato"
+            return Sources.MANGANATO
         } else {
-            return "MangaDex"
+            return Sources.MANGADEX
         }
     }
 
@@ -44,18 +44,62 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         return when(source){
             Sources.MANGADEX -> mangadexRepo.searchAllManga(title, offSet, ordering, demo, tagsIncluded, tagsExcluded, rating)
             Sources.MANGANATO -> natoRepo.searchAllManga(title, offSet, ordering.keys.first(), demo, tagsIncluded, tagsExcluded, rating, "")
-            Sources.ALL->Pair(listOf(),0)
+            Sources.ALL->Pair(listOf(),999)
         }
     }
 
     suspend fun getChapters(manga: MangaInfo) : MangaInfo{
         return when(getBelongedRepo(manga.id)){
-            "MangaNato" -> {natoRepo.getChapters(manga)}
-            else -> {mangadexRepo.getChapters(manga)}
+            Sources.MANGANATO -> {
+                Log.d("TAG", "getChapters: manganato")
+                natoRepo.getChapters(manga)
+            }
+            else -> {
+                Log.d("TAG", "getChapters: mangadex")
+                mangadexRepo.getChapters(manga)
+            }
         }
     }
 
+    fun getLibrary(): List<MangaInfo> {
+        return mangadexRepo.library.toList() + natoRepo.library.toList()
+    }
 
+    suspend fun getImageUri(mangaId: String, coverUrl: String) : String {
+        val source = getBelongedRepo(mangaId)
+        return when (source){
+            Sources.MANGANATO -> {natoRepo.getImageUri(mangaId, coverUrl)}
+            Sources.MANGADEX -> {mangadexRepo.getImageUri(mangaId, coverUrl)}
+            Sources.ALL -> {""}
+        }
+    }
+
+    fun getBaseUrls( mangaId: String, chapterId: String): String{
+        val source = getBelongedRepo(mangaId)
+        return when(source){
+            Sources.MANGANATO -> "https://chapmanganato.to/$mangaId/$chapterId"
+            Sources.MANGADEX ->  "https://mangadex.org/chapter/$chapterId"
+            else -> ""
+        }
+    }
+
+    suspend fun addToLibrary(manga: MangaInfo){
+        val source = getBelongedRepo(manga.id)
+        when (source){
+            Sources.MANGANATO -> {natoRepo.addToLibrary(manga)}
+            Sources.MANGADEX -> {mangadexRepo.addToLibrary(manga)}
+            Sources.ALL -> return
+        }
+    }
+
+    suspend fun removeFromLibrary(manga: MangaInfo?){
+        val source = manga?.id?.let { getBelongedRepo(it) } ?: return
+        when (source){
+            Sources.MANGANATO -> {natoRepo.removeFromLibrary(manga)}
+            Sources.MANGADEX -> {mangadexRepo.removeFromLibrary(manga)}
+            Sources.ALL -> return
+        }
+    }
 
     fun getBackUpFromFile(): String {
         try {
@@ -66,4 +110,15 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
             return ""
         }
     }
+
+    suspend fun getChapterContents(ch: Chapter, mangaId: String): Chapter{
+        val source = getBelongedRepo(mangaId)
+        return when (source){
+            Sources.MANGANATO -> natoRepo.getChapterContents(ch, mangaId)
+            Sources.MANGADEX -> mangadexRepo.getChapterContents(ch)
+            else -> throw(IllegalArgumentException())
+        }
+    }
 }
+
+//each repo has its own backup file, the getbackUpFromFile will take the n files and merge them into 1 text file.

@@ -123,7 +123,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
                     )
                 }
             } else {
-                val chap = mangaDexRepository.getChapterContents(chapterFound)
+                val chap = repo.getChapterContents(chapterFound, currentManga.id)
                 chapterlist = chapterlist?.map {elm ->if (elm.id == chapterId){
                     chap
                 } else {
@@ -190,9 +190,9 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
             this.viewModelScope.launch {
                 // Add or remove manga from the library based on the toggled value
                 if (newManga.inLibrary) {
-                    mangaDexRepository.addToLibrary(newManga)
+                   repo.addToLibrary(newManga)
                 } else {
-                    mangaDexRepository.removeFromLibrary(currentManga)
+                    repo.removeFromLibrary(currentManga)
                 }
             }
                 // Update the UI state inside the coroutine to ensure consistency
@@ -208,7 +208,6 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
         Log.d("TAG", "id passed was this: \"$id\"")
         if (id !== null){
             val result = uiState.value.currentManga?.let { repo.getChapters(it) }
-            Log.d("TAG", "getChapterInfo: size of ${result!!.chapterList!!.size}")
             _uiState.update {
                 it.copy(
                     currentManga = result
@@ -217,6 +216,12 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
             //filterSame()
             orderManga()
         }
+    }
+
+    fun getRefererUrl(): String{
+        val s = repo.getBaseUrls(uiState.value.currentManga!!.id , uiState.value.currentChapter!!.id )
+        Log.d("TAG", "getRefererUrl: $s")
+        return s
     }
 
     suspend fun getNextChapter(context: Context){
@@ -239,7 +244,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
             }
 
             if (firstNextChapter !== null){
-                val chapter = mangaDexRepository.getChapterContents(firstNextChapter)
+                val chapter = repo.getChapterContents(firstNextChapter, uiState.value.currentManga?.id ?: "")
                 if (chapter.contents?.imagePaths?.isEmpty() == true){
                     Log.d("TAG", "getNextChapter: no images found in getchapter contents")
                     _uiState.update {
@@ -370,7 +375,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
         if (currentVolume !== null && currentChapter !== null){
             var firstNextChapter = uiState.value.currentManga?.chapterList?.firstOrNull { elm  -> elm.chapter < currentChapter }
             if (firstNextChapter !== null){
-                val chapter = mangaDexRepository.getChapterContents(firstNextChapter)
+                val chapter = repo.getChapterContents(firstNextChapter, uiState.value.currentManga?.id ?: "")
                 Log.d("TAG", "getNextChapter: $chapter")
                 if (chapter.contents is ChapterContents.Online){
                     firstNextChapter = chapter
@@ -393,7 +398,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
     }
 
     suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
-        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+        return repo.getImageUri(mangaId, coverUrl)
     }
 
     fun loadNextChapter(){

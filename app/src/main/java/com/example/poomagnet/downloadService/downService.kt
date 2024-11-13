@@ -8,5 +8,5 @@ import retrofit2.http.Url
 
 interface DownService{
     @GET
-    suspend fun downloadFile(@Url url: String,@Header("Referer") referer: String ): Response<ResponseBody>
+    suspend fun downloadFile(@Url url: String,@Header("Referer") referer: String? ): Response<ResponseBody>
 }

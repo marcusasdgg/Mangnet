@@ -4,17 +4,46 @@ import android.content.Context
 import android.util.Log
 import com.example.poomagnet.downloadService.DownloadService
 import com.example.poomagnet.mangaRepositoryManager.Chapter
+import com.example.poomagnet.mangaRepositoryManager.ChapterContents
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsDeserializer
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsSerializer
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
+import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Tag
+import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
+import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
+import com.example.poomagnet.mangaRepositoryManager.slimChapter
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.util.Scanner
 import javax.inject.Inject
+
+data class BackUpInstance(
+    val library: MutableSet<MangaInfo>,
+    val idSet: MutableSet<String>,
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>>,
+    val tagMap: MutableMap<Tag,Int>,
+    var suggestiveRating: Int,
+    val eroticaRating: Int,
+    val pornographicRating: Int,
+    val shounen: Int,
+    val shoujo: Int,
+    val seinen: Int,
+    val josei: Int,
+)
+
 
 class MangaNatoRepository @Inject constructor(private val context: Context, private val downloadService: DownloadService) {
     private val natoApi = RetrofitInstance.api
@@ -26,21 +55,77 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     private var shoujo = 0;
     private var seinen = 0;
     private var josei = 0;
+    var library: MutableSet<MangaInfo> = mutableSetOf()
+    var idSet: MutableSet<String> = mutableSetOf()
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
 
+    private val gsonSerializer = GsonBuilder()
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
+        .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
+        .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
+        .registerTypeAdapter(Tag::class.java, TagDeserializer())
+        .create()
 
     init {
+        loadMangaFromBackup(context)
         initTags()
     }
 
-    fun loadBackup(){
-
+    private fun loadMangaFromBackup(context: Context) {
+        try {
+            // Read the file content from backup.txt
+            val file = File(context.filesDir, "backup_manganato.txt")
+            if (file.exists()) {
+                val jsonString = file.readText()
+                Log.d("TAG", "loadMangaFromBackup nato!: backup is $jsonString")
+                // Deserialize the JSON string into a list of MangaInfo objects using Gson
+                val listType = object : TypeToken<BackUpInstance>() {}.type
+                val r: BackUpInstance = gsonSerializer.fromJson(jsonString, listType)
+                library = r.library
+                idSet = r.idSet
+                newUpdatedChapters = r.newUpdatedChapters
+                tagMap = r.tagMap
+                suggestiveRating = r.suggestiveRating
+                eroticaRating = r.eroticaRating
+                pornographicRating = r.pornographicRating
+                seinen = r.seinen
+                shoujo = r.shoujo
+                shounen = r.shounen
+                josei = r.josei
+                //tagMap = r.tagMap
+                Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
+            } else {
+                Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
+            }
+        } catch (e: Exception) {
+            Log.e("TAG", "Error loading manga from backup.txt", e)
+        }
     }
 
-    fun backUp(){
+    suspend fun backUpManga(){
+        Log.d("TAG", "commencing backup: ${library.map { e -> e.chapterList }}")
 
+        val libraryShouldBe = library.map {element ->
+            element.copy(chapterList = element.chapterList?.map { chapter ->
+                chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
+            } ?: listOf())
+        }
+        val file = File(context.filesDir, "backup_manganato.txt")
+        withContext(Dispatchers.IO) {
+            FileOutputStream(file).use { fos ->
+                // Create an OutputStreamWriter to write text data
+                OutputStreamWriter(fos).use { writer ->
+                    // Write the data to the file
+                    writer.write(
+                        gsonSerializer.toJson(BackUpInstance(library, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei))
+                    )
+                }
+            }
+            Log.d("TAG", "backUpManga: success")
+        }
     }
 
-    //speed this function up by, if demographic is "" in mangaspecific view, we call updateInfo on this given the url in title
     suspend fun searchAllManga(title: String, page: Int = 1, ordering: String, demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String) : Pair<List<MangaInfo>,Int>{
         var ret = mutableListOf<MangaInfo>()
 
@@ -110,7 +195,6 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
 //        Log.d("TAG", "searchAllManga: $tE, $tI, $title")
             val res = natoApi.mangaSearchSimple(titleE,if (page != 0) page else 1,if (order !== "") order else null,tI,tE,statusE)
-
             Log.d("TAG", "searchAllManga prasing html qs: $title")
             val soupy = Jsoup.parse(res).body().getElementsByTag("div").first{
                 it.hasClass("body-site")
@@ -158,65 +242,66 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
     //allow this function to read off backup file if exists
     fun initTags(){
-        CoroutineScope(Dispatchers.IO).launch{
-            try {
-                val result = natoApi.tagInit()
-                val htparse = Jsoup.parse(result).getElementsByTag("body").first().getElementsByTag("div")
-                    .first { it.hasClass("container") && it.hasClass("container-main") }.getElementsByTag("div").first(){
-                        it.hasClass("panel-advanced-search-tool")
-                    }.getElementsByTag("div").first{
-                        it.hasClass("advanced-search-tool-content")
-                    }.getElementsByTag("div").first{
-                        it.hasClass("advanced-search-tool-genres-list")
-                    }.getElementsByTag("span").toList()
-                Log.d("TAG", "initTags: found ${htparse.size} spans")
-                for (i in htparse){
-                    val num = i.attr("data-i").toInt()
-                    val title = i.attr("title").removeSuffix(" Manga")
+        if (tagMap.isEmpty()){
+            CoroutineScope(Dispatchers.IO).launch{
+                try {
+                    val result = natoApi.tagInit()
+                    val htparse = Jsoup.parse(result).getElementsByTag("body").first().getElementsByTag("div")
+                        .first { it.hasClass("container") && it.hasClass("container-main") }.getElementsByTag("div").first(){
+                            it.hasClass("panel-advanced-search-tool")
+                        }.getElementsByTag("div").first{
+                            it.hasClass("advanced-search-tool-content")
+                        }.getElementsByTag("div").first{
+                            it.hasClass("advanced-search-tool-genres-list")
+                        }.getElementsByTag("span").toList()
+                    Log.d("TAG", "initTags: found ${htparse.size} spans")
+                    for (i in htparse){
+                        val num = i.attr("data-i").toInt()
+                        val title = i.attr("title").removeSuffix(" Manga")
 
-                    when(title){
-                        "Pornographic" -> {
-                            pornographicRating = num
-                            continue
-                        }
-                        "Ecchi" -> {
-                           suggestiveRating = num
-                            continue
-                        }
-                        "Erotica" -> {
-                            eroticaRating = num
-                            continue
-                        }
-                        "Shounen" -> {
-                            shounen = num
-                        }
-                        "Shoujo" -> {
-                            shoujo = num
-                        }
-                        "Seinen" -> {
-                            seinen = num
-                        }
-                        "Josei" -> {
-                            josei = num
+                        when(title){
+                            "Pornographic" -> {
+                                pornographicRating = num
+                                continue
+                            }
+                            "Ecchi" -> {
+                                suggestiveRating = num
+                                continue
+                            }
+                            "Erotica" -> {
+                                eroticaRating = num
+                                continue
+                            }
+                            "Shounen" -> {
+                                shounen = num
+                            }
+                            "Shoujo" -> {
+                                shoujo = num
+                            }
+                            "Seinen" -> {
+                                seinen = num
+                            }
+                            "Josei" -> {
+                                josei = num
+                            }
+
                         }
 
+                        Tag.fromValue(title)?.let { tagMap.put(it, num ) }
                     }
+                    Log.d("TAG", "initTags: $tagMap with ${tagMap.size} entries")
 
-                    Tag.fromValue(title)?.let { tagMap.put(it, num ) }
+
+                } catch (e : Exception){
+                    Log.d("TAG", "initTags: $e")
                 }
-                Log.d("TAG", "initTags: $tagMap with ${tagMap.size} entries")
-
-
-            } catch (e : Exception){
-                Log.d("TAG", "initTags: $e")
             }
+
         }
-
-
     }
 
     suspend fun getChapters(manga: MangaInfo): MangaInfo{
-        try {
+
             val innerUrl = "https://chapmanganato.to/${manga.id}"
             Log.d("TAG", "getChapters: $innerUrl")
             val res = natoApi.getInfo(innerUrl)
@@ -317,10 +402,11 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                     ch.getElementsByTag("a").first().text().replace("-", " ").replace(":", " ")
                         .replace("Vol.", "Vol ")
                 val chapterId = chapterUrl.split("/").last()
+                Log.d("TAG", "getChapters: $chapterId ")
 
                 val stream = ByteArrayInputStream(chapString.toByteArray())
                 val scanner = Scanner(stream)
-                Log.d("TAG", "getChapters: $chapString")
+
                 val vol = if (chapString.contains("Vol ")) {
                     scanner.next()
                     scanner.nextInt().toDouble()
@@ -346,52 +432,125 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 val soupyDoup = ch.getElementsByTag("span").first {
                     it.hasClass("chapter-time")
                 }.text()
-                val monthStr = soupyDoup.substring(0, 3)
-                val month = when (soupyDoup) {
-                    "Jan" -> 1
-                    "Feb" -> 2
-                    "Mar" -> 3
-                    "Apr" -> 4
-                    "May" -> 5
-                    "Jun" -> 6
-                    "Jul" -> 7
-                    "Aug" -> 8
-                    "Sep" -> 9
-                    "Oct" -> 10
-                    "Nov" -> 11
-                    "Dec" -> 12
-                    else -> 13
-                }
-                val day = soupyDoup.substring(4, 6)
-                val year = "20" + soupyDoup.substring(7, 9)
-                val date = SimpleDate(day.toInt(), month.toInt(), year.toInt())
+                if (!soupyDoup.contains("hour")){
+                    val monthStr = soupyDoup.substring(0, 3)
 
-                chapArr.add(
-                    Chapter(
-                        title,
-                        chapterId,
-                        vol,
-                        chapter,
-                        group,
-                        type,
-                        pageCount.toDouble(),
-                        null,
-                        date
+                    val month = when (monthStr) {
+                        "Jan" -> 1
+                        "Feb" -> 2
+                        "Mar" -> 3
+                        "Apr" -> 4
+                        "May" -> 5
+                        "Jun" -> 6
+                        "Jul" -> 7
+                        "Aug" -> 8
+                        "Sep" -> 9
+                        "Oct" -> 10
+                        "Nov" -> 11
+                        "Dec" -> 12
+                        else -> 13
+                    }
+                    val day = soupyDoup.substring(4, 6)
+                    val year = "20" + soupyDoup.substring(7, 9)
+                    val date = SimpleDate(day.toInt(), month, year.toInt())
+
+                    chapArr.add(
+                        Chapter(
+                            title,
+                            chapterId,
+                            vol,
+                            chapter,
+                            group,
+                            type,
+                            pageCount.toDouble(),
+                            null,
+                            date
+                        )
                     )
-                )
+                }else {
+                    val date = SimpleDate()
+                    chapArr.add(
+                        Chapter(
+                            title,
+                            chapterId,
+                            vol,
+                            chapter,
+                            group,
+                            type,
+                            pageCount.toDouble(),
+                            null,
+                            date
+                        )
+                    )
+                }
+
             }
 
-            Log.d("TAG", "getChapters: ${chapArr.size} chapters")
             return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = chapArr)
-        } catch (e: Exception){
-            Log.d("TAG", "getChapters: failed $e")
-            return manga
-        }
+//        } catch (e: Exception){
+//            Log.d("TAG", "getChapters: failed $e")
+//            return manga
+//        }
 
 
     }
 
 
+    suspend fun addToLibrary(manga: MangaInfo) {
+        if (idSet.contains(manga.id)){
+            Log.d("TAG", "already in library ")
+            return
+        }
+        var mang = manga
+        if(manga.chapterList?.size  == 0){
+            val chapterList = getChapters(mang)
+            Log.d("TAG", "no chapters found trying again")
+            library.add(mang)
+            idSet.add(manga.id)
+            backUpManga()
+            Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
+        } else {
+            val d = downloadService.downloadCoverUrl(manga.id, manga.coverArtUrl)
+            Log.d("TAG", "addToLibrary: found url $d")
+            library.add(mang.copy(coverArtUrl = d))
+            idSet.add(manga.id)
+            backUpManga()
+            Log.d("TAG", "addToLibrary: ${library.map { elm -> elm.title }.toList()} with inlib states ${library.map { elm -> elm.inLibrary }.toList()}")
+        }
+    }
 
+    suspend fun removeFromLibrary(manga: MangaInfo?){
+        library.removeIf { elm -> elm.id == manga?.id }
+        Log.d("TAG", "removeFromLibrary: removed ${manga?.id}")
+        idSet.remove(manga?.id)
+        newUpdatedChapters.removeIf { elm->
+            elm.second.mangaId == manga?.id
+        }
+        backUpManga()
+    }
+
+    suspend fun getImageUri(mangaId: String, coverUrl: String): String {
+        return downloadService.retrieveImage(mangaId,coverUrl).toString()
+    }
+
+    suspend fun getChapterContents(ch: Chapter, mangaId: String): Chapter {
+        val id = ch.id
+        try {
+            val response = natoApi.getChapterPages(mangaId, id)
+            val list = mutableListOf<String>()
+
+            val Soupy = Jsoup.parse(response).body().getElementsByClass("body-site").first().getElementsByClass("container-chapter-reader").first().getElementsByTag("img").toList()
+            Log.d("TAG", "getChapterContents: found ${Soupy.size} images for ${ch.id}")
+
+            Soupy.forEach { img ->
+                list.add(img.attr("src").toString())
+            }
+
+            return ch.copy(contents = ChapterContents.Online(list, false), pageCount = list.size.toDouble())
+        } catch (e: Exception) {
+            return ch
+        }
+
+    }
 }
 //val res = natoApi.getInfo(innerUrl)

@@ -120,7 +120,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
 }
 
 @Composable
-fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String){
+fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String){
     val coroutineScope = rememberCoroutineScope()
     Box(
         Modifier
@@ -146,6 +146,7 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
             AsyncImage(
                 model = ImageRequest.Builder(context)
                     .data(imageUrl)
+                    .addHeader("referer", refereUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = "Image",
@@ -307,7 +308,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                             }
                                         }
                                     }
-                                }, ifDownloaded = false, loadImage = {""})}
+                                }, ifDownloaded = false, loadImage = {""}, refereUrl = viewModel.getRefererUrl())}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
@@ -420,7 +421,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                         val s = viewModel.loadContentimage(uiState.currentManga!!.id ,uiState.currentChapter!!.id, elm)
                                         Log.d("TAG", "ReadScreen: $s")
                                         s
-                                    })}
+                                    }, "")}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.

@@ -10,10 +10,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
 import javax.inject.Inject
 
 const val APPFOLDERNAME = "pooMAgnet"
@@ -88,7 +84,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     private suspend fun downloadImage(url: String, refererUrl: String =""): Bitmap?{
         try {
-            val response = apiService.downloadFile(url, refererUrl)
+            val response = apiService.downloadFile(url, if (refererUrl == "") null else refererUrl)
             Log.d("TAG", "downloadImage: $response")
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
@@ -107,6 +103,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
 
     suspend fun downloadCoverUrl(mangaId: String, url: String): String {
+        Log.d("TAG", "downloadCoverUrl: $url")
         val image = addImageToFolder(mangaId, mangaId, url)
         if (image !== null){
             Log.d("TAG", "downloadCoverUrl: iamge given was $image")

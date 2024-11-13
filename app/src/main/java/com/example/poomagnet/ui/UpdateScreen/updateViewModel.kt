@@ -1,6 +1,5 @@
 package com.example.poomagnet.ui.UpdateScreen
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
@@ -46,7 +45,7 @@ class updateViewModel @Inject constructor(
     }
 
     suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
-        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+        return repo.getImageUri(mangaId, coverUrl)
     }
 
 

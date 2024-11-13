@@ -1,6 +1,7 @@
 package com.example.poomagnet.manganatoService
 
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Url
 
@@ -20,5 +21,8 @@ interface natoService {
 
     @GET
     suspend fun getInfo(@Url mangaUrl : String): String
+
+    @GET("https://chapmanganato.to/{mangaId}/{chapterId}")
+    suspend fun getChapterPages(@Path("mangaId") mangaId: String, @Path("chapterId") chapterId: String) : String
 
 }

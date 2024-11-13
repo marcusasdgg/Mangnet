@@ -1,17 +1,17 @@
     package com.example.poomagnet.ui.HomeScreen
 
 
-import com.example.poomagnet.mangaRepositoryManager.ContentRating
-import com.example.poomagnet.mangaRepositoryManager.Demographic
-import com.example.poomagnet.mangaRepositoryManager.Ordering
-import com.example.poomagnet.mangaRepositoryManager.Tag
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.ViewModel
+import com.example.poomagnet.mangaRepositoryManager.ContentRating
+import com.example.poomagnet.mangaRepositoryManager.Demographic
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
+import com.example.poomagnet.mangaRepositoryManager.Ordering
+import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.ui.SearchScreen.Direction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +25,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val repo: MangaRepositoryManager
     ): ViewModel() {
-        private val mangaDexRepository = repo.getMangaDexRepo()
-
+    val mangaDexRepository = repo.getMangaDexRepo()
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
@@ -34,13 +33,13 @@ class HomeViewModel @Inject constructor(
     public fun syncLibrary(){
         _uiState.update {
             it.copy(
-                library = mangaDexRepository.library.toList()
+                library = repo.getLibrary()
             )
         }
     }
 
     suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
-        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+        return repo.getImageUri(mangaId, coverUrl)
     }
 
     fun loadIt(boolean: Boolean){

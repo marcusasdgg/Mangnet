@@ -46,7 +46,7 @@ class SearchViewModel @Inject constructor(
     }
 
     suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
-        return mangaDexRepository.getImageUri(mangaId, coverUrl)
+        return repo.getImageUri(mangaId, coverUrl)
     }
 
     fun expandSearchBar(ifExpanded: Boolean) {
@@ -96,7 +96,7 @@ class SearchViewModel @Inject constructor(
         val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
 
         val s = getIncludeExclude()
-        Log.d("TAG", "executeSearch: tags include exclude are $s")
+        Log.d("TAG", "executeSearch: tags include exclude  are $s")
         val result = uiState.value.sourceSelected.let { t ->
             repo.searchAllManga(uiState.value.searchText,
                 ordering = mapOf(res),
@@ -107,6 +107,7 @@ class SearchViewModel @Inject constructor(
                 source = t
             )
         }
+        Log.d("TAG", "executeSearch: $result")
         _uiState.update{
             it.copy(
                 itemCount = result.second,
