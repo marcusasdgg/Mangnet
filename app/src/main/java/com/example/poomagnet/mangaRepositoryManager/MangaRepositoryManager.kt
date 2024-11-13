@@ -119,6 +119,22 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
             else -> throw(IllegalArgumentException())
         }
     }
+
+    suspend fun downloadChapter(mangaId: String, chapterId: String){
+
+        val source = getBelongedRepo(mangaId)
+        when(source){
+            Sources.MANGANATO -> {
+                Log.d("TAG", "downloadChapter: nato")
+                natoRepo.downloadChapter(mangaId,chapterId)
+            }
+            Sources.MANGADEX ->{
+                Log.d("TAG", "downloadChapter: dex")
+                mangadexRepo.downloadChapter(mangaId,chapterId)
+            }
+            else -> {}
+        }
+    }
 }
 
 //each repo has its own backup file, the getbackUpFromFile will take the n files and merge them into 1 text file.

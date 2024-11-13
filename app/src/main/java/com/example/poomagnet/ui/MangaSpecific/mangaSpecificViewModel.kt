@@ -21,7 +21,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -427,12 +426,6 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
 
         WorkManager.getInstance(context) // Use context directly
             .enqueue(workRequest)
-        delay(8000)
-        _uiState.update {
-            it.copy(
-                currentManga = mangaDexRepository.library.firstOrNull { its -> its.id == it.currentManga?.id }
-            )
-        }
     }
 
     fun loadPreviousChapter(){
@@ -462,12 +455,12 @@ class MangaWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         // Retrieve parameters
-        val mangaId = inputData.getString("mangaId") ?: return Result.failure()
-        val id = inputData.getString("chapterId") ?: return Result.failure()
-
+        val mangaId = inputData.getString("mangaId") ?: return  Result.failure()
+        val id = inputData.getString("chapterId") ?: return  Result.failure()
+        Log.d("TAG", "doWork: $mangaId $id")
         return try {
             Log.d("TAG", "downloading chapter: ")
-            repo.getMangaDexRepo().downloadChapter(mangaId, id)
+            repo.downloadChapter(mangaId, id)
             Log.d("TAG", "downloaded chapter: ")
             Result.success()
         } catch (e: Exception) {

@@ -19,7 +19,10 @@ import com.example.poomagnet.mangaRepositoryManager.slimChapter
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -485,13 +488,23 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 }
 
             }
+            val curChapList = manga.chapterList?.toMutableList() ?: mutableListOf()
+            val list = mutableListOf<Chapter>()
+            for (i in curChapList){
+                list.add(i)
+            }
+            for (i in chapArr){
+                if (!list.any{e -> e.id == i.id}){
+                    list.add(i)
+                }
+            }
 
-            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = chapArr)
-//        } catch (e: Exception){
-//            Log.d("TAG", "getChapters: failed $e")
-//            return manga
-//        }
-
+            backUpManga()
+            if (idSet.contains(manga.id)){
+                library.removeIf { elm -> elm.id == manga.id }
+                library.add(manga.copy(chapterList = list))
+            }
+            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = list)
 
     }
 
@@ -552,5 +565,73 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
         }
 
     }
+
+    fun CoroutineScope.downloadChapterConcurrently(
+        chapterContents: List<String>,
+        mangaId: String,
+        chapterId: String
+    ): List<Pair<Deferred<String>, Boolean>> {  // Change to Deferred<String>
+        val deferredList = mutableListOf<Pair<Deferred<String>, Boolean>>()
+
+        // Launch all download tasks asynchronously
+        for (i in chapterContents) {
+            val deferred = async(Dispatchers.IO) {
+                downloadService.downloadContent(mangaId, chapterId, i, "https://chapmanganato.to/$mangaId/$chapterId") // This returns a String
+            }
+            deferredList.add(Pair(deferred, false))
+            Log.d("TAG", "downloadChapter: Task launched for $i")
+        }
+
+        return deferredList
+    }
+    suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
+        val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
+        val chapterS = library.first { e -> e.id == mangaId }.chapterList?.first { e -> e.id == chapterId }
+        val chapterContents = getChapterContents(chapterS!!, mangaId).contents?.imagePaths
+        var list: List<String> = listOf()
+        coroutineScope {
+            val lists = downloadChapterConcurrently(chapterContents!!, mangaId, chapterId)
+            list = lists.map { (deferred) ->
+                deferred.await()  // Await the result and pair it with the flag
+            }
+        }
+
+        var manga = library.find { elm -> elm.id == mangaId }
+
+        val chapList = manga?.chapterList?.toMutableList()
+
+
+        val chapterIndex: Int = manga?.chapterList?.indexOfFirst { elm ->
+            elm.id == chapterId
+        } ?: -1
+
+        var chapter = manga?.chapterList?.find { elm ->
+            elm.id == chapterId
+        }
+
+        chapter = chapter?.copy(
+            contents = ChapterContents.Downloaded(list, ifDone = false),
+            pageCount = list.size.toDouble()
+        )
+
+        if (chapter != null) {
+            chapList!![chapterIndex] = chapter
+        }
+
+        manga = manga?.copy(
+            chapterList = chapList!!,
+        )
+
+
+        library.removeIf { elm -> elm.id == mangaId }
+        library.add(manga!!)
+
+        Log.d("TAG", "downloadChapter: ${manga.chapterList?.map { e -> e.contents }}")
+
+        backUpManga()
+
+        return true
+    }
+
 }
 //val res = natoApi.getInfo(innerUrl)

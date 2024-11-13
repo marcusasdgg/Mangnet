@@ -84,6 +84,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     private suspend fun downloadImage(url: String, refererUrl: String =""): Bitmap?{
         try {
+            Log.d("TAG", "downloadImage: referrer url given is $refererUrl")
             val response = apiService.downloadFile(url, if (refererUrl == "") null else refererUrl)
             Log.d("TAG", "downloadImage: $response")
             if (response.isSuccessful) {
@@ -113,18 +114,8 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         }
     }
 
-    suspend fun downloadContent(mangaId: String, chapterId: String, url: String): String{
-        val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url)
-        if (image !== null){
-            Log.d("TAG", "downloadContent: storing image name as ${
-                url.split("/").last()}")
-            return url.split("/").last().substringBeforeLast(".")+".jpeg"
-        } else {
-            return ""
-        }
-    }
 
-    suspend fun downloadContent(mangaId: String, chapterId: String, url: String, refererUrl: String): String{
+    suspend fun downloadContent(mangaId: String, chapterId: String, url: String, refererUrl: String = ""): String{
         val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url, refererUrl)
         if (image !== null){
             Log.d("TAG", "downloadContent: storing image name as ${

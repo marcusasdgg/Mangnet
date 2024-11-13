@@ -212,15 +212,18 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
         val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
-        val chapterS = library.first { e -> e.id === mangaId }.chapterList?.first { e -> e.id == chapterId }
+        val chapterS = library.first { e -> e.id == mangaId }.chapterList?.first { e -> e.id == chapterId }
+        Log.d("TAG", "$chapterS")
         val chapterContents = getChapterContents(chapterS!!).contents?.imagePaths
         var list: List<String> = listOf()
+
         coroutineScope {
             val lists = downloadChapterConcurrently(chapterContents!!, mangaId, chapterId)
             list = lists.map { (deferred) ->
                 deferred.await()  // Await the result and pair it with the flag
             }
         }
+
 
         var manga = library.find { elm -> elm.id == mangaId }
 

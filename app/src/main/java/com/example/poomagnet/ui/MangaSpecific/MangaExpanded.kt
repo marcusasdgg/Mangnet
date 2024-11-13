@@ -66,8 +66,8 @@ import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.R
+import com.example.poomagnet.mangaRepositoryManager.ChapterContents
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
-import com.example.poomagnet.mangaRepositoryManager.isDownloaded
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -123,7 +123,6 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                                 .clip(RoundedCornerShape(15.dp))
                         )
                     }else {
-                        Log.d("TAG", "MangaScreen: new uri is searched with url ${uiState.currentManga!!.coverArtUrl}")
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(uiState.currentManga?.coverArtUrl)
@@ -217,7 +216,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                             mangaViewModel.setFlag(true)
                         }
                         }
-                        ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished, elm.contents?.isDownloaded?:false, onDownload = {mangaViewModel.viewModelScope.launch {
+                        ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished, elm.contents is ChapterContents.Downloaded , onDownload = {mangaViewModel.viewModelScope.launch {
                             mangaViewModel.downloadChapter(chapterId = elm.id)
                         }})
                 }
