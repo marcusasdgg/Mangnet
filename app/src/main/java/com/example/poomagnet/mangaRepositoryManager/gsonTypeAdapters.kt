@@ -1,6 +1,5 @@
 package com.example.poomagnet.mangaRepositoryManager
 
-import android.util.Log
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -59,7 +58,6 @@ class SlimChapterAdapter : JsonDeserializer<slimChapter>, JsonSerializer<slimCha
 
 class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
     override fun serialize(src: ChapterContents, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        Log.d("TAG", "serialize: ")
         val jsonObject = JsonObject()
 
         when (src) {
@@ -75,7 +73,6 @@ class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
             }
         }
 
-        Log.d("TAG", "serialize: $jsonObject")
         return jsonObject
     }
 }
@@ -83,7 +80,6 @@ class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
 class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterContents {
         val jsonObject = json.asJsonObject
-        Log.d("TAG", "serialize: $jsonObject")
         val imagePathsType = object : TypeToken<List<String>>() {}.type
         val imagePaths: List<String> = context.deserialize(jsonObject.get("imagePaths"), imagePathsType)
         val ifDone = jsonObject.get("ifDone").asBoolean

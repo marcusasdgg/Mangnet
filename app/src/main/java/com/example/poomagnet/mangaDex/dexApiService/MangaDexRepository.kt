@@ -28,7 +28,10 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -163,7 +166,6 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun backUpManga(){
-        Log.d("TAG", "commencing backup: ${library.map { e -> e.chapterList }}")
 
         val libraryShouldBe = library.map {element ->
             element.copy(chapterList = element.chapterList?.map { chapter ->
@@ -181,7 +183,6 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                     )
                 }
             }
-            Log.d("TAG", "backUpManga: success")
         }
         withContext(Dispatchers.IO) {
             printBackUp()
@@ -193,16 +194,23 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         chapterContents: List<String>,
         mangaId: String,
         chapterId: String
-    ): List<Pair<Deferred<String>, Boolean>> {  // Change to Deferred<String>
+    ): List<Pair<Deferred<String>, Boolean>> {  //
         val deferredList = mutableListOf<Pair<Deferred<String>, Boolean>>()
+        val semaphore = Semaphore(15)
 
-        // Launch all download tasks asynchronously
-        for (i in chapterContents) {
+
+        for ((index,content) in chapterContents.withIndex()) {
             val deferred = async(Dispatchers.IO) {
-                downloadService.downloadContent(mangaId, chapterId, i) // This returns a String
+                semaphore.withPermit {
+                    val result = downloadService.downloadContent(mangaId, chapterId, content) // This returns a String
+
+                    if ((index + 1) % 10 != 0) {
+                        delay(1000L / 10)
+                    }
+                    result
+                }
             }
             deferredList.add(Pair(deferred, false))
-            Log.d("TAG", "downloadChapter: Task launched for $i")
         }
 
         return deferredList
@@ -213,7 +221,6 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
         val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
         val chapterS = library.first { e -> e.id == mangaId }.chapterList?.first { e -> e.id == chapterId }
-        Log.d("TAG", "$chapterS")
         val chapterContents = getChapterContents(chapterS!!).contents?.imagePaths
         var list: List<String> = listOf()
 

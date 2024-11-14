@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.CoroutineWorker
 import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -415,17 +416,24 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
     }
 
 
-    suspend fun downloadChapter(chapterId: String){
+    suspend fun downloadChapter(chapterId: String, mangaId: String){
+        Log.d("TAG", "downloadChapter: ")
         val inputData = Data.Builder()
-            .putString("mangaId", uiState.value.currentManga?.id)
+            .putString("mangaId", mangaId)
             .putString("chapterId", chapterId)
             .build()
         val workRequest = OneTimeWorkRequestBuilder<MangaWorker>()
             .setInputData(inputData)
             .build()
 
-        WorkManager.getInstance(context) // Use context directly
-            .enqueue(workRequest)
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                "mangaDownloadQueue",
+                ExistingWorkPolicy.APPEND,
+                workRequest
+            )
+
+        Log.d("TAG", "downloadChapters: ${WorkManager.getInstance(context).getWorkInfosByTag("MangaWorker").toString()}")
     }
 
     fun loadPreviousChapter(){
@@ -457,11 +465,8 @@ class MangaWorker @AssistedInject constructor(
         // Retrieve parameters
         val mangaId = inputData.getString("mangaId") ?: return  Result.failure()
         val id = inputData.getString("chapterId") ?: return  Result.failure()
-        Log.d("TAG", "doWork: $mangaId $id")
         return try {
-            Log.d("TAG", "downloading chapter: ")
             repo.downloadChapter(mangaId, id)
-            Log.d("TAG", "downloaded chapter: ")
             Result.success()
         } catch (e: Exception) {
             Result.failure()

@@ -217,7 +217,8 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                         }
                         }
                         ,elm.chapter,elm.volume, elm.name,elm.date, elm.finished, elm.contents is ChapterContents.Downloaded , onDownload = {mangaViewModel.viewModelScope.launch {
-                            mangaViewModel.downloadChapter(chapterId = elm.id)
+                            val mangaId = uiState.currentManga?.id ?: return@launch
+                            mangaViewModel.downloadChapter(chapterId = elm.id, mangaId)
                         }})
                 }
             }
@@ -365,31 +366,30 @@ fun MangaAppBar(modifier: Modifier = Modifier, onBack: () -> Unit, mangaViewMode
                             DropdownMenuItem(text = {Text("first 5 chapters")}, onClick = {open = false; mangaViewModel.viewModelScope.launch {
                                 val maxSize = state.currentManga?.chapterList?.size ?: 0
                                 val chapterList = state.currentManga?.chapterList?.reversed()?.subList(0,min(maxSize,5))
+                                val manga = state.currentManga?.id ?: return@launch
                                 chapterList?.forEach { elm->
                                     Log.d("TAG", "MangaAppBar: ${elm.id}")
-                                    mangaViewModel.downloadChapter(chapterId = elm.id)
+                                    mangaViewModel.downloadChapter(chapterId = elm.id, manga)
                                 }
                                 open = false
                             }})
                             DropdownMenuItem(text = {Text("first 10 chapters")}, onClick = {open = false; mangaViewModel.viewModelScope.launch {
                                 val maxSize = state.currentManga?.chapterList?.size ?: 0
+                                val manga = state.currentManga?.id ?: return@launch
                                 val chapterList = state.currentManga?.chapterList?.reversed()?.subList(
                                     0,
                                     min(maxSize, 10)
                                 )
                                 chapterList?.forEach { elm ->
-                                    mangaViewModel.downloadChapter(chapterId = elm.id)
+                                    mangaViewModel.downloadChapter(chapterId = elm.id, manga)
                                 }
                             }
                             })
                             DropdownMenuItem(text = {Text("All chapters")}, onClick = {open = false ; mangaViewModel.viewModelScope.launch {
-                                val maxSize = state.currentManga?.chapterList?.size ?: 0
-                                val chapterList = state.currentManga?.chapterList?.reversed()?.subList(
-                                    0,
-                                    maxSize
-                                )
+                                val chapterList = state.currentManga?.chapterList?.reversed()?.toList()
+                                val mangaId = state.currentManga?.id ?: return@launch
                                 chapterList?.forEach { elm ->
-                                    mangaViewModel.downloadChapter(chapterId = elm.id)
+                                    mangaViewModel.downloadChapter(chapterId = elm.id, mangaId)
                                 }
 
                             }

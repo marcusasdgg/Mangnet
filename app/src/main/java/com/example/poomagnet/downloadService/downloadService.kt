@@ -59,7 +59,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
             put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$folderName")
         }
-        Log.d("TAG", "addImageToFolder: sending request to $imageUrl")
+        //Log.d("TAG", "addImageToFolder: sending request to $imageUrl")
         val image = downloadImage(imageUrl, refererUrl)
 
         if (image == null){
@@ -84,9 +84,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     private suspend fun downloadImage(url: String, refererUrl: String =""): Bitmap?{
         try {
-            Log.d("TAG", "downloadImage: referrer url given is $refererUrl")
             val response = apiService.downloadFile(url, if (refererUrl == "") null else refererUrl)
-            Log.d("TAG", "downloadImage: $response")
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
                     val inputStream = responseBody.byteStream()
@@ -104,10 +102,8 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
 
     suspend fun downloadCoverUrl(mangaId: String, url: String): String {
-        Log.d("TAG", "downloadCoverUrl: $url")
         val image = addImageToFolder(mangaId, mangaId, url)
         if (image !== null){
-            Log.d("TAG", "downloadCoverUrl: iamge given was $image")
             return "$mangaId.jpeg"
         } else {
             return ""
@@ -118,8 +114,8 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
     suspend fun downloadContent(mangaId: String, chapterId: String, url: String, refererUrl: String = ""): String{
         val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url, refererUrl)
         if (image !== null){
-            Log.d("TAG", "downloadContent: storing image name as ${
-                url.split("/").last()}")
+//            Log.d("TAG", "downloadContent: storing image name as ${
+//                url.split("/").last()}")
             return url.split("/").last().substringBeforeLast(".")+".jpeg"
         } else {
             return ""
