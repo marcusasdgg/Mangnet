@@ -15,12 +15,12 @@ import com.example.poomagnet.mangaRepositoryManager.ChapterContentsSerializer
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
 import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
-import com.example.poomagnet.mangaRepositoryManager.slimChapter
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -42,7 +42,7 @@ import javax.inject.Inject
 data class BackUpInstance(
     val library: MutableSet<MangaInfo>,
     val idSet: MutableSet<String>,
-    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>>,
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>>,
     val tagMap: MutableMap<Tag,String>
 )
 
@@ -62,9 +62,9 @@ data class BackUpInstance(
 
 class MangaDexRepository @Inject constructor(private val context: Context, private val downloadService: DownloadService)  {
     private val apiService = RetrofitInstance.api
-    private var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
+    private var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>> = mutableListOf()
 
-    fun getNewUpdatedChapters(): List<Pair<SimpleDate, slimChapter>>{
+    fun getNewUpdatedChapters(): List<Pair<SimpleDate, SlimChapter>>{
         return newUpdatedChapters
     }
     private val gsonSerializer = GsonBuilder()
@@ -509,7 +509,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             for (i in chapterObjects){
                 if (!list.any{e -> e.id == i.id}){
                     list.add(i)
-                    newUpdatedChapters.add(Pair(SimpleDate(),slimChapter.fromChapter(i,manga)))
+                    newUpdatedChapters.add(Pair(SimpleDate(),SlimChapter.fromChapter(i,manga)))
                 }
             }
 

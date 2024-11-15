@@ -44,7 +44,7 @@ data class Chapter(
 
     )
 
-data class slimChapter(
+data class SlimChapter(
     val id: String,
     val name: String,
     val chapter: Double,
@@ -55,8 +55,8 @@ data class slimChapter(
 ){
     companion object {
         // Example "from" constructor
-        fun fromChapter(other: Chapter, manga: MangaInfo): slimChapter {
-            return slimChapter(
+        fun fromChapter(other: Chapter, manga: MangaInfo): SlimChapter {
+            return SlimChapter(
                 id = other.id,
                 name = other.name,
                 chapter = other.chapter,

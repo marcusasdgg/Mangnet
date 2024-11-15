@@ -10,7 +10,7 @@ import javax.inject.Inject
 //central manager of all managa source repositories, will improve structure later
 
 class MangaRepositoryManager @Inject constructor( private val mangadexRepo: MangaDexRepository, private val context: Context, private val natoRepo: MangaNatoRepository) {
-    val newUpdatedChapters:  List<Pair<SimpleDate,slimChapter>>
+    val newUpdatedChapters:  List<Pair<SimpleDate,SlimChapter>>
         get() = mangadexRepo.getNewUpdatedChapters() + natoRepo.getNewUpdatedChapters()
     fun getMangaDexRepo(): MangaDexRepository {
         return mangadexRepo

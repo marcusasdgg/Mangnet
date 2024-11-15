@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.poomagnet.mangaRepositoryManager.slimChapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +75,7 @@ fun UpdateScreen(modifier: Modifier = Modifier, viewModel: updateViewModel, onCh
 }
 
 @Composable
-fun ChapterListing(modifier: Modifier = Modifier, chapter: slimChapter, onChapterClick: (String, String) -> Unit, loadImage: suspend (String, String) -> String){
+fun ChapterListing(modifier: Modifier = Modifier, chapter: SlimChapter, onChapterClick: (String, String) -> Unit, loadImage: suspend (String, String) -> String){
     val context = LocalContext.current
     var uri by remember { mutableStateOf("")}
     LaunchedEffect(Unit){

@@ -1,7 +1,7 @@
 package com.example.poomagnet.ui.UpdateScreen
 
-import com.example.poomagnet.mangaRepositoryManager.slimChapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 
 data class updateUiState (
-    val showList: Map<String, List<slimChapter>> = mapOf()
+    val showList: Map<String, List<SlimChapter>> = mapOf()
 )

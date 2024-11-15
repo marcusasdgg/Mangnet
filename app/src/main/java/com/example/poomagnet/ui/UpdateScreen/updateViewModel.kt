@@ -3,7 +3,7 @@ package com.example.poomagnet.ui.UpdateScreen
 import androidx.lifecycle.ViewModel
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
-import com.example.poomagnet.mangaRepositoryManager.slimChapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ class updateViewModel @Inject constructor(
 
     fun syncLibrary(){
         val list = repo.newUpdatedChapters
-        val newMap: MutableMap<String, MutableList<slimChapter>> = mutableMapOf()
+        val newMap: MutableMap<String, MutableList<SlimChapter>> = mutableMapOf()
         for (i in list){
             if (newMap.contains(i.first.toString())){
                 newMap[i.first.toString()]!!.add(i.second)

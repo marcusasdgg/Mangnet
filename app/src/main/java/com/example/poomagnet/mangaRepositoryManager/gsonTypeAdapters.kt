@@ -29,10 +29,10 @@ class SimpleDateAdapter : JsonDeserializer<SimpleDate>, JsonSerializer<SimpleDat
     }
 }
 
-class SlimChapterAdapter : JsonDeserializer<slimChapter>, JsonSerializer<slimChapter> {
-    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): slimChapter {
+class SlimChapterAdapter : JsonDeserializer<SlimChapter>, JsonSerializer<SlimChapter> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): SlimChapter {
         val jsonObject = json?.asJsonObject
-        return slimChapter(
+        return SlimChapter(
             id = jsonObject?.get("id")?.asString ?: "",
             name = jsonObject?.get("name")?.asString ?: "",
             chapter = jsonObject?.get("chapter")?.asDouble ?: 0.0,
@@ -43,7 +43,7 @@ class SlimChapterAdapter : JsonDeserializer<slimChapter>, JsonSerializer<slimCha
         )
     }
 
-    override fun serialize(src: slimChapter, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+    override fun serialize(src: SlimChapter, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
         val jsonObject = JsonObject()
         jsonObject.addProperty("id", src.id)
         jsonObject.addProperty("name", src.name)
