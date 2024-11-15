@@ -107,7 +107,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                         Log.d("TAG", "MangaScreen: in library mode")
                         var image by remember { mutableStateOf("")}
                         LaunchedEffect(uiState.currentManga!!.inLibrary) {
-                            image = mangaViewModel.loadImageFromLibrary(uiState.currentManga!!.id, uiState.currentManga!!.coverArtUrl)
+                            image = mangaViewModel.loadImageFromLibrary(uiState.currentManga!!.id, uiState.currentManga!!.id)
                             Log.d("TAG", "MangaScreen: new uri is $image searched with url ${uiState.currentManga!!.coverArtUrl}")
                         }
                         AsyncImage(

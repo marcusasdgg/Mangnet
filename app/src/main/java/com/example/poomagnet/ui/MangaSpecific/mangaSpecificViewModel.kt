@@ -398,7 +398,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
     }
 
     suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
-        return repo.getImageUri(mangaId, coverUrl)
+        return repo.getImageUri(mangaId, "$coverUrl.jpeg")
     }
 
     fun loadNextChapter(){
