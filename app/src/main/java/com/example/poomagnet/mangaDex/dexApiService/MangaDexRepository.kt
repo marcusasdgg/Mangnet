@@ -509,7 +509,10 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             for (i in chapterObjects){
                 if (!list.any{e -> e.id == i.id}){
                     list.add(i)
-                    newUpdatedChapters.add(Pair(SimpleDate(),SlimChapter.fromChapter(i,manga)))
+                    if (manga.chapterList !== null){
+                        newUpdatedChapters.add(Pair(SimpleDate(), SlimChapter.fromChapter(i, manga)))
+                        newUpdatedChapters.add(Pair(SimpleDate(),SlimChapter.fromChapter(i,manga)))
+                    }
                 }
             }
 

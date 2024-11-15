@@ -514,7 +514,9 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             for (i in chapArr){
                 if (!list.any{e -> e.id == i.id}){
                     list.add(i)
-                    newUpdatedChapters.add(Pair(SimpleDate(), SlimChapter.fromChapter(i, manga)))
+                    if (manga.chapterList !== null){
+                        newUpdatedChapters.add(Pair(SimpleDate(), SlimChapter.fromChapter(i, manga)))
+                    }
                 }
             }
 
