@@ -368,9 +368,8 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
             for (e in right) {
                 val label =
-                    e.getElementsByClass("table-label").first().getElementsByTag("i").first()
-                        .className().removeSuffix(" :")
-
+                    e.getElementsByClass("table-label").first().text().split(" :").first()
+                Log.d("TAG", "getChapters: $label")
                 when (label) {
                     "Alternative" -> {
                         alternateTitles =
@@ -383,9 +382,11 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                     }
 
                     "Genres" -> {
+                        Log.d("TAG", "getChapters: genres")
                         val lit = e.getElementsByClass("table-value").first().getElementsByTag("a")
                             .toList()
                         for (i in lit) {
+                            Log.d("TAG", "getChapters: ${i.text()}")
                             when (i.text()) {
                                 "Seinen" -> {
                                     demographic = i.text()
@@ -443,7 +444,6 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                     ch.getElementsByTag("a").first().text().replace("-", " ").replace(":", " ")
                         .replace("Vol.", "Vol ")
                 val chapterId = chapterUrl.split("/").last()
-                Log.d("TAG", "getChapters: $chapterId ")
 
                 val stream = ByteArrayInputStream(chapString.toByteArray())
                 val scanner = Scanner(stream)
@@ -545,7 +545,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 library.removeIf { elm -> elm.id == manga.id }
                 library.add(manga.copy(chapterList = list))
             }
-            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = list)
+            return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = list, tagList = tagList)
 
     }
 
