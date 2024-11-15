@@ -406,7 +406,6 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
                                 else -> tagList.add(i.text())
                             }
-                            tagList.add(i.text())
                         }
                     }
                 }
