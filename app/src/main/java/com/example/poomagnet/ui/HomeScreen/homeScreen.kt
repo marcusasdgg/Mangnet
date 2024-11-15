@@ -1,15 +1,9 @@
 package com.example.poomagnet.ui.HomeScreen
 
-import android.graphics.ColorSpace.Rgb
-import android.graphics.Paint.Align
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,20 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -43,8 +30,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -52,20 +37,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.poomagnet.App.ScreenType
-import com.example.poomagnet.R
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.ui.DoubleStackCard
 import com.example.poomagnet.ui.SortDrawer.HomeSortDrawer
 import com.example.poomagnet.ui.VerticalCard
-import java.util.logging.Filter
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -100,21 +81,45 @@ fun HomeScreen(modifier: Modifier = Modifier, hideBottomBar: () -> Unit = {}, vi
     )
 
     Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
-        Column(modifier = modifier.fillMaxWidth().fillMaxHeight().verticalScroll(scrollState)) {
-                uiState.library.forEach { manga ->
-                    VerticalCard(manga = manga, modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) }, engageChapter = { id ->
-                        readChapter(id,manga)
-                    }, openLast = {
-                        openLast(manga)
-                    },
-                        loadImage = {elm1, elm2 -> viewModel.loadImageFromLibrary(elm1,elm2)},
-                        somethingChanged = uiState.somethingChanged
-                    )
-                    Spacer(Modifier.fillMaxWidth().height(10.dp))
+        when (uiState.typeView){
+            displayType.VERTICALCARD -> {
+                Column(modifier = modifier.fillMaxWidth().fillMaxHeight().verticalScroll(scrollState)) {
+                    uiState.library.forEach { manga ->
+                        VerticalCard(manga = manga, modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp, 0.dp), onclick = { setCurrentManga(manga) }, engageChapter = { id ->
+                            readChapter(id,manga)
+                        }, openLast = {
+                            openLast(manga)
+                        },
+                            loadImage = {elm1, elm2 -> viewModel.loadImageFromLibrary(elm1,elm2)},
+                            somethingChanged = uiState.somethingChanged
+                        )
+                        Spacer(Modifier.fillMaxWidth().height(10.dp))
+                    }
                 }
+            }
+            displayType.SINGLESCREEN -> TODO()
+            displayType.LISTSCROLL -> TODO()
+            displayType.TWOGRID -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2), // 2 items per row
+                    modifier = modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    items(uiState.library) { manga ->
+                        DoubleStackCard(
+                            manga = manga,
+                            click = setCurrentManga,
+                            loadImage = {elm1, elm2 -> viewModel.loadImageFromLibrary(elm1,elm2) }
+                        )
+                    }
+                }
+            }
         }
+
         PullRefreshIndicator(
             refreshing = uiState.ifLoading,
             state = pullRefreshState,

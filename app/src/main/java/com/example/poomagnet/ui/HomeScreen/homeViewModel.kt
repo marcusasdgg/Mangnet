@@ -29,6 +29,13 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
+    fun changeView(type: displayType){
+        _uiState.update {
+            it.copy(
+                typeView = type
+            )
+        }
+    }
 
     public fun syncLibrary(){
         _uiState.update {

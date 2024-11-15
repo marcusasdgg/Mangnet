@@ -1,8 +1,6 @@
 package com.example.poomagnet.ui.SortDrawer
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,17 +15,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.North
 import androidx.compose.material.icons.outlined.South
-import androidx.compose.material.icons.sharp.ArrowDownward
-import androidx.compose.material.icons.sharp.ArrowUpward
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -39,18 +29,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.colorspace.ColorModel.Companion.Rgb
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.poomagnet.R
 import com.example.poomagnet.ui.HomeScreen.HomeViewModel
+import com.example.poomagnet.ui.HomeScreen.displayType
 import com.example.poomagnet.ui.SearchScreen.Direction
-import com.example.poomagnet.ui.SearchScreen.SearchUiState
 import com.example.poomagnet.ui.SearchScreen.SearchViewModel
 
 
@@ -92,6 +77,14 @@ fun HomeSortDrawer(modifier: Modifier = Modifier, viewModel: HomeViewModel){
     if (uiState.showDrawer){ //uiState.showDrawer
         ModalBottomSheet(onDismissRequest = {viewModel.revealBottomSheet(false)}, Modifier.height(600.dp)) { //viewModel.revealBottomSheet(false)
             LazyColumn(modifier.fillMaxSize()) {
+                item {
+                    Text("View Type:", modifier.padding(horizontal = 10.dp))
+                    Column(Modifier.fillMaxSize().height(100.dp)) {
+                        displayType.entries.forEach { e ->
+                            ViewListing(Modifier.weight(1f), e, uiState.typeView == e, viewModel::changeView)
+                        }
+                    }
+                }
                 item{
                     Row(Modifier.fillMaxWidth().height(150.dp)) {
                         //demographic and content rating
@@ -120,6 +113,16 @@ fun CheckATitle(modifier: Modifier = Modifier, title: String, checkboxState: Tog
         Row(Modifier.fillMaxWidth().fillMaxHeight(), verticalAlignment = Alignment.CenterVertically){
             TriStateCheckbox(checkboxState,onclick)
             Text(title)
+        }
+    }
+}
+
+@Composable
+fun ViewListing(modifier: Modifier = Modifier, view: displayType, clicked: Boolean, onclick: (displayType) -> Unit){
+    Box(modifier.fillMaxWidth().fillMaxHeight().clickable { onclick(view) }){
+        Row(Modifier.fillMaxWidth().fillMaxHeight(), verticalAlignment = Alignment.CenterVertically){
+            RadioButton(clicked, {onclick(view)})
+            Text(view.full_name)
         }
     }
 }
