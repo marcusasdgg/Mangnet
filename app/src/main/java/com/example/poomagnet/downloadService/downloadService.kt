@@ -54,10 +54,14 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
     }
 
     private suspend fun addImageToFolder(folderName: String, imageName: String, imageUrl: String, refererUrl: String = ""): Uri?{
+        val customDate = 946684800000
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "$imageName.jpeg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
             put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$folderName")
+            put(MediaStore.Images.Media.DATE_TAKEN, customDate)
+            put(MediaStore.Images.Media.DATE_ADDED, customDate / 1000) // DATE_ADDED expects seconds
+            put(MediaStore.Images.Media.DATE_MODIFIED, customDate / 1000) // DATE_MODIFIED expects seconds
         }
         //Log.d("TAG", "addImageToFolder: sending request to $imageUrl")
         val image = downloadImage(imageUrl, refererUrl)
