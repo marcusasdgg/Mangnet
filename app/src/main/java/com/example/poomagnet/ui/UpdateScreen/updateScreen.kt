@@ -100,7 +100,7 @@ fun ChapterListing(modifier: Modifier = Modifier, chapter: SlimChapter, onChapte
                     .padding(15.dp,8.dp)
             )
             Column(Modifier.fillMaxWidth(0.8f), horizontalAlignment = Alignment.Start) {
-                Text(chapter.name, fontSize = 14.sp, modifier = Modifier, textAlign = TextAlign.Start)
+                Text(chapter.mangaName, fontSize = 14.sp, modifier = Modifier, textAlign = TextAlign.Start)
                 Spacer(Modifier.height(5.dp))
                 Text("Vol. ${chapter.volume} Ch. ${chapter.chapter} - ${chapter.name}", fontSize = 14.sp, modifier = Modifier.padding(10.dp,0.dp,0.dp,0.dp), textAlign = TextAlign.Start)
             }
