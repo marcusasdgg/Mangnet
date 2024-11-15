@@ -36,7 +36,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
-import java.time.OffsetDateTime
 import javax.inject.Inject
 
 
@@ -63,9 +62,11 @@ data class BackUpInstance(
 
 class MangaDexRepository @Inject constructor(private val context: Context, private val downloadService: DownloadService)  {
     private val apiService = RetrofitInstance.api
-    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
+    private var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
 
-
+    fun getNewUpdatedChapters(): List<Pair<SimpleDate, slimChapter>>{
+        return newUpdatedChapters
+    }
     private val gsonSerializer = GsonBuilder()
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
@@ -508,15 +509,17 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             for (i in chapterObjects){
                 if (!list.any{e -> e.id == i.id}){
                     list.add(i)
+                    newUpdatedChapters.add(Pair(SimpleDate(),slimChapter.fromChapter(i,manga)))
                 }
             }
 
-            backUpManga()
+
             if (idSet.contains(manga.id)){
                 library.removeIf { elm -> elm.id == manga.id }
                 library.add(manga.copy(chapterList = list))
             }
             Log.d(TAG, "getChapters: found ${list.size} elements")
+            backUpManga()
             return manga.copy(chapterList = list)
         } catch(e: Exception){
             Log.d("TAG", "chapList: failed to get chapters ${e.message}}")
@@ -602,15 +605,13 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     suspend fun updateInLibrary(manga: MangaInfo){
         Log.d("TAG", "updateInLibrary: receieved $manga")
-        val currentDate = SimpleDate(OffsetDateTime.now().toString())
+        val currentDate = SimpleDate()
         library = library.map { elm ->
             if (manga.id == elm.id){
-                Log.d("TAG", "updateInLibrary: found manga")
                 val oldChapters = elm.chapterList?.toMutableList()
                 manga.chapterList?.forEach { t ->
                     if (!oldChapters?.any{ e -> e.id == t.id }!!){
                         oldChapters.add(t)
-                        newUpdatedChapters.add(Pair(currentDate, slimChapter(t.id,t.name,t.chapter,t.volume, elm.id, elm.coverArtUrl, elm.title )))
                     } else {
                         val old = oldChapters.indexOfFirst { m -> m.id == t.id }
                         if (old != -1){
@@ -643,17 +644,6 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
 
     }
 
-    fun addToList(chapter: Chapter, mangaId: String, url: String, name: String){
-        try {
-            if (!newUpdatedChapters.any { elm -> elm.second.id == chapter.id }){
-                newUpdatedChapters.add(Pair(SimpleDate(OffsetDateTime.now().toString()), slimChapter(chapter.id, chapter.name,chapter.chapter,chapter.volume,mangaId,url,name)))
-            }
-
-        } catch (e: Exception){
-            Log.d("TAG", "addToList: $e")
-        }
-
-    }
     
     suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String): String{
         return downloadService.retrieveMangaImage(mangaId, chapterId, url).toString()

@@ -1,7 +1,6 @@
 package com.example.poomagnet.ui.UpdateScreen
 
 import androidx.lifecycle.ViewModel
-import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
 import com.example.poomagnet.mangaRepositoryManager.slimChapter
@@ -15,12 +14,11 @@ import javax.inject.Inject
 class updateViewModel @Inject constructor(
     private val repo: MangaRepositoryManager
 ): ViewModel() {
-    private val mangaDexRepository: MangaDexRepository = repo.getMangaDexRepo()
     val _uiState: MutableStateFlow<updateUiState> = MutableStateFlow(updateUiState())
     val uiState: StateFlow<updateUiState> = _uiState
 
     fun syncLibrary(){
-        val list = mangaDexRepository.newUpdatedChapters
+        val list = repo.newUpdatedChapters
         val newMap: MutableMap<String, MutableList<slimChapter>> = mutableMapOf()
         for (i in list){
             if (newMap.contains(i.first.toString())){
@@ -37,11 +35,7 @@ class updateViewModel @Inject constructor(
     }
 
     fun findMangaInLibrary(id: String): MangaInfo? {
-        val library = mangaDexRepository.library
-        val manga = library.firstOrNull { el ->
-            el.id == id
-        }
-        return manga
+        return repo.getMangaById(id)
     }
 
     suspend fun loadImageFromLibrary(mangaId: String, coverUrl: String): String{
@@ -50,7 +44,7 @@ class updateViewModel @Inject constructor(
 
 
     suspend fun performUpdate(){
-        mangaDexRepository.updateWholeLibrary()
+        repo.updateLibrary()
         syncLibrary()
     }
 

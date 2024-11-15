@@ -60,7 +60,25 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     private var josei = 0;
     var library: MutableSet<MangaInfo> = mutableSetOf()
     var idSet: MutableSet<String> = mutableSetOf()
-    var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
+    private var newUpdatedChapters: MutableList<Pair<SimpleDate, slimChapter>> = mutableListOf()
+
+    fun getNewUpdatedChapters(): List<Pair<SimpleDate, slimChapter>>{
+        return newUpdatedChapters
+    }
+    suspend fun updateWholeLibrary(){
+        Log.d("TAG", "updateWholeLibrary: called")
+        //use chapterlist which does everything for u idiot.
+        try {
+            library.map { its ->
+                getChapters(its)
+            }
+            backUpManga()
+        } catch (e: Exception){
+            Log.d("TAG", "updateWholeLibrary: $e")
+        }
+
+    }
+
 
     private val gsonSerializer = GsonBuilder()
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())

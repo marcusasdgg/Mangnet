@@ -10,7 +10,8 @@ import javax.inject.Inject
 //central manager of all managa source repositories, will improve structure later
 
 class MangaRepositoryManager @Inject constructor( private val mangadexRepo: MangaDexRepository, private val context: Context, private val natoRepo: MangaNatoRepository) {
-
+    val newUpdatedChapters:  List<Pair<SimpleDate,slimChapter>>
+        get() = mangadexRepo.getNewUpdatedChapters() + natoRepo.getNewUpdatedChapters()
     fun getMangaDexRepo(): MangaDexRepository {
         return mangadexRepo
     }
@@ -23,13 +24,6 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         mangadexRepo.updateWholeLibrary()
     }
 
-    fun addToList(chapter: Chapter, mangaId: String, url: String, name: String){
-        if (mangaId.startsWith("manga")){
-
-        } else {
-            mangadexRepo.addToList(chapter, mangaId, url, name)
-        }
-    }
 
     fun getBelongedRepo(mangaId: String): Sources{
         if (mangaId.startsWith("manga")){
@@ -83,6 +77,15 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         }
     }
 
+    fun getMangaById(id: String): MangaInfo?{
+        val source = getBelongedRepo(id)
+        return when(source){
+            Sources.MANGANATO -> natoRepo.library.firstOrNull { e -> e.id == id }
+            Sources.MANGADEX -> mangadexRepo.library.firstOrNull { e -> e.id == id }
+            else -> null
+        }
+    }
+
     suspend fun addToLibrary(manga: MangaInfo){
         val source = getBelongedRepo(manga.id)
         when (source){
@@ -119,6 +122,11 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
             Sources.MANGADEX -> mangadexRepo.getChapterContents(ch)
             else -> throw(IllegalArgumentException())
         }
+    }
+
+    suspend fun updateLibrary(){
+        mangadexRepo.updateWholeLibrary()
+        natoRepo.updateWholeLibrary()
     }
 
     suspend fun downloadChapter(mangaId: String, chapterId: String){

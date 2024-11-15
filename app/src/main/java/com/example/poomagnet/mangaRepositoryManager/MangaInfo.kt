@@ -52,7 +52,25 @@ data class slimChapter(
     val mangaId: String,
     val imageUrl: String,
     val mangaName: String,
-)
+){
+    companion object {
+        // Example "from" constructor
+        fun fromChapter(other: Chapter, manga: MangaInfo): slimChapter {
+            return slimChapter(
+                id = other.id,
+                name = other.name,
+                chapter = other.chapter,
+                volume = other.volume,
+                mangaId = manga.id,
+                imageUrl = manga.coverArtUrl,
+                mangaName = other.name
+            )
+        }
+    }
+}
+
+
+
 
 sealed class ChapterContents(@Transient open val  imagePaths: List<String>,
                              @Transient open val ifDone: Boolean) {
