@@ -118,10 +118,30 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
             } else {
                 Log.d("TAG", "backup.txt not found, mangaObj is empty. ")
+                file.writeText(gsonSerializer.toJson(BackUpInstance(library, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei)))
             }
         } catch (e: Exception) {
             Log.e("TAG", "Error loading manga from backup.txt", e)
         }
+    }
+
+    fun restoreBackup(jsonString: String){
+        Log.d("TAG", "loadMangaFromBackup nato!: backup is $jsonString")
+        // Deserialize the JSON string into a list of MangaInfo objects using Gson
+        val listType = object : TypeToken<BackUpInstance>() {}.type
+        val r: BackUpInstance = gsonSerializer.fromJson(jsonString, listType)
+        library = r.library
+        idSet = r.idSet
+        newUpdatedChapters = r.newUpdatedChapters
+        tagMap = r.tagMap
+        suggestiveRating = r.suggestiveRating
+        eroticaRating = r.eroticaRating
+        pornographicRating = r.pornographicRating
+        seinen = r.seinen
+        shoujo = r.shoujo
+        shounen = r.shounen
+        josei = r.josei
+        //tagMap = r.tagMap
     }
 
     suspend fun backUpManga(){

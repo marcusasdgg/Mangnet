@@ -67,6 +67,15 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     fun getNewUpdatedChapters(): List<Pair<SimpleDate, SlimChapter>>{
         return newUpdatedChapters
     }
+
+    fun restoreBackup(jsonString: String){
+        // Deserialize the JSON string into a list of MangaInfo objects using Gson
+        val listType = object : TypeToken<BackUpInstance>() {}.type
+        val r: BackUpInstance = gsonSerializer.fromJson(jsonString, listType)
+        library = r.library
+        idSet = r.idSet
+        newUpdatedChapters = r.newUpdatedChapters
+    }
     private val gsonSerializer = GsonBuilder()
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())

@@ -165,7 +165,6 @@ fun VerticalCard(modifier: Modifier = Modifier, manga: MangaInfo, onclick: () ->
         .clickable { onclick() }) {
         Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
             if (manga.inLibrary){
-                Log.d("TAG", "VerticalCard: sending uri ${manga.coverArtUrl.split("/").last().substringBeforeLast(".")+".jpeg"}")
                 var image by remember { mutableStateOf("") }
                 LaunchedEffect(somethingChanged) {
                     image = loadImage(manga.id,manga.id+".jpeg")

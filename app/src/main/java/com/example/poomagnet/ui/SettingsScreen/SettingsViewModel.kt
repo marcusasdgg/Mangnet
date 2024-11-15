@@ -15,4 +15,8 @@ class SettingsViewModel @Inject constructor(
         Log.d("TAG", "getBackUp: $s")
         return s
     }
+
+    fun restoreBackup(backup: String){
+        repo.loadFromBackUp(backup)
+    }
 }

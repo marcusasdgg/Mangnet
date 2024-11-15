@@ -156,7 +156,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         return null
     }
 
-    suspend fun retrieveImage(mangaId: String, imageName: String): Uri?{
+     fun retrieveImage(mangaId: String, imageName: String): Uri?{
         val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"

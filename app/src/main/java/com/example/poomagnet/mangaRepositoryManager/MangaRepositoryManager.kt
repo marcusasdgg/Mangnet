@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.manganatoService.MangaNatoRepository
+import com.google.gson.JsonParser
 import java.io.File
 import javax.inject.Inject
 
@@ -62,9 +63,20 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     suspend fun getImageUri(mangaId: String, coverUrl: String) : String {
         val source = getBelongedRepo(mangaId)
         return when (source){
-            Sources.MANGANATO -> {natoRepo.getImageUri(mangaId, coverUrl)}
-            Sources.MANGADEX -> {mangadexRepo.getImageUri(mangaId, coverUrl)}
-            Sources.ALL -> {""}
+            Sources.MANGANATO -> {
+                val s = natoRepo.getImageUri(mangaId, coverUrl)
+                Log.d("TAG", "getImageUri: $s")
+                s
+            }
+
+            Sources.MANGADEX -> {
+                val s = mangadexRepo.getImageUri(mangaId, coverUrl)
+                Log.d("TAG", "getImageUri: $s")
+                s
+            }
+            Sources.ALL -> {
+                Log.d("TAG", "getImageUri: no source detected")
+                ""}
         }
     }
 
@@ -108,7 +120,9 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         try {
             val file = File(context.filesDir, "backup_mangadex.txt")
             val file2 = File(context.filesDir, "backup_manganato.txt")
-            return "\"mangadex\" : {${file.readText()} \n \"manganato\": {${file2.readText()}}"
+            Log.d("TAG", "getBackUpFromFile: ${file2.readText()}")
+            return "{\"mangadex\" : ${file.readText()}, \n \"manganato\": ${file2.readText()}\n}"
+            //
         } catch (e : Exception){
             Log.e("TAG", "error getting backup Instance $e")
             return ""
@@ -127,6 +141,12 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     suspend fun updateLibrary(){
         mangadexRepo.updateWholeLibrary()
         natoRepo.updateWholeLibrary()
+    }
+
+    fun loadFromBackUp(backup: String){
+        val backups = JsonParser().parse(backup).asJsonObject
+        natoRepo.restoreBackup(backups.get("manganato").toString())
+        mangadexRepo.restoreBackup(backups.get("mangadex").toString())
     }
 
     suspend fun downloadChapter(mangaId: String, chapterId: String){

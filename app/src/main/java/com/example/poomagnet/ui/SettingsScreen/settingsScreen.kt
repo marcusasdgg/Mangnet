@@ -1,6 +1,7 @@
 package com.example.poomagnet.ui.SettingsScreen
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
 
     // Function to write to the file
     fun writeToFile(uri: Uri, content: String) {
+        Log.d("TAG", "writeToFile: ")
         try {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.write(content.toByteArray())
@@ -52,13 +54,33 @@ fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
         }
     }
 
+    fun readFromFile(uri: Uri): String {
+        val contentResolver = context.contentResolver
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            val content = inputStream.bufferedReader().use { it.readText() }
+            vm.restoreBackup(content)
+        }
+        return ""
+    }
+
     val createFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("plain/text")
     ) { uri: Uri? ->
         fileUri = uri
         writeToFile(fileUri!!, vm.getBackUp())
     }
-    Column(modifier = modifier.fillMaxSize().verticalScroll(scrollState), horizontalAlignment = Alignment.CenterHorizontally) {
+
+    val readFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        fileUri = uri
+        readFromFile(uri ?: return@rememberLauncherForActivityResult)
+    }
+
+
+    Column(modifier = modifier
+        .fillMaxSize()
+        .verticalScroll(scrollState), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("About:")
         Spacer(Modifier.height(20.dp))
         Text("Version: beta 0.5")
@@ -90,6 +112,11 @@ fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
                 "increasing the overall stability of this app, notifications when the manga is updated and the support of different sources to search manga for. as well as customization options")
         Button(onClick = { createFileLauncher.launch("backup.txt") }) {
             Text("Backup App!")
+        }
+        Button(onClick = {
+            readFileLauncher.launch(arrayOf("application/json", "text/plain"))
+        }) {
+            Text("restore App!")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
