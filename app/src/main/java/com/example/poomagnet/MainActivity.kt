@@ -1,21 +1,10 @@
 package com.example.poomagnet
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -29,19 +18,28 @@ import java.util.concurrent.TimeUnit
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ActivityCompat.requestPermissions(this,
-            listOf(Manifest.permission.MANAGE_EXTERNAL_STORAGE).toTypedArray(),
-            PackageManager.PERMISSION_GRANTED);
         enableEdgeToEdge()
         setContent {
             AppTheme {
-                App()
+                App(activityResultLauncher)
             }
         }
 
 
         scheduleDailyWorker()
     }
+
+    private val activityResultLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()){ isGranted ->
+            // Handle Permission granted/rejected
+            if (isGranted) {
+                // Permission is granted
+            } else {
+                // Permission is denied
+            }
+        }
+
 
     private fun scheduleDailyWorker() {
         val workRequest = PeriodicWorkRequestBuilder<MyWorker>(1, TimeUnit.DAYS)

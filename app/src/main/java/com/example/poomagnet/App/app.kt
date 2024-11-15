@@ -1,8 +1,10 @@
 package com.example.poomagnet.App
 
-import android.Manifest
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.activity.result.ActivityResultLauncher
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -33,14 +35,14 @@ import com.example.poomagnet.ui.UpdateScreen.UpdateScreen
 import com.example.poomagnet.ui.UpdateScreen.UpdateTopBar
 import com.example.poomagnet.ui.UpdateScreen.updateViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun App() {
+fun App(activityResultLauncher: ActivityResultLauncher<String>) {
 
     val viewModel: AppViewModel = viewModel()
     val uiState = viewModel.uiState.collectAsState().value
@@ -51,9 +53,6 @@ fun App() {
     val updateViewModel: updateViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
-    val notificationPermission = rememberPermissionState(
-        permission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
-    )
 
 
     val simpleBack: () -> Unit = { viewModel.viewModelScope.launch {
@@ -157,7 +156,7 @@ fun App() {
                 }
             })
             ScreenType.Settings -> {
-               SettingsScreen(Modifier.padding(innerPadding), settingsViewModel)
+               SettingsScreen(Modifier.padding(innerPadding), settingsViewModel, activityResultLauncher)
             }
             ScreenType.MangaSpecific -> {
                 viewModel.hideBotBar(true)

@@ -103,7 +103,7 @@ fun MangaScreen(modifier: Modifier = Modifier, mangaViewModel: MangaSpecificView
                     Modifier
                         .weight(1.8f)
                         .fillMaxHeight()) {
-                    if (uiState.currentManga?.inLibrary == true && !uiState.currentManga!!.coverArtUrl.startsWith("https://")){
+                    if (uiState.currentManga?.inLibrary == true ){
                         Log.d("TAG", "MangaScreen: in library mode")
                         var image by remember { mutableStateOf("")}
                         LaunchedEffect(uiState.currentManga!!.inLibrary) {

@@ -1,9 +1,13 @@
 package com.example.poomagnet.ui.SettingsScreen
 
+import android.Manifest
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,8 +35,18 @@ fun SettingsTopBar(){
     TopAppBar(title = {Text("Settings")})
 }
 
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
+fun SettingsScreen(
+    modifier: Modifier = Modifier,
+    vm: SettingsViewModel,
+    activityResultLauncher: ActivityResultLauncher<String>
+){
+    val noteLuancher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { e->
+        Log.d("TAG", "SettingsScreen: $e givem")
+    }
+
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
@@ -114,7 +128,10 @@ fun SettingsScreen(modifier: Modifier = Modifier, vm: SettingsViewModel){
             Text("Backup App!")
         }
         Button(onClick = {
-            readFileLauncher.launch(arrayOf("application/json", "text/plain"))
+           readFileLauncher.launch(arrayOf("application/json", "text/plain"))
+            activityResultLauncher.launch(
+                Manifest.permission.READ_MEDIA_IMAGES
+            )
         }) {
             Text("restore App!")
         }
