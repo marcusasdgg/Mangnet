@@ -1,5 +1,6 @@
 package com.example.poomagnet.ui.UpdateScreen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.MangaRepositoryManager
@@ -21,6 +22,7 @@ class updateViewModel @Inject constructor(
         val list = repo.newUpdatedChapters
         val newMap: MutableMap<String, MutableList<SlimChapter>> = mutableMapOf()
         for (i in list){
+            Log.d("TAG", "syncLibrary: $i")
             if (newMap.contains(i.first.toString())){
                 newMap[i.first.toString()]!!.add(i.second)
             } else {

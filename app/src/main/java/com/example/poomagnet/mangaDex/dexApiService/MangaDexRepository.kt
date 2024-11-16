@@ -458,6 +458,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
     suspend fun getChapters(manga: MangaInfo): MangaInfo {
         val TAG = "TAG"
         val id = manga.id
+        Log.d("TAG", "getChapters: ${manga.chapterList}")
         try {
             val responses = mutableListOf(apiService.getChapterList(id,0))
             val totalChapters = responses[0]["total"] as Double
@@ -518,9 +519,8 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
             for (i in chapterObjects){
                 if (!list.any{e -> e.id == i.id}){
                     list.add(i)
-                    if (manga.chapterList !== null){
+                    if (manga.chapterList?.isNotEmpty() == true && manga.inLibrary){
                         newUpdatedChapters.add(Pair(SimpleDate(), SlimChapter.fromChapter(i, manga)))
-                        newUpdatedChapters.add(Pair(SimpleDate(),SlimChapter.fromChapter(i,manga)))
                     }
                 }
             }
