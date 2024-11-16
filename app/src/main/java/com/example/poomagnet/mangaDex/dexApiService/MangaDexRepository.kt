@@ -214,7 +214,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
                 semaphore.withPermit {
                     val result = downloadService.downloadContent(mangaId, chapterId, content) // This returns a String
 
-                    if ((index + 1) % 5 != 0) {
+                    if ((index + 1) % 10 != 0) {
                         delay(1000L / 10)
                     }
                     result

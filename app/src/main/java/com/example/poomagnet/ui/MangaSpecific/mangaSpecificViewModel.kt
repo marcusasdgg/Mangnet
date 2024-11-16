@@ -469,10 +469,11 @@ class MangaWorker @AssistedInject constructor(
         return try {
             repo.downloadChapter(mangaId, id)
             Result.success()
-        } catch (e: Exception) {
+        } catch (e: NullPointerException) {
             Log.d("TAG", "doWork: $e")
-            Result.failure()
+            Result.retry()
         }
+        return Result.failure()
     }
 }
 
