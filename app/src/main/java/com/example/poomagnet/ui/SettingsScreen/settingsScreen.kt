@@ -27,7 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import bt.dht.DHTConfig
+import bt.dht.DHTModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +90,16 @@ fun SettingsScreen(
         writeToFile(fileUri!!, vm.getBackUp())
     }
 
+    val torrentFileLuancher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("*/*")
+    ) { uri: Uri? ->
+        uri?.let {
+            CoroutineScope(Dispatchers.IO).launch{
+                vm.tryDownload(it,"magnet:?xt=urn:btih:8690ACEB262802B0B9E27A2D18C5EDC1325D42D2&dn=Men+in+Black%3A+International+%282019%29+%5BWEBRip%5D+%5B1080p%5D+%5BYTS%5D+%5BYIFY%5D&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.com%3A2710%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce")
+            }
+        }
+    }
+
     val readFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -127,6 +143,7 @@ fun SettingsScreen(
         Button(onClick = { createFileLauncher.launch("backup.txt") }) {
             Text("Backup App!")
         }
+
         Button(onClick = {
            readFileLauncher.launch(arrayOf("application/json", "text/plain"))
             activityResultLauncher.launch(
@@ -138,5 +155,19 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Button(onClick = {
+            torrentFileLuancher.launch("")
+        }) {
+            Text("torrent Test App!")
+        }
     }
 }
+
+
+// enable bootstrapping from public routers
+var dhtModule = DHTModule(object : DHTConfig() {
+    override fun shouldUseRouterBootstrap(): Boolean {
+        return true
+    }
+})
+

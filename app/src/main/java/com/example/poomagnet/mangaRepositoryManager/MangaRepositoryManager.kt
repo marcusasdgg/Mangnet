@@ -172,7 +172,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                 Log.d("TAG", "downloadChapter: dex")
                 mangadexRepo.downloadChapter(mangaId,chapterId)
             }
-            else -> {}
+            else -> {Log.d("TAG", "downloadChapter: nothing? $mangaId, $chapterId")}
         }
     }
 
@@ -183,6 +183,10 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
             Sources.MANGADEX -> mangadexRepo.retrieveImageContent(mangaId,chapterId,url)
             else -> ""
         }
+    }
+
+    fun getContext(): Context {
+        return mangadexRepo.context
     }
 }
 

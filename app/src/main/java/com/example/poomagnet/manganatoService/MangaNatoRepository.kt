@@ -615,7 +615,9 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
         // Launch all download tasks asynchronously
         for (i in chapterContents) {
+
             val deferred = async(Dispatchers.IO) {
+
                 downloadService.downloadContent(mangaId, chapterId, i, "https://chapmanganato.to/$mangaId/$chapterId") // This returns a String
             }
             deferredList.add(Pair(deferred, false))
@@ -629,7 +631,9 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
         val chapterS = library.first { e -> e.id == mangaId }.chapterList?.first { e -> e.id == chapterId }
         val chapterContents = getChapterContents(chapterS!!, mangaId).contents?.imagePaths
         var list: List<String> = listOf()
+
         coroutineScope {
+            Log.d("TAG", "downloadChapterConcurrently: https://chapmanganato.to/$mangaId/$chapterId")
             val lists = downloadChapterConcurrently(chapterContents!!, mangaId, chapterId)
             list = lists.map { (deferred) ->
                 deferred.await()  // Await the result and pair it with the flag

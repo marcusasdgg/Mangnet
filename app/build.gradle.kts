@@ -5,8 +5,12 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
-android {
 
+
+android {
+    packaging {
+        resources.merges.add("META-INF/DEPENDENCIES")
+    }
     namespace = "com.example.poomagnet"
     compileSdk = 34
 
@@ -106,6 +110,11 @@ dependencies {
     implementation("org.jsoup:jsoup:1.18.1")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
+
+
+    implementation("com.github.atomashpolskiy:bt-core:1.10")
+    implementation("com.github.atomashpolskiy:bt-dht:1.10")
+    implementation("com.github.atomashpolskiy:bt-http-tracker-client:1.10")
 
 
 }

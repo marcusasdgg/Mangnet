@@ -417,7 +417,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
 
 
     suspend fun downloadChapter(chapterId: String, mangaId: String){
-        Log.d("TAG", "downloadChapter: ")
+        Log.d("TAG", "downloadChapter: $chapterId, $mangaId")
         val inputData = Data.Builder()
             .putString("mangaId", mangaId)
             .putString("chapterId", chapterId)
@@ -465,10 +465,12 @@ class MangaWorker @AssistedInject constructor(
         // Retrieve parameters
         val mangaId = inputData.getString("mangaId") ?: return  Result.failure()
         val id = inputData.getString("chapterId") ?: return  Result.failure()
+        Log.d("TAG", "doWork: ")
         return try {
             repo.downloadChapter(mangaId, id)
             Result.success()
         } catch (e: Exception) {
+            Log.d("TAG", "doWork: $e")
             Result.failure()
         }
     }

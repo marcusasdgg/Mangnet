@@ -60,7 +60,7 @@ data class BackUpInstance(
 //need to store, chapter and volume name
 
 
-class MangaDexRepository @Inject constructor(private val context: Context, private val downloadService: DownloadService)  {
+class MangaDexRepository @Inject constructor(val context: Context, private val downloadService: DownloadService)  {
     private val apiService = RetrofitInstance.api
     private var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>> = mutableListOf()
 
@@ -206,7 +206,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
         chapterId: String
     ): List<Pair<Deferred<String>, Boolean>> {  //
         val deferredList = mutableListOf<Pair<Deferred<String>, Boolean>>()
-        val semaphore = Semaphore(15)
+        val semaphore = Semaphore(5)
 
 
         for ((index,content) in chapterContents.withIndex()) {
@@ -214,7 +214,7 @@ class MangaDexRepository @Inject constructor(private val context: Context, priva
                 semaphore.withPermit {
                     val result = downloadService.downloadContent(mangaId, chapterId, content) // This returns a String
 
-                    if ((index + 1) % 10 != 0) {
+                    if ((index + 1) % 5 != 0) {
                         delay(1000L / 10)
                     }
                     result
