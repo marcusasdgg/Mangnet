@@ -34,7 +34,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
                                                   @ApplicationContext private val context: Context) : ViewModel() {
     private val _uiState = MutableStateFlow(mangaUiState())
     val uiState: StateFlow<mangaUiState> = _uiState
-    private val mangaDexRepository = repo.getMangaDexRepo()
+
     fun selectCurrentManga(manga: MangaInfo?){
         if (manga == null){ //shouldnt happen?
             _uiState.update{
@@ -309,7 +309,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
         val currentManga = uiState.value.currentManga
         if (currentManga !== null && currentManga.inLibrary ){
             Log.d("TAG", "updateLibraryEquivalent: updating library\n${currentManga}")
-            mangaDexRepository.updateInLibrary(currentManga)
+            repo.updateInLibrary(currentManga)
         }
     }
 
@@ -446,7 +446,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
     }
 
     suspend fun loadContentimage(mangaId: String, chapterId: String, url: String): String{
-        return mangaDexRepository.retrieveImageContent(mangaId, chapterId, url)
+        return repo.retrieveImageContent(mangaId, chapterId, url)
     }
 
 

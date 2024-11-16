@@ -673,5 +673,34 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
         return true
     }
 
+    suspend fun updateInLibrary(manga: MangaInfo){
+        library = library.map { elm ->
+            if (manga.id == elm.id){
+                val oldChapters = elm.chapterList?.toMutableList()
+                manga.chapterList?.forEach { t ->
+                    if (!oldChapters?.any{ e -> e.id == t.id }!!){
+                        oldChapters.add(t)
+                    } else {
+                        val old = oldChapters.indexOfFirst { m -> m.id == t.id }
+                        if (old != -1){
+                            if (t.finished){
+                                oldChapters[old] = t
+                            }
+                        }
+                    }
+                }
+                manga.copy(chapterList = oldChapters ?: listOf())
+            }else {
+                elm
+            }
+        }.toMutableSet()
+
+        backUpManga()
+    }
+
+    suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String): String{
+        return downloadService.retrieveMangaImage(mangaId, chapterId, url).toString()
+    }
+
 }
 //val res = natoApi.getInfo(innerUrl)

@@ -149,6 +149,17 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         mangadexRepo.restoreBackup(backups.get("mangadex").toString())
     }
 
+    suspend fun updateInLibrary(manga: MangaInfo){
+        val source = getBelongedRepo(manga.id)
+        when (source){
+            Sources.MANGANATO -> natoRepo.updateInLibrary(manga)
+            Sources.MANGADEX -> mangadexRepo.updateInLibrary(manga)
+            else -> throw(IllegalArgumentException())
+        }
+
+    }
+
+
     suspend fun downloadChapter(mangaId: String, chapterId: String){
 
         val source = getBelongedRepo(mangaId)
@@ -162,6 +173,15 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                 mangadexRepo.downloadChapter(mangaId,chapterId)
             }
             else -> {}
+        }
+    }
+
+    suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String): String {
+        val source = getBelongedRepo(mangaId)
+        return when(source){
+            Sources.MANGANATO -> natoRepo.retrieveImageContent(mangaId,chapterId,url)
+            Sources.MANGADEX -> mangadexRepo.retrieveImageContent(mangaId,chapterId,url)
+            else -> ""
         }
     }
 }
