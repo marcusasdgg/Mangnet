@@ -53,8 +53,34 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         }
     }
 
-    private suspend fun addImageToFolder(folderName: String, imageName: String, imageUrl: String, refererUrl: String = ""): Uri?{
+    private suspend fun addImageToFolder(folderName: String, imageName: String, imageUrl: String, refererUrl: String = "", mangaId: String): Uri?{
         val customDate = 946684800000
+
+        //check if iamge exists first.
+        val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ? AND ${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf(imageName, "%${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId%")
+
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID, // The ID of the image
+            MediaStore.Images.Media.DISPLAY_NAME, // The display name (file name)
+            MediaStore.Images.Media.RELATIVE_PATH // The relative path to the file (in this case, "Pictures/")
+        )
+
+        resolver.query(folderDirectory, projection, selection, selectionArgs, sortOrder)?.use {
+            cursor ->
+            if (cursor.moveToFirst()){
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val id = cursor.getLong(idColumn)
+
+                // Create the URI for the image using the ID
+                return Uri.withAppendedPath(folderDirectory, id.toString())
+            }
+
+        }
+
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "$imageName.jpeg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
@@ -63,6 +89,8 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
             put(MediaStore.Images.Media.DATE_ADDED, customDate / 1000) // DATE_ADDED expects seconds
             put(MediaStore.Images.Media.DATE_MODIFIED, customDate / 1000) // DATE_MODIFIED expects seconds
         }
+
+
         //Log.d("TAG", "addImageToFolder: sending request to $imageUrl")
         val image = downloadImage(imageUrl, refererUrl)
 
@@ -106,7 +134,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
 
     suspend fun downloadCoverUrl(mangaId: String, url: String): String {
-        val image = addImageToFolder(mangaId, mangaId, url)
+        val image = addImageToFolder(mangaId, mangaId, url, mangaId = mangaId)
         if (image !== null){
             return "$mangaId.jpeg"
         } else {
@@ -116,7 +144,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
 
     suspend fun downloadContent(mangaId: String, chapterId: String, url: String, refererUrl: String = ""): String{
-        val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url, refererUrl)
+        val image = addImageToFolder("$mangaId/$chapterId",url.split("/").last().substringBeforeLast("."), url, refererUrl, mangaId)
         if (image !== null){
 //            Log.d("TAG", "downloadContent: storing image name as ${
 //                url.split("/").last()}")
