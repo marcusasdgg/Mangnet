@@ -181,7 +181,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
             element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
             } ?: listOf())
-        }
+        }.toMutableSet()
         val file = File(context.filesDir, "backup_mangadex.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
@@ -189,7 +189,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
                 OutputStreamWriter(fos).use { writer ->
                     // Write the data to the file
                     writer.write(
-                        gsonSerializer.toJson(BackUpInstance(library, idSet, newUpdatedChapters, tagMap))
+                        gsonSerializer.toJson(BackUpInstance(libraryShouldBe, idSet, newUpdatedChapters, tagMap))
                     )
                 }
             }
@@ -197,6 +197,15 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
         withContext(Dispatchers.IO) {
             printBackUp()
         }
+    }
+
+    fun backUpMangaString(): String{
+        val libraryShouldBe = library.map {element ->
+            element.copy(chapterList = element.chapterList?.map { chapter ->
+                chapter.copy(contents = null)
+            } ?: listOf())
+        }.toMutableSet()
+        return gsonSerializer.toJson(BackUpInstance(libraryShouldBe, idSet, newUpdatedChapters, tagMap))
     }
 
 

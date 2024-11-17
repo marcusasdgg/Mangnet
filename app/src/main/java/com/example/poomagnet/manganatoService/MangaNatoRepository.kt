@@ -151,7 +151,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
             } ?: listOf())
-        }
+        }.toMutableSet()
         val file = File(context.filesDir, "backup_manganato.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
@@ -159,12 +159,23 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 OutputStreamWriter(fos).use { writer ->
                     // Write the data to the file
                     writer.write(
-                        gsonSerializer.toJson(BackUpInstance(library, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei))
+                        gsonSerializer.toJson(BackUpInstance(libraryShouldBe, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei))
                     )
                 }
             }
             Log.d("TAG", "backUpManga: success")
         }
+    }
+
+    fun backUpMangaString(): String{
+        Log.d("TAG", "commencing backup: ${library.map { e -> e.chapterList }}")
+
+        val libraryShouldBe = library.map {element ->
+            element.copy(chapterList = element.chapterList?.map { chapter ->
+                chapter.copy(contents = null)
+            } ?: listOf())
+        }.toMutableSet()
+        return gsonSerializer.toJson(BackUpInstance(libraryShouldBe, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei))
     }
 
     suspend fun searchAllManga(title: String, page: Int = 1, ordering: String, demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String) : Pair<List<MangaInfo>,Int>{

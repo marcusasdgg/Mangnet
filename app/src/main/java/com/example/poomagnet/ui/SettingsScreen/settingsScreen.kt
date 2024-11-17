@@ -1,6 +1,5 @@
 package com.example.poomagnet.ui.SettingsScreen
 
-import android.Manifest
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -146,20 +145,13 @@ fun SettingsScreen(
 
         Button(onClick = {
            readFileLauncher.launch(arrayOf("application/json", "text/plain"))
-            activityResultLauncher.launch(
-                Manifest.permission.READ_MEDIA_IMAGES
-            )
+            // reset/download thumbnails again. todo
         }) {
             Text("restore App!")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            torrentFileLuancher.launch("")
-        }) {
-            Text("torrent Test App!")
-        }
     }
 }
 

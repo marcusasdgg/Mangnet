@@ -5,7 +5,6 @@ import android.util.Log
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.manganatoService.MangaNatoRepository
 import com.google.gson.JsonParser
-import java.io.File
 import javax.inject.Inject
 
 //central manager of all managa source repositories, will improve structure later
@@ -118,10 +117,9 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
 
     fun getBackUpFromFile(): String {
         try {
-            val file = File(context.filesDir, "backup_mangadex.txt")
-            val file2 = File(context.filesDir, "backup_manganato.txt")
-            Log.d("TAG", "getBackUpFromFile: ${file2.readText()}")
-            return "{\"mangadex\" : ${file.readText()}, \n \"manganato\": ${file2.readText()}\n}"
+            val file = mangadexRepo.backUpMangaString()
+            val file2 = natoRepo.backUpMangaString()
+            return "{\"mangadex\" : ${file}, \n \"manganato\": ${file2}\n}"
             //
         } catch (e : Exception){
             Log.e("TAG", "error getting backup Instance $e")
