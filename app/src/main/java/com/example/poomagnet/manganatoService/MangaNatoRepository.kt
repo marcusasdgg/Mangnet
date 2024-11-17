@@ -640,6 +640,9 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     suspend fun downloadChapter(mangaId: String, chapterId: String):Boolean{
         val nameList: MutableList<Pair<String,Boolean>> = mutableListOf()
         val chapterS = library.first { e -> e.id == mangaId }.chapterList?.first { e -> e.id == chapterId }
+        if (chapterS?.contents is ChapterContents.Downloaded){
+            return true
+        }
         val chapterContents = getChapterContents(chapterS!!, mangaId).contents?.imagePaths
         var list: List<String> = listOf()
 
