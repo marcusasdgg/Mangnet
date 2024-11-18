@@ -168,16 +168,19 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         )
 
         resolver.query(folderDirectory, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
-            if (cursor.moveToFirst()) {
+            while (cursor.moveToNext()) {
                 // Get the ID of the image file
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
                 val id = cursor.getLong(idColumn)
+                val relativePathColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
+                val displayNameColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                val relativePath = cursor.getString(relativePathColumn)
 
-                // Create the URI for the image using the ID
-                return Uri.withAppendedPath(folderDirectory, id.toString())
-            } else {
-                Log.d("TAG", "retrieveImage: no image found with name $name in path ${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId/$chapterId")
-                return null
+                if (relativePath.endsWith("$mangaId/$chapterId/")) {
+                    return Uri.withAppendedPath(folderDirectory, id.toString())
+                }
             }
         }
         Log.d("TAG", "retrieveImage: no image found with name $name")
@@ -215,10 +218,7 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     }
 
-    private suspend fun addChapter(folderName: String, imageNames: List<String>): Boolean{
 
-        return false
-    }
 
 
 }
