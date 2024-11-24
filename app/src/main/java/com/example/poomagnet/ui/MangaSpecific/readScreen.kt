@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
@@ -122,10 +124,12 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
 @Composable
 fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String){
     val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.Black)
+            .verticalScroll(scrollState)
             , contentAlignment = Alignment.Center){
         if (ifDownloaded){
             Log.d("TAG", "ImageView: loading image")
@@ -139,8 +143,8 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                     .crossfade(true)
                     .build(),
                 contentDescription = "Image",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxWidth()
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth().fillMaxHeight()
             )
         }else {
             AsyncImage(
@@ -150,8 +154,8 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                     .crossfade(true)
                     .build(),
                 contentDescription = "Image",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxWidth()
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth().fillMaxHeight()
             )
         }
         Box(
