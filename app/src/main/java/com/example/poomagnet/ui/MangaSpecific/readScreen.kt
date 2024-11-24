@@ -131,6 +131,28 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
             .background(Color.Black)
             .verticalScroll(scrollState)
             , contentAlignment = Alignment.Center){
+        Box(
+            Modifier
+                .align(Alignment.CenterStart)
+                .fillMaxHeight()
+                .fillMaxWidth(0.35f)
+                .clickable { leftZone(coroutineScope.coroutineContext) })
+        Box(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .fillMaxWidth(0.35f)
+                .clickable { rightZone(coroutineScope.coroutineContext) })
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .fillMaxHeight()
+                .fillMaxWidth(0.3f)
+                .clickable(
+                    onClick = { onClick() },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() })
+        )
         if (ifDownloaded){
             Log.d("TAG", "ImageView: loading image")
             var image by remember { mutableStateOf("")}
@@ -158,28 +180,7 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                 modifier = Modifier.fillMaxWidth().fillMaxHeight()
             )
         }
-        Box(
-            Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxHeight()
-                .fillMaxWidth(0.35f)
-                .clickable { leftZone(coroutineScope.coroutineContext) })
-        Box(
-            Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .fillMaxWidth(0.35f)
-                .clickable { rightZone(coroutineScope.coroutineContext) })
-        Box(
-            Modifier
-                .align(Alignment.Center)
-                .fillMaxHeight()
-                .fillMaxWidth(0.3f)
-                .clickable(
-                    onClick = { onClick() },
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() })
-        )
+
     }
 }
 
