@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -52,6 +53,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -64,6 +68,7 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -125,34 +130,46 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
 fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String){
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+
+    //Box(
+    //            Modifier
+    //                .align(Alignment.CenterStart)
+    //                .fillMaxHeight()
+    //                .fillMaxWidth(0.35f)
+    //                .clickable { leftZone(coroutineScope.coroutineContext) })
+    //        Box(
+    //            Modifier
+    //                .align(Alignment.CenterEnd)
+    //                .fillMaxHeight()
+    //                .fillMaxWidth(0.35f)
+    //                .clickable { rightZone(coroutineScope.coroutineContext) })
+    //        Box(
+    //            Modifier
+    //                .align(Alignment.Center)
+    //                .fillMaxHeight()
+    //                .fillMaxWidth(0.3f)
+    //                .clickable(
+    //                    onClick = { onClick() },
+    //                    indication = null,
+    //                    interactionSource = remember { MutableInteractionSource() })
+    //        )
+    //.verticalScroll(scrollState)
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.Black)
             .verticalScroll(scrollState)
+            .pointerInput(Unit) { // Allow pointer input to be detected
+                detectVerticalScrollWithZones(
+                    scrollState,
+                    coroutineScope,
+                    leftZone,
+                    rightZone,
+                    onClick
+                )
+            }
             , contentAlignment = Alignment.Center){
-        Box(
-            Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxHeight()
-                .fillMaxWidth(0.35f)
-                .clickable { leftZone(coroutineScope.coroutineContext) })
-        Box(
-            Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .fillMaxWidth(0.35f)
-                .clickable { rightZone(coroutineScope.coroutineContext) })
-        Box(
-            Modifier
-                .align(Alignment.Center)
-                .fillMaxHeight()
-                .fillMaxWidth(0.3f)
-                .clickable(
-                    onClick = { onClick() },
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() })
-        )
+
         if (ifDownloaded){
             Log.d("TAG", "ImageView: loading image")
             var image by remember { mutableStateOf("")}
@@ -166,7 +183,9 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                     .build(),
                 contentDescription = "Image",
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth().fillMaxHeight()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
             )
         }else {
             AsyncImage(
@@ -177,7 +196,9 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                     .build(),
                 contentDescription = "Image",
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth().fillMaxHeight()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
             )
         }
 
@@ -675,3 +696,54 @@ suspend fun preloadImage(context: Context, imageUrl: String) {
         val result = imageLoader.enqueue(request)
     }
 }
+
+ private suspend fun PointerInputScope.detectVerticalScrollWithZones(
+     scrollState: ScrollState,
+     coroutineScope: CoroutineScope,
+     leftZone: (CoroutineContext) -> Unit,
+     rightZone: (CoroutineContext) -> Unit,
+     centerClick: () -> Unit
+ ) {
+     awaitPointerEventScope {
+         while (true) {
+             val event = awaitPointerEvent()
+             val change = event.changes.firstOrNull() ?: continue
+
+             if (change.pressed) {
+                 val dragAmount = change.positionChange().y
+                 if (dragAmount != 0f) {
+                     Log.d("TAG", "drag detected")
+                     scrollState.dispatchRawDelta(dragAmount) // Allow scrolling
+                     change.consume()
+                     continue
+                 }
+                 val position = change.position
+                 val width = size.width
+
+                 // Detect a tap gesture
+                 if (!event.changes.any { it.isConsumed }) {
+                     Log.d("TAG", "detectVerticalScrollWithZones: click detected")
+                     when {
+                         position.x < width * 0.35f -> {
+                             Log.d("TAG", "detectVerticalScrollWithZones: click on left")
+                             leftZone(coroutineScope.coroutineContext) // Left zone click
+                         }
+                         position.x > width * 0.65f -> {
+                             Log.d("TAG", "detectVerticalScrollWithZones: click on right")
+                             rightZone(coroutineScope.coroutineContext) // Right zone click
+                         }
+                         else -> {
+                             Log.d("TAG", "detectVerticalScrollWithZones: click on center")
+                             centerClick() // Center zone click
+                         }
+                     }
+                 }
+                 change.consume()
+
+                 // Handle scroll gestures by passing them to the scroll state
+
+
+             }
+         }
+     }
+ }
