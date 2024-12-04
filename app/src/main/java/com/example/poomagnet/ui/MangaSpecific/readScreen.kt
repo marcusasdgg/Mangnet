@@ -126,8 +126,9 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String){
+fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String, pagerState: PagerState){
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
@@ -165,7 +166,8 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                     coroutineScope,
                     leftZone,
                     rightZone,
-                    onClick
+                    onClick,
+                    pagerState
                 )
             }
             , contentAlignment = Alignment.Center){
@@ -334,7 +336,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                             }
                                         }
                                     }
-                                }, ifDownloaded = false, loadImage = {""}, refereUrl = viewModel.getRefererUrl())}
+                                }, ifDownloaded = false, loadImage = {""}, refereUrl = viewModel.getRefererUrl(), pagerState)}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
@@ -447,7 +449,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                         val s = viewModel.loadContentimage(uiState.currentManga!!.id ,uiState.currentChapter!!.id, elm)
                                         Log.d("TAG", "ReadScreen: $s")
                                         s
-                                    }, "")}
+                                    }, "", pagerState)}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
@@ -697,12 +699,14 @@ suspend fun preloadImage(context: Context, imageUrl: String) {
     }
 }
 
+ @OptIn(ExperimentalFoundationApi::class)
  private suspend fun PointerInputScope.detectVerticalScrollWithZones(
      scrollState: ScrollState,
      coroutineScope: CoroutineScope,
      leftZone: (CoroutineContext) -> Unit,
      rightZone: (CoroutineContext) -> Unit,
-     centerClick: () -> Unit
+     centerClick: () -> Unit,
+     pagerState: PagerState
  ) {
      awaitPointerEventScope {
          while (true) {
@@ -711,12 +715,20 @@ suspend fun preloadImage(context: Context, imageUrl: String) {
 
              if (change.pressed) {
                  val dragAmount = change.positionChange().y
-                 if (dragAmount != 0f) {
+                 val xdragAmount = change.positionChange().x
+                 if (dragAmount != 0f || xdragAmount != 0f) {
+                     if (dragAmount != 0f){
+                         scrollState.dispatchRawDelta(-dragAmount) // Allow scrolling
+                         change.consume()
+                         continue
+                     }
+                     if (xdragAmount != 0f){
+                         continue
+                     }
                      Log.d("TAG", "drag detected")
-                     scrollState.dispatchRawDelta(dragAmount) // Allow scrolling
-                     change.consume()
-                     continue
                  }
+
+
                  val position = change.position
                  val width = size.width
 
