@@ -9,6 +9,7 @@ Mangnet is a Android native manga reading app inspired by Tachiyomi (RIP 🙏), 
 # Installation
 The releases are able to be found in the releases tab of this repository but notable releases will be linked below:
 - Beta release 0.5 - [Mangnet.apk](https://github.com/marcusasdgg/Mangnet/releases/download/v1.0.106/app-release.apk)
+- Official release 1.1 [Mangnet.apk](https://github.com/marcusasdgg/Mangnet/releases/tag/v1.1)
 
 # License
 [MIT](https://choosealicense.com/licenses/mit/)
@@ -18,10 +19,12 @@ The releases are able to be found in the releases tab of this repository but not
 - filtering manga listings by tag/genres via Mangadex
 - filtering manga listings via content rating and Target Demographic via Mangadex
 - Reading chapters via Mangadex
+- Extra Source support Manganato, supports same features of Mangadex
 - Downloading chapters to storage for offline reading
 - offline searching and filtering of library.
 - periodic as well as forced updates to check for new chapters in library
 - Storing manga reading history for easy continuation of reading.
+- Manwhua/long form reading support.
 
 # App design
 <img src="Screenshot_20240927_155353_pooMAgnet.jpg" alt="Alt text" width="390" height="800"/>
