@@ -15,6 +15,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,6 +85,7 @@ import kotlin.coroutines.CoroutineContext
 fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel, pagerState: PagerState, context: Context, list: MutableState<List<@Composable () -> Unit>>){
 
     val uiState by viewModel.uiState.collectAsState()
+    val sstate = rememberScrollState();
 
     LaunchedEffect(pagerState, pagerState.pageCount) {
         snapshotFlow { pagerState.currentPageOffsetFraction}.collect { offset ->
@@ -121,7 +123,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
     }
 
 
-    HorizontalPager(pagerState, modifier.fillMaxSize()) { page ->
+    HorizontalPager(pagerState, modifier.fillMaxSize().verticalScroll(sstate)) { page ->
         list.value[page]()
     }
 }
@@ -130,47 +132,35 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
 @Composable
 fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String, pagerState: PagerState){
     val coroutineScope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
 
-    //Box(
-    //            Modifier
-    //                .align(Alignment.CenterStart)
-    //                .fillMaxHeight()
-    //                .fillMaxWidth(0.35f)
-    //                .clickable { leftZone(coroutineScope.coroutineContext) })
-    //        Box(
-    //            Modifier
-    //                .align(Alignment.CenterEnd)
-    //                .fillMaxHeight()
-    //                .fillMaxWidth(0.35f)
-    //                .clickable { rightZone(coroutineScope.coroutineContext) })
-    //        Box(
-    //            Modifier
-    //                .align(Alignment.Center)
-    //                .fillMaxHeight()
-    //                .fillMaxWidth(0.3f)
-    //                .clickable(
-    //                    onClick = { onClick() },
-    //                    indication = null,
-    //                    interactionSource = remember { MutableInteractionSource() })
-    //        )
-    //.verticalScroll(scrollState)
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .verticalScroll(scrollState)
-            .pointerInput(Unit) { // Allow pointer input to be detected
-                detectVerticalScrollWithZones(
-                    scrollState,
-                    coroutineScope,
-                    leftZone,
-                    rightZone,
-                    onClick,
-                    pagerState
-                )
+            .pointerInput(Unit) {
+                detectTapGestures { offset ->
+                    val screenWidth = size.width
+                    when {
+                        offset.x < screenWidth * 0.35f -> {
+                            // Left zone
+                            leftZone(coroutineScope.coroutineContext)
+                        }
+
+                        offset.x < screenWidth * 0.65f -> {
+                            // Center zone
+                            onClick()
+                        }
+
+                        else -> {
+                            // Right zone
+                            rightZone(coroutineScope.coroutineContext)
+                        }
+                    }
+                }
             }
-            , contentAlignment = Alignment.Center){
+        , contentAlignment = Alignment.Center){
+
+
 
         if (ifDownloaded){
             Log.d("TAG", "ImageView: loading image")
@@ -186,8 +176,7 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                 contentDescription = "Image",
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
+                    .fillMaxSize()
             )
         }else {
             AsyncImage(
@@ -199,12 +188,49 @@ fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Un
                 contentDescription = "Image",
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
+                    .fillMaxSize()
             )
         }
-
+//        Box(
+//            Modifier
+//                .align(Alignment.CenterStart)
+//                .fillMaxHeight()
+//                .fillMaxWidth(0.35f)
+//                .background(Color.Red.copy(alpha = 0.3f)) // Add a semi-transparent background for visibility
+//                .border(2.dp, Color.White) // Change border color to white for contrast
+//                .clickable { leftZone() }
+//                .zIndex(1f)
+//        )
+//
+//        // Right zone with border
+//        Box(
+//            Modifier
+//                .align(Alignment.CenterEnd)
+//                .fillMaxHeight()
+//                .fillMaxWidth(0.35f)
+//                .background(Color.Green.copy(alpha = 0.3f)) // Semi-transparent green for visibility
+//                .border(2.dp, Color.White)
+//                .zIndex(1f)
+//                .clickable { rightZone(coroutineScope.coroutineContext) }
+//        )
+//
+//        // Center zone with border
+//        Box(
+//            Modifier
+//                .align(Alignment.Center)
+//                .fillMaxHeight()
+//                .fillMaxWidth(0.3f)
+//                .background(Color.Blue.copy(alpha = 0.3f)) // Semi-transparent blue
+//                .border(2.dp, Color.White)
+//                .zIndex(1f)
+//                .clickable(
+//                    onClick = { onClick() },
+//                    indication = null,
+//                    interactionSource = remember { MutableInteractionSource() }
+//                )
+//        )
     }
+
 }
 
 // Needed when disabling the indication
@@ -722,10 +748,9 @@ suspend fun preloadImage(context: Context, imageUrl: String) {
                          change.consume()
                          continue
                      }
-                     if (xdragAmount != 0f){
-                         continue
-                     }
-                     Log.d("TAG", "drag detected")
+
+                     Log.d("TAG", "drag detected horizontal detected")
+                     continue
                  }
 
 
