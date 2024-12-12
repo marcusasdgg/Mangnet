@@ -88,6 +88,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
     val sstate = rememberScrollState();
 
     LaunchedEffect(pagerState, pagerState.pageCount) {
+
         snapshotFlow { pagerState.currentPageOffsetFraction}.collect { offset ->
             if (pagerState.currentPage == pagerState.pageCount-2 && offset > 0f) {
                 Log.d("TAG", "ReadingScreen: is last page scroll")
@@ -116,6 +117,7 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
                     viewModel.markThisAsDone()
                 }
                 Log.d("TAG", "ReadingScreen: changing to ${pagerState.pageCount}")
+                sstate.scrollTo(0)
                 viewModel.setPage(pagerState.currentPage+1)
             }
         }
@@ -123,7 +125,10 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
     }
 
 
-    HorizontalPager(pagerState, modifier.fillMaxSize().verticalScroll(sstate)) { page ->
+    HorizontalPager(pagerState,
+        modifier
+            .fillMaxSize()
+            .verticalScroll(sstate)) { page ->
         list.value[page]()
     }
 }
