@@ -82,7 +82,7 @@ import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel, pagerState: PagerState, context: Context, list: MutableState<List<@Composable () -> Unit>>){
+fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel, pagerState: PagerState, context: Context, list: MutableState<List<@Composable () -> Unit>>, leftZone:(CoroutineContext) -> Unit, rightZone: (CoroutineContext) -> Unit, onClick: () -> Unit){
 
     val uiState by viewModel.uiState.collectAsState()
     val sstate = rememberScrollState();
@@ -123,46 +123,47 @@ fun ReadingScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewMod
         }
 
     }
+    val coroutineScope = rememberCoroutineScope()
 
+    Box(Modifier.background(Color.Black).pointerInput(Unit) {
+        detectTapGestures { offset ->
+            val screenWidth = size.width
+            when {
+                offset.x < screenWidth * 0.35f -> {
+                    // Left zone
+                    leftZone(coroutineScope.coroutineContext)
+                }
 
-    HorizontalPager(pagerState,
-        modifier
-            .fillMaxSize()
-            .verticalScroll(sstate)) { page ->
-        list.value[page]()
+                offset.x < screenWidth * 0.65f -> {
+                    // Center zone
+                    onClick()
+                }
+
+                else -> {
+                    // Right zone
+                    rightZone(coroutineScope.coroutineContext)
+                }
+            }
+        }
+    }){
+        HorizontalPager(pagerState,
+            modifier = modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .verticalScroll(sstate)) { page ->
+            list.value[page]()
+        }
     }
+
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ImageView(modifier: Modifier = Modifier, imageUrl: String, onClick: () -> Unit, context: Context, leftZone:  (CoroutineContext) -> Unit, rightZone:(CoroutineContext) -> Unit, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String, pagerState: PagerState){
+fun ImageView(modifier: Modifier = Modifier, imageUrl: String, context: Context, ifDownloaded: Boolean, loadImage: suspend ()->String, refereUrl: String){
     val coroutineScope = rememberCoroutineScope()
-
     Box(
-        Modifier
+        modifier
             .fillMaxSize()
-            .background(Color.Black)
-            .pointerInput(Unit) {
-                detectTapGestures { offset ->
-                    val screenWidth = size.width
-                    when {
-                        offset.x < screenWidth * 0.35f -> {
-                            // Left zone
-                            leftZone(coroutineScope.coroutineContext)
-                        }
-
-                        offset.x < screenWidth * 0.65f -> {
-                            // Center zone
-                            onClick()
-                        }
-
-                        else -> {
-                            // Right zone
-                            rightZone(coroutineScope.coroutineContext)
-                        }
-                    }
-                }
-            }
         , contentAlignment = Alignment.Center){
 
 
@@ -325,49 +326,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                         viewModel.toggleHomeBar(false)
                                         viewModel.toggleReadBar(false)
                                     }
-                                    ImageView(Modifier, imageUrl = elm, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
-                                    viewModel.viewModelScope.launch {
-                                        if (pagerState.currentPage >= pagerState.pageCount - 2){
-                                            if (uiState.nextChapter == null){
-                                                viewModel.markThisAsDone()
-                                                viewModel.getNextChapter(context = context)
-                                                viewModel.loadNextChapter()
-                                                pagerState.scrollToPage(0)
-                                            } else {
-                                                viewModel.markThisAsDone()
-                                                viewModel.loadNextChapter()
-                                                viewModel.setFlag(true)
-                                                pagerState.scrollToPage(0)
-                                            }
-                                        } else {
-                                            withContext(its){
-                                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                                                viewModel.setPage(pagerState.currentPage + 1)
-                                            }
-                                        }
-                                    }
-                                }, { its ->
-                                    viewModel.viewModelScope.launch(Dispatchers.Main) {
-                                        if (pagerState.currentPage == 0){
-                                            if (uiState.previousChapter == null){
-                                                viewModel.markThisAsDone()
-                                                viewModel.getPreviousChapter(context)
-                                                viewModel.loadPreviousChapter()
-                                                pagerState.scrollToPage(0)
-                                            } else {
-                                                viewModel.markThisAsDone()
-                                                viewModel.loadPreviousChapter()
-                                                viewModel.setFlag(true)
-                                                pagerState.scrollToPage(0)
-                                            }
-                                        } else {
-                                            withContext(its) {
-                                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                                                viewModel.setPage(pagerState.currentPage - 1)
-                                            }
-                                        }
-                                    }
-                                }, ifDownloaded = false, loadImage = {""}, refereUrl = viewModel.getRefererUrl(), pagerState)}
+                                    ImageView(modifier.fillMaxSize(), imageUrl = elm, context, ifDownloaded = false, loadImage = {""}, refereUrl = viewModel.getRefererUrl())}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
@@ -377,7 +336,7 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                 returner()
                             }
                             Log.d("TAG", "ReadScreen has : ${firstList.size}")
-                            list.value = firstList + { endScreen(Modifier, "End of Chapter", "",
+                            list.value = firstList + { endScreen(Modifier.fillMaxSize(), "End of Chapter", "",
                                 {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()},
                                 { its ->
                                     viewModel.viewModelScope.launch(Dispatchers.Main) {
@@ -434,53 +393,11 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
                                         viewModel.toggleHomeBar(false)
                                         viewModel.toggleReadBar(false)
                                     }
-                                    ImageView(Modifier, imageUrl = elm, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, context, { its ->
-                                        viewModel.viewModelScope.launch {
-                                            if (pagerState.currentPage >= pagerState.pageCount - 2){
-                                                if (uiState.nextChapter == null){
-                                                    viewModel.markThisAsDone()
-                                                    viewModel.getNextChapter(context = context)
-                                                    viewModel.loadNextChapter()
-                                                    pagerState.scrollToPage(0)
-                                                } else {
-                                                    viewModel.markThisAsDone()
-                                                    viewModel.loadNextChapter()
-                                                    viewModel.setFlag(true)
-                                                    pagerState.scrollToPage(0)
-                                                }
-                                            } else {
-                                                withContext(its){
-                                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                                                    viewModel.setPage(pagerState.currentPage + 1)
-                                                }
-                                            }
-                                        }
-                                    }, { its ->
-                                        viewModel.viewModelScope.launch(Dispatchers.Main) {
-                                            if (pagerState.currentPage == 0){
-                                                if (uiState.previousChapter == null){
-                                                    viewModel.markThisAsDone()
-                                                    viewModel.getPreviousChapter(context)
-                                                    viewModel.loadPreviousChapter()
-                                                    pagerState.scrollToPage(0)
-                                                } else {
-                                                    viewModel.markThisAsDone()
-                                                    viewModel.loadPreviousChapter()
-                                                    viewModel.setFlag(true)
-                                                    pagerState.scrollToPage(0)
-                                                }
-                                            } else {
-                                                withContext(its) {
-                                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                                                    viewModel.setPage(pagerState.currentPage - 1)
-                                                }
-                                            }
-                                        }
-                                    }, ifDownloaded = true, loadImage = {
+                                    ImageView(Modifier, imageUrl = elm, context, ifDownloaded = true, loadImage = {
                                         val s = viewModel.loadContentimage(uiState.currentManga!!.id ,uiState.currentChapter!!.id, elm)
                                         Log.d("TAG", "ReadScreen: $s")
                                         s
-                                    }, "", pagerState)}
+                                    }, "")}
                             }
                             if (firstList.size == 0){
                                 //inject warning for now but who cares.
@@ -580,7 +497,49 @@ fun ReadScreen(modifier: Modifier = Modifier, viewModel: MangaSpecificViewModel,
         bottomBar = { MangaBotBar(Modifier,viewModel, { pagerState.scrollToPage(0) })}
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()){
-            ReadingScreen(Modifier.fillMaxSize(), viewModel, pagerState,context, list)
+            ReadingScreen(Modifier.fillMaxSize(), viewModel, pagerState,context, list,  { its ->
+                viewModel.viewModelScope.launch {
+                    if (pagerState.currentPage >= pagerState.pageCount - 2){
+                        if (uiState.nextChapter == null){
+                            viewModel.markThisAsDone()
+                            viewModel.getNextChapter(context = context)
+                            viewModel.loadNextChapter()
+                            pagerState.scrollToPage(0)
+                        } else {
+                            viewModel.markThisAsDone()
+                            viewModel.loadNextChapter()
+                            viewModel.setFlag(true)
+                            pagerState.scrollToPage(0)
+                        }
+                    } else {
+                        withContext(its){
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            viewModel.setPage(pagerState.currentPage + 1)
+                        }
+                    }
+                }
+            }, onClick = {viewModel.toggleReadBar() ; viewModel.toggleHomeBar()}, rightZone = { its ->
+                viewModel.viewModelScope.launch(Dispatchers.Main) {
+                    if (pagerState.currentPage == 0){
+                        if (uiState.previousChapter == null){
+                            viewModel.markThisAsDone()
+                            viewModel.getPreviousChapter(context)
+                            viewModel.loadPreviousChapter()
+                            pagerState.scrollToPage(0)
+                        } else {
+                            viewModel.markThisAsDone()
+                            viewModel.loadPreviousChapter()
+                            viewModel.setFlag(true)
+                            pagerState.scrollToPage(0)
+                        }
+                    } else {
+                        withContext(its) {
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                            viewModel.setPage(pagerState.currentPage - 1)
+                        }
+                    }
+                }
+            })
             if (uiState.currentPage <= (uiState.currentChapter?.pageCount?.toInt() ?: 0)){
                 Text("${uiState.currentPage}/${uiState.currentChapter?.pageCount?.toInt()}",
                     Modifier
