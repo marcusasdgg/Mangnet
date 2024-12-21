@@ -10,6 +10,7 @@ Mangnet is a Android native manga reading app inspired by Tachiyomi (RIP 🙏), 
 The releases are able to be found in the releases tab of this repository but notable releases will be linked below:
 - Beta release 0.5 - [Mangnet.apk](https://github.com/marcusasdgg/Mangnet/releases/download/v1.0.106/app-release.apk)
 - Official release 1.1 [Mangnet.apk](https://github.com/marcusasdgg/Mangnet/releases/tag/v1.1)
+- Official release 1.4 (bug fixes) [Mangnet.apk](https://github.com/marcusasdgg/Mangnet/releases/tag/v1.1.4)
 
 # License
 [MIT](https://choosealicense.com/licenses/mit/)
