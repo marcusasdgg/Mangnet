@@ -447,34 +447,47 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             fun hasNumber(string: String): Boolean {
                 return Regex(".*\\d.*").containsMatchIn(string)
             }
-
+        Log.d("TAG", "getChapters: ${chapterSoup.size} found")
+        var ttt = 0
             for (ch in chapterSoup) {
+                Log.d("TAG", "getChapters: found $ttt chapter $ch")
+
                 val chapterUrl = ch.getElementsByTag("a").first().attr("href").toString()
                 var chapString =
                     ch.getElementsByTag("a").first().text().replace("-", " ").replace(":", " ")
                         .replace("Vol.", "Vol ")
-                val chapterId = chapterUrl.split("/").last()
 
+                Log.d("TAG", "chapString derived: $chapString")
+                val chapterId = chapterUrl.split("/").last()
+                Log.d("TAG", "chapterId derived $chapterId")
                 val stream = ByteArrayInputStream(chapString.toByteArray())
                 val scanner = Scanner(stream)
-
+                Log.d("TAG", "scanner worked")
                 val vol = if (chapString.contains("Vol ")) {
-                    scanner.next()
-                    scanner.nextInt().toDouble()
+                    try {
+                        scanner.next()
+                        scanner.nextInt().toDouble()
+                    }catch (e: Exception){
+                        e.printStackTrace()
+                        -1.0
+                    }
                 } else {
                     -1.0
                 }
-
+                Log.d("TAG", "getChapters: $ttt vol scanned to be $vol")
                 val chapter = if (chapString.contains("Chapter")) {
                     try {
                         scanner.next()
                         scanner.nextDouble()
                     } catch (e: Exception) {
+                        Log.d("TAG", "getChapters: chapter number failed")
                         if (scanner.hasNextInt()) scanner.nextInt().toDouble() else -1.0
                     }
                 } else {
                     -1.0
                 }
+
+                Log.d("TAG", "getChapters: $ttt ch scanned to be $chapter")
 
                 val type = "whothefuckcares"
                 val title = if (scanner.hasNext()) scanner.next() else ""
@@ -504,37 +517,39 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                     val day = soupyDoup.substring(4, 6)
                     val year = "20" + soupyDoup.substring(7, 9)
                     val date = SimpleDate(day.toInt(), month, year.toInt())
-
+                    val temp = Chapter(
+                        title,
+                        chapterId,
+                        vol,
+                        chapter,
+                        group,
+                        type,
+                        pageCount.toDouble(),
+                        null,
+                        date
+                    )
+                    Log.d("TAG", "getChapters: adding chapter $temp ")
                     chapArr.add(
-                        Chapter(
-                            title,
-                            chapterId,
-                            vol,
-                            chapter,
-                            group,
-                            type,
-                            pageCount.toDouble(),
-                            null,
-                            date
-                        )
+                        temp
                     )
                 }else {
                     val date = SimpleDate()
+                    val chap = Chapter(
+                        title,
+                        chapterId,
+                        vol,
+                        chapter,
+                        group,
+                        type,
+                        pageCount.toDouble(),
+                        null,
+                        date
+                    )
                     chapArr.add(
-                        Chapter(
-                            title,
-                            chapterId,
-                            vol,
-                            chapter,
-                            group,
-                            type,
-                            pageCount.toDouble(),
-                            null,
-                            date
-                        )
+                        chap
                     )
                 }
-
+                ttt++
             }
             val curChapList = manga.chapterList?.toMutableList() ?: mutableListOf()
             val list = mutableListOf<Chapter>()
@@ -555,6 +570,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 library.removeIf { elm -> elm.id == manga.id }
                 library.add(manga.copy(chapterList = list))
             }
+        Log.d("TAG", "getChapters: list contains ${list.size}")
             return manga.copy(description = description, demographic = demographic, state = state, alternateTitles = alternateTitles, chapterList = list, tagList = tagList)
 
     }
