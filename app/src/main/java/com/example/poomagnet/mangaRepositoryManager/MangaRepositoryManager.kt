@@ -52,7 +52,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                     manga
                 }
             }
-            else -> 
+            else -> {
                 try {
                 Log.d("TAG", "getChapters: mangadex")
                 mangadexRepo.getChapters(manga)
