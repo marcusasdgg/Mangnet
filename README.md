@@ -48,7 +48,9 @@ I wanted to make something that I wouldn't just throw away after making, I wante
 Overall, I hope you guys are happy with this project, if you ever have the time to provide feedback do not hesistate and email [me](marcusolachan@gmail.com)
 
 # Roadmap
-In the future I will be adding notification support as well as support for reading manga off of other sources other than mangadex.
+In the future I will be adding notification support as well as support for reading manga off of other sources other than mangadex. Also would like to increase overall stability in the app, I.e loading downloaded chapters on app start up instead of reading from storage to see if it is downloaded.
+
+Update 30th Jan 2025: manganato support and rudimentary vertical reading support.
 
 # Project Status
 Since I am the only person developing this app right now, progress will be slow as I am juggling this project and Uni at the same time.
