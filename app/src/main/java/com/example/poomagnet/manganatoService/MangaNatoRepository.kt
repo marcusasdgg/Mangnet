@@ -34,7 +34,7 @@ import java.util.Scanner
 import javax.inject.Inject
 
 data class BackUpInstance(
-    val library: MutableSet<MangaInfo>,
+    val library: MutableList<MangaInfo>,
     val idSet: MutableSet<String>,
     var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>>,
     val tagMap: MutableMap<Tag,Int>,
@@ -58,8 +58,8 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     private var shoujo = 0;
     private var seinen = 0;
     private var josei = 0;
-    var library: MutableSet<MangaInfo> = mutableSetOf()
-    var idSet: MutableSet<String> = mutableSetOf()
+    var library: MutableList<MangaInfo> = mutableListOf()
+    private var idSet: MutableSet<String> = mutableSetOf()
     private var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>> = mutableListOf()
 
     fun getNewUpdatedChapters(): List<Pair<SimpleDate, SlimChapter>>{
@@ -90,6 +90,9 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
     init {
         loadMangaFromBackup(context)
+        library = library.map { manga ->
+            searchDownloaded(manga)
+        }.toMutableList()
         initTags()
     }
 
@@ -151,7 +154,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
             } ?: listOf())
-        }.toMutableSet()
+        }.toMutableList()
         val file = File(context.filesDir, "backup_manganato.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
@@ -174,7 +177,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = null)
             } ?: listOf())
-        }.toMutableSet()
+        }.toMutableList()
         return gsonSerializer.toJson(BackUpInstance(libraryShouldBe, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei))
     }
 
@@ -727,13 +730,25 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
             }else {
                 elm
             }
-        }.toMutableSet()
+        }.toMutableList()
 
         backUpManga()
     }
 
     suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String): String{
         return downloadService.retrieveMangaImage(mangaId, chapterId, url).toString()
+    }
+
+    private fun searchDownloaded(manga: MangaInfo): MangaInfo { //: MangaInfo
+        val list = manga.chapterList?.map { ch ->
+            val list  = downloadService.checkDownloaded(manga.id, ch.id)
+            if (list.size != ch.pageCount.toInt()) {
+                Log.d("TAG", "searchDownloaded: ${ch.chapter} does not match with the file contents.")
+            }
+            val contents = ChapterContents.Downloaded(list,false)
+            return@map ch.copy(contents = contents)
+        }
+        return manga.copy(chapterList = list)
     }
 
 }

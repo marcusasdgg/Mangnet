@@ -24,7 +24,6 @@ import javax.inject.Inject
 class SearchViewModel @Inject constructor(
     private val repo: MangaRepositoryManager
 ) : ViewModel() {
-    private val mangaDexRepository = repo.getMangaDexRepo()
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState
 

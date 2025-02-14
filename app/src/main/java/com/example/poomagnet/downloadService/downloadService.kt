@@ -218,6 +218,31 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
 
     }
 
+    fun checkDownloaded(mangaId: String, chapterId: String): List<String> {
+        //query the mangaid/chapterid for how many images in folder, if doesn't exist return 0.
+        val folderDirectory = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val selection = "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf("%${Environment.DIRECTORY_PICTURES}/$APPFOLDERNAME/$mangaId/$chapterId%")
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID, // The ID of the image
+            MediaStore.Images.Media.DISPLAY_NAME, // The display name (file name)
+        )
+
+        val list = mutableListOf<String>()
+        resolver.query(folderDirectory, projection, selection, selectionArgs, sortOrder)?.use { c ->
+            val idColumn = c.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+
+            while (c.moveToNext()) { // Move first before accessing data
+                list.add(c.getString(idColumn))
+            }
+        }
+        if (list.isNotEmpty()){
+            Log.d("TAG", "checkDownloaded: $chapterId has downloaded images")
+        }
+        return list
+    }
+
 
 
 

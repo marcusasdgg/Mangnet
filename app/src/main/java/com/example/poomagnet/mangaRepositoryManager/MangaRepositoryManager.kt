@@ -8,6 +8,10 @@ import com.google.gson.JsonParser
 import javax.inject.Inject
 
 //central manager of all managa source repositories, will improve structure later
+// future improvements:
+// make in-memory manga lists stable - switch off set.
+// add a feature that on startup reads all downloaded files and sets downloaded or not downloaded.
+// do file retrievals with a special itty bitty service like download service but called file service or something.
 
 class MangaRepositoryManager @Inject constructor( private val mangadexRepo: MangaDexRepository, private val context: Context, private val natoRepo: MangaNatoRepository) {
     val newUpdatedChapters:  List<Pair<SimpleDate,SlimChapter>>

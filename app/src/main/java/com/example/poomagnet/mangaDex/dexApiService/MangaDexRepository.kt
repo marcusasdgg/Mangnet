@@ -40,8 +40,8 @@ import javax.inject.Inject
 
 
 data class BackUpInstance(
-    val library: MutableSet<MangaInfo>,
-    val idSet: MutableSet<String>,
+    val library: MutableList<MangaInfo>,
+    var idSet: MutableSet<String> = mutableSetOf(),
     var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>>,
     val tagMap: MutableMap<Tag,String>
 )
@@ -76,6 +76,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
         idSet = r.idSet
         newUpdatedChapters = r.newUpdatedChapters
     }
+
     private val gsonSerializer = GsonBuilder()
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
@@ -86,20 +87,38 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
 
     //local persistence is so much easier now, i just backup
 
-    var library: MutableSet<MangaInfo> = mutableSetOf()
-    private var idSet: MutableSet<String> = mutableSetOf()
+    var library: MutableList<MangaInfo> = mutableListOf()
 
     private var tagMap: MutableMap<Tag,String> = mutableMapOf()
+    private var idSet: MutableSet<String> = mutableSetOf()
 
 
     init {
         loadMangaFromBackup(context)
+        // after loading all mangas from backup we next devise a function which takes from download service.
+        library = library.map { manga ->
+            searchDownloaded(manga)
+        }.toMutableList()
         setupTags()
     }
 
     suspend fun getImageUri(mangaId: String, coverUrl: String): String{
         Log.d("TAG", "getImageUri: with mangaId $mangaId, and coverurl $coverUrl")
         return downloadService.retrieveImage(mangaId,coverUrl).toString()
+    }
+
+    // given a manga search to see chapters downloaded and return back a list of all downloaded chapters.
+    // for now forgo the error correction where backup says not downloaded but is.
+    private fun searchDownloaded(manga: MangaInfo): MangaInfo { //: MangaInfo
+        val list = manga.chapterList?.map { ch ->
+            val list  = downloadService.checkDownloaded(manga.id, ch.id)
+            if (list.size != ch.pageCount.toInt()) {
+                Log.d("TAG", "searchDownloaded: ${ch.chapter} does not match with the file contents.")
+            }
+            val contents = ChapterContents.Downloaded(list,false)
+            return@map ch.copy(contents = contents)
+        }
+        return manga.copy(chapterList = list)
     }
 
     private fun setupTags(){
@@ -161,7 +180,6 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
                 val listType = object : TypeToken<BackUpInstance>() {}.type
                 val r: BackUpInstance = gsonSerializer.fromJson(jsonString, listType)
                 library = r.library
-                idSet = r.idSet
                 newUpdatedChapters = r.newUpdatedChapters
                 //tagMap = r.tagMap
                 Log.d("TAG", "loadMangaFromBackup initalize: $newUpdatedChapters")
@@ -181,7 +199,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
             element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
             } ?: listOf())
-        }.toMutableSet()
+        }.toMutableList()
         val file = File(context.filesDir, "backup_mangadex.txt")
         withContext(Dispatchers.IO) {
             FileOutputStream(file).use { fos ->
@@ -204,7 +222,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
             element.copy(chapterList = element.chapterList?.map { chapter ->
                 chapter.copy(contents = null)
             } ?: listOf())
-        }.toMutableSet()
+        }.toMutableList()
         return gsonSerializer.toJson(BackUpInstance(libraryShouldBe, idSet, newUpdatedChapters, tagMap))
     }
 
@@ -624,9 +642,10 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
         }
     }
 
+
+    // function which given a new manga entry replaces the one with the same id.
     suspend fun updateInLibrary(manga: MangaInfo){
         Log.d("TAG", "updateInLibrary: receieved $manga")
-        val currentDate = SimpleDate()
         library = library.map { elm ->
             if (manga.id == elm.id){
                 val oldChapters = elm.chapterList?.toMutableList()
@@ -646,7 +665,11 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
             }else {
                 elm
             }
-        }.toMutableSet()
+        }.toMutableList()
+
+        // get pointer to manga in library.
+
+
 
         backUpManga()
     }
