@@ -239,6 +239,8 @@ public class DownloadService @Inject constructor(@ApplicationContext val context
         }
         if (list.isNotEmpty()){
             Log.d("TAG", "checkDownloaded: $chapterId has downloaded images")
+        } else {
+            Log.d("TAG", "checkDownloaded: $chapterId is online")
         }
         return list
     }

@@ -742,8 +742,8 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
     private fun searchDownloaded(manga: MangaInfo): MangaInfo { //: MangaInfo
         val list = manga.chapterList?.map { ch ->
             val list  = downloadService.checkDownloaded(manga.id, ch.id)
-            if (ch.contents is ChapterContents.Online) {
-                Log.d("TAG", "searchDownloaded: ${ch.chapter} is online")
+            if (list.isEmpty()) {
+                Log.d("TAG", "searchDownloaded: ${ch.chapter} is online there fore has  ${list.size} images")
                 return@map ch
             }
             if (list.size != ch.pageCount.toInt()) {
