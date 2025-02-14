@@ -112,7 +112,8 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
     private fun searchDownloaded(manga: MangaInfo): MangaInfo { //: MangaInfo
         val list = manga.chapterList?.map { ch ->
             val list  = downloadService.checkDownloaded(manga.id, ch.id)
-            if (list.isEmpty()) {
+            if (ch.contents is ChapterContents.Online) {
+                Log.d("TAG", "searchDownloaded: ${ch.chapter} is online")
                 return@map ch
             }
             if (list.size != ch.pageCount.toInt()) {
