@@ -10,6 +10,7 @@ import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.manganatoService.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 data class BackUpInstance (
     val library: MutableList<MangaInfo>,
@@ -32,15 +33,20 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
     private var idSet: MutableSet<String> = mutableSetOf()
 
     init {
+        // call restoreBackup
+        setupTags()
 
     }
 
     private fun setupTags(){
-    CoroutineScope(Dispatchers.IO){
-        try {
-            val response = apiService.getTagList()
+        CoroutineScope(Dispatchers.IO).launch{
+            try {
+                val response = apiService.getTagList()
+
+            } catch (e: Exception){
+
+            }
         }
-    }
     }
 
     // functions to implement TODO:
