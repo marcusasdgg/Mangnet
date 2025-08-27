@@ -6,22 +6,26 @@ import retrofit2.http.Query
 import retrofit2.http.Url
 
 interface mickService {
-    @GET("advanced_search?s=all")
-    suspend fun mangaSearchSimple(
-        @Query("keyw") title: String?,
-        @Query("page") offset: Int,
-        @Query("orby") orderBy: String?,
-        @Query("g_i") includedTags: String?,
-        @Query("g_e") excludedTags: String?,
-        @Query("sts") status: String?
-    ): String
+    // gets all tags slugified
+    @GET("genre/")
+    suspend fun getTagList() : Map<String, Any?>
 
-    @GET("https://manganato.com/genre-all")
-    suspend fun tagInit(): String
+    @GET("/v1.0/search/")
+    suspend fun searchAllManga(
+        @Query("q") search: String,
+        @Query("genres") genres: List<String>?,
+        @Query("excludes") genre_excludes: List<String>?,
+        @Query("tags") tags: List<String>?,
+        @Query("excluded-tags") excluded_tags: List<String>?,
+        @Query("demographic") demo: List<Int>?,
+        @Query("page") page: Int,
+        @Query("content_rating") contentRating: String,
+        @Query("sort") sortBy: String,
+    )
 
-    @GET
-    suspend fun getInfo(@Url mangaUrl : String): String
+    @GET("/comic/{HID}/chapters?lang=en")
+    suspend fun getChapterList(@Path("HID") id: String, @Query("limit") limit: Int, @Query("page") page: Int)
 
-    @GET("https://chapmanganato.to/{mangaId}/{chapterId}")
-    suspend fun getChapterPages(@Path("mangaId") mangaId: String, @Path("chapterId") chapterId: String) : String
+    @GET("/chapter/{HID}?tachiyomi=true")
+    suspend fun getChapterPagesInfo(@Path("HID") chapterId: String) : Map<String,Any>?
 }

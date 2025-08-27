@@ -3,15 +3,19 @@ package com.example.poomagnet.comickService
 import android.content.Context
 import com.example.poomagnet.downloadService.DownloadService
 import javax.inject.Inject
-import com.example.poomagnet.comickService.retroFitInstance
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.SimpleDate
+import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.Tag
+import com.example.poomagnet.manganatoService.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
-data class BackUpInstance {
-
-
-
-}
+data class BackUpInstance (
+    val library: MutableList<MangaInfo>,
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>>,
+    val tagMap: MutableMap<Tag, String>
+)
 
 // essence of a repository is that
 // it provides a few features:
@@ -19,12 +23,37 @@ data class BackUpInstance {
 // some of teh most important functions we need are to be able to search for manga based on tags
 // download chapters, add chapters to library.
 class ComickRepository @Inject constructor(val context: Context, private val downloadService: DownloadService){
-    private val apiService = retroFitInstance.api
+    private val apiService = retrofitInstance.api
     // comicks api works interestingly
     // tags work using a string instead of int like manganato
 
     private var tagMap: MutableMap<Tag, Int> = mutableMapOf()
     val library: MutableList<MangaInfo> = mutableListOf()
+    private var idSet: MutableSet<String> = mutableSetOf()
+
+    init {
+
+    }
+
+    private fun setupTags(){
+    CoroutineScope(Dispatchers.IO){
+        try {
+            val response = apiService.getTagList()
+        }
+    }
+    }
+
+    // functions to implement TODO:
+    // loadmangaFromBackup
+    // updateWholeLibrary
+    // restorBackup
+    // backupManga
+    // searchAllManga
+    // getChapters
+    // updateInLibarry
+    // downloadChapter
+    // getNewUpdatedChapters
+
 
 
 
