@@ -9,5 +9,5 @@ object retroFitInstance {
         .baseUrl("https://api.mangadex.org")
         .build()
 
-    val api:
+    val api: mickService = retrofit.create(mickService::class.java)
 }
