@@ -2,15 +2,14 @@ package com.example.poomagnet.comickService
 
 import android.content.Context
 import com.example.poomagnet.downloadService.DownloadService
-import javax.inject.Inject
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.Tag
-import com.example.poomagnet.manganatoService.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class BackUpInstance (
     val library: MutableList<MangaInfo>,

@@ -1,16 +1,18 @@
 package com.example.poomagnet.comickService
 
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.Path
 import retrofit2.http.Query
-import retrofit2.http.Url
 
 interface mickService {
     // gets all tags slugified
-    @GET("genre/")
+    @GET("genre/?tachiyomi=true")
+    @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
     suspend fun getTagList() : Map<String, Any?>
 
-    @GET("/v1.0/search/")
+    @GET("/v1.0/search/?tachiyomi=true")
+    @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
     suspend fun searchAllManga(
         @Query("q") search: String,
         @Query("genres") genres: List<String>?,
@@ -21,11 +23,13 @@ interface mickService {
         @Query("page") page: Int,
         @Query("content_rating") contentRating: String,
         @Query("sort") sortBy: String,
-    )
+    ) : Map<String, Any?>
 
-    @GET("/comic/{HID}/chapters?lang=en")
-    suspend fun getChapterList(@Path("HID") id: String, @Query("limit") limit: Int, @Query("page") page: Int)
+    @GET("/comic/{HID}/chapters?lang=en&tachiyomi=true")
+    @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
+    suspend fun getChapterList(@Path("HID") id: String, @Query("limit") limit: Int, @Query("page") page: Int) : Map<String, Any?>
 
     @GET("/chapter/{HID}?tachiyomi=true")
+    @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
     suspend fun getChapterPagesInfo(@Path("HID") chapterId: String) : Map<String,Any>?
 }

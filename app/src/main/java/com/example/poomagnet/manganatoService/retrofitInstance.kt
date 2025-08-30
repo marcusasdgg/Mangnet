@@ -17,7 +17,7 @@ object RetrofitInstance {
     private val retrofit: Retrofit = Retrofit.Builder()
         .client(client) // attach the custom OkHttpClient
         .addConverterFactory(ScalarsConverterFactory.create())
-        .baseUrl("https://manganato.com")
+        .baseUrl("https://natomanga.com")
         .build()
 
     val api: natoService = retrofit.create(natoService::class.java)

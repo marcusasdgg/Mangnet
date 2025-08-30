@@ -1,40 +1,41 @@
 package com.example.poomagnet.comickService
 
+import okhttp3.CipherSuite.Companion.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+import okhttp3.CipherSuite.Companion.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+import okhttp3.CipherSuite.Companion.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+import okhttp3.ConnectionSpec
+import okhttp3.OkHttpClient
+import okhttp3.TlsVersion
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.security.KeyStore
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
-import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
-object retrofitInstance {
 
-    private fun getTrustManager(): X509TrustManager {
-        val trustManagerFactory = TrustManagerFactory.getInstance(
-            TrustManagerFactory.getDefaultAlgorithm()
-        )
-        trustManagerFactory.init(null as KeyStore?)
-        val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
-        return trustManagers.first { it is X509TrustManager } as X509TrustManager
-    }
+    object retrofitInstance {
 
-    private fun getTLS13Client(): OkHttpClient {
-        val trustManager = getTrustManager()
-        val sslContext = SSLContext.getInstance("TLSv1.3")
-        sslContext.init(null, arrayOf<TrustManager>(trustManager), null)
+        private fun createClient() : OkHttpClient {
+            val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                .tlsVersions(TlsVersion.TLS_1_3)
+                .cipherSuites(
+                    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+                    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+                    TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+                )
+                .build()
 
-        return OkHttpClient.Builder()
-            .sslSocketFactory(sslContext.socketFactory, trustManager)
+            return OkHttpClient.Builder()
+                .connectionSpecs(listOf(spec, ConnectionSpec.CLEARTEXT)) // allow TLS + HTTP
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build()
+
+        }
+
+        private val retrofit: Retrofit = Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .baseUrl("https://api.comick.fun")
             .build()
+
+        val api: mickService = retrofit.create(mickService::class.java)
     }
-
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(getTLS13Client())
-        .baseUrl("https://api.comick.fun")
-        .build()
-
-    val api: mickService = retrofit.create(mickService::class.java)
-}

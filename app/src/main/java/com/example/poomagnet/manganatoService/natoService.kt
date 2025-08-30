@@ -16,13 +16,13 @@ interface natoService {
         @Query("sts") status: String?
     ): String
 
-    @GET("https://manganato.com/genre-all")
+    @GET("https://natomanga.com/genre-all")
     suspend fun tagInit(): String
 
     @GET
     suspend fun getInfo(@Url mangaUrl : String): String
 
-    @GET("https://chapmanganato.to/{mangaId}/{chapterId}")
+    @GET("https://chapmaneganato.to/{mangaId}/{chapterId}")
     suspend fun getChapterPages(@Path("mangaId") mangaId: String, @Path("chapterId") chapterId: String) : String
 
 }
