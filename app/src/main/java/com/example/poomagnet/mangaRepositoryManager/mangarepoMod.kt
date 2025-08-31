@@ -1,6 +1,7 @@
 package com.example.poomagnet.mangaRepositoryManager
 
 import android.content.Context
+import com.example.poomagnet.comickService.ComickRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.manganatoService.MangaNatoRepository
 import dagger.Module
@@ -14,7 +15,7 @@ import javax.inject.Singleton
 object mangaRepoMod {
     @Provides
     @Singleton
-    fun provideImageSearchRepository(repo: MangaDexRepository, context: Context, natoRepository: MangaNatoRepository): MangaRepositoryManager {
-        return MangaRepositoryManager(repo, context, natoRepository)
+    fun provideImageSearchRepository(repo: MangaDexRepository, context: Context, natoRepository: MangaNatoRepository, mickRepo: ComickRepository): MangaRepositoryManager {
+        return MangaRepositoryManager(repo, natoRepository, mickRepo, context)
     }
 }

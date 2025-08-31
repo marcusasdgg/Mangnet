@@ -9,21 +9,20 @@ interface mickService {
     // gets all tags slugified
     @GET("genre/?tachiyomi=true")
     @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
-    suspend fun getTagList() : Map<String, Any?>
+    suspend fun getGenreList() : List<Map<String, Any?>>
 
-    @GET("/v1.0/search/?tachiyomi=true")
+
+    @GET("/v1.0/search/?type=comic&tachiyomi=true")
     @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
     suspend fun searchAllManga(
         @Query("q") search: String,
         @Query("genres") genres: List<String>?,
         @Query("excludes") genre_excludes: List<String>?,
-        @Query("tags") tags: List<String>?,
-        @Query("excluded-tags") excluded_tags: List<String>?,
         @Query("demographic") demo: List<Int>?,
         @Query("page") page: Int,
-        @Query("content_rating") contentRating: String,
-        @Query("sort") sortBy: String,
-    ) : Map<String, Any?>
+        @Query("content_rating") contentRating: String?,
+        @Query("sort") sortBy: String?,
+    ) : List<Map<String, Any?>>
 
     @GET("/comic/{HID}/chapters?lang=en&tachiyomi=true")
     @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")

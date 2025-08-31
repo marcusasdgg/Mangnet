@@ -133,6 +133,13 @@ fun SearchTopBar(modifier: Modifier = Modifier, searchViewModel: SearchViewModel
                             searchViewModel.dropdownSource(false)
                         }
                     )
+                    DropdownMenuItem(
+                        text = { Text("ComicK") },
+                        onClick = {
+                            searchViewModel.changeSource(Sources.COMICK)
+                            searchViewModel.dropdownSource(false)
+                        }
+                    )
                 }
             }
 

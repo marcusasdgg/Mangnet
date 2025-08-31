@@ -121,7 +121,13 @@ enum class Demographic(val msg: String){
     Shounen("shounen"),
     Shoujo("shoujo"),
     Josei("josei"),
-    Seinen("seinen")
+    Seinen("seinen");
+
+    companion object {
+        fun fromValue(value: String): Demographic? {
+            return Demographic.entries.find { it.msg.lowercase() == value.lowercase() }
+        }
+    }
 }
 
 enum class ContentRating(val msg: String){

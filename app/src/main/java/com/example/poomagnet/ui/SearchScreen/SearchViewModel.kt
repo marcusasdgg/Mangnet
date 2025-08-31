@@ -92,15 +92,15 @@ class SearchViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun executeSearch() {
-        val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
+        val res = uiState.value.sortTags.filter { it.value.first }.map { it.key to it.value.second }.first()
 
         val s = getIncludeExclude()
         Log.d("TAG", "executeSearch: tags include exclude  are $s")
         val result = uiState.value.sourceSelected.let { t ->
             repo.searchAllManga(uiState.value.searchText,
-                ordering = mapOf(res),
-                demo = getDemo().map { it.msg }.toList(),
-                rating = getContentRating().map { it.msg }.toList(),
+                ordering = res,
+                demo = getDemo(),
+                rating = getContentRating(),
                 tagsIncluded = s.first,
                 tagsExcluded = s.second,
                 source = t
@@ -158,19 +158,20 @@ class SearchViewModel @Inject constructor(
             Log.d("TAG", "continueSearch: failed as search finished")
             return
         } else {
-            val res = uiState.value.sortTags.filter { it.value.first }.map { it.key.msg to it.value.second.msg }.first()
+            val res = uiState.value.sortTags.filter { it.value.first }.map { it.key to it.value.second}.first()
             val s = getIncludeExclude()
             val offset = when(uiState.value.sourceSelected){
                 Sources.MANGANATO -> {uiState.value.pageNumber + 1}
                 Sources.MANGADEX -> {uiState.value.searchListing.size+1}
+                Sources.COMICK -> {uiState.value.pageNumber + 1}
                 Sources.ALL -> {0}
             }
             val result =  repo.searchAllManga(
                 uiState.value.searchText,
                 offSet = offset,
-                ordering = mapOf(res),
-                demo = getDemo().map { it.msg }.toList(),
-                rating = getContentRating().map { it.msg }.toList(),
+                ordering = res,
+                demo = getDemo(),
+                rating = getContentRating(),
                 tagsIncluded = s.first,
                 tagsExcluded = s.second,
                 source = uiState.value.sourceSelected

@@ -4,4 +4,5 @@ enum class Sources {
     ALL,
     MANGADEX,
     MANGANATO,
+    COMICK
 }

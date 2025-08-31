@@ -12,7 +12,10 @@ import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
 import com.example.poomagnet.mangaRepositoryManager.ChapterContentsDeserializer
 import com.example.poomagnet.mangaRepositoryManager.ChapterContentsSerializer
+import com.example.poomagnet.mangaRepositoryManager.ContentRating
+import com.example.poomagnet.mangaRepositoryManager.Demographic
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
+import com.example.poomagnet.mangaRepositoryManager.Ordering
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapter
@@ -21,6 +24,7 @@ import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
 import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
+import com.example.poomagnet.ui.SearchScreen.Direction
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -343,13 +347,15 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Map<String,String> = mapOf(), demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<String>): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
+    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Pair<Ordering, Direction>, demo: List<Demographic>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<ContentRating>): Pair<List<MangaInfo>, Int> {//search including stuff like coverpage url.
         Log.d("TAG", "searchALlManga: starting first get request")
 
         val tI = tagsIncluded.map { tagMap[it] }.toList().filterNotNull()
         val tE = tagsExcluded.map{tagMap[it]}.toList().filterNotNull()
+        val stringOrder = mapOf(ordering.first.msg to ordering.second.msg)
+        Log.d("TAG", "searchAllManga: $stringOrder")
         try {
-            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"),tI ,tE, demo, rating,ordering)
+            val s = apiService.mangaSearchSimple(title, offSet, listOf("cover_art"),tI ,tE, demo.map{it.msg}, rating.map{it.msg},stringOrder)
 
             val list: MutableList<MangaInfo> = mutableListOf()
             if (s["result"] == "ok") {

@@ -2,8 +2,10 @@ package com.example.poomagnet.mangaRepositoryManager
 
 import android.content.Context
 import android.util.Log
+import com.example.poomagnet.comickService.ComickRepository
 import com.example.poomagnet.mangaDex.dexApiService.MangaDexRepository
 import com.example.poomagnet.manganatoService.MangaNatoRepository
+import com.example.poomagnet.ui.SearchScreen.Direction
 import com.google.gson.JsonParser
 import javax.inject.Inject
 
@@ -13,7 +15,10 @@ import javax.inject.Inject
 // add a feature that on startup reads all downloaded files and sets downloaded or not downloaded.
 // do file retrievals with a special itty bitty service like download service but called file service or something.
 
-class MangaRepositoryManager @Inject constructor( private val mangadexRepo: MangaDexRepository, private val context: Context, private val natoRepo: MangaNatoRepository) {
+
+//  todo: replace demographic string list with demographic type list
+class MangaRepositoryManager @Inject constructor( private val mangadexRepo: MangaDexRepository, private val natoRepo: MangaNatoRepository, private val mickRepo: ComickRepository
+, private val context: Context) {
     val newUpdatedChapters:  List<Pair<SimpleDate,SlimChapter>>
         get() = mangadexRepo.getNewUpdatedChapters() + natoRepo.getNewUpdatedChapters()
     fun getMangaDexRepo(): MangaDexRepository {
@@ -37,11 +42,12 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         }
     }
 
-    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Map<String,String> = mapOf(), demo: List<String>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<String>, source: Sources, status: mangaState = mangaState.IN_PROGRESS) : Pair<List<MangaInfo>,Int>{
+    suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Pair<Ordering, Direction>, demo: List<Demographic>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<ContentRating>, source: Sources, status: mangaState = mangaState.IN_PROGRESS) : Pair<List<MangaInfo>,Int>{
         //title: String, page: Int = 1, ordering: String, demo: List<String> tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String
         return when(source){
             Sources.MANGADEX -> mangadexRepo.searchAllManga(title, offSet, ordering, demo, tagsIncluded, tagsExcluded, rating)
-            Sources.MANGANATO -> natoRepo.searchAllManga(title, offSet, ordering.keys.first(), demo, tagsIncluded, tagsExcluded, rating, "")
+            Sources.COMICK -> mickRepo.searchAllManga(title, offSet, ordering, demo, tagsIncluded, tagsExcluded, rating)
+            Sources.MANGANATO -> Pair(listOf(),999)
             Sources.ALL->Pair(listOf(),999)
         }
     }
@@ -56,7 +62,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                     manga
                 }
             }
-            else -> {
+            Sources.MANGADEX -> {
                 try {
                 Log.d("TAG", "getChapters: mangadex")
                 mangadexRepo.getChapters(manga)
@@ -64,11 +70,20 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                     manga
                 }
             }
+            Sources.COMICK -> {
+                try {
+                    Log.d("TAG", "getChapters: mangadex")
+                    mickRepo.getChapters(manga)
+                } catch(e: Exception){
+                    manga
+                }
+            }
+            else -> manga
         }
     }
 
     fun getLibrary(): List<MangaInfo> {
-        return mangadexRepo.library.toList() + natoRepo.library.toList()
+        return mangadexRepo.library.toList() + natoRepo.library.toList() + mickRepo.library.toList()
     }
 
     suspend fun getImageUri(mangaId: String, coverUrl: String) : String {
@@ -85,7 +100,8 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                 Log.d("TAG", "getImageUri: $s")
                 s
             }
-            Sources.ALL -> {
+
+            else -> {
                 Log.d("TAG", "getImageUri: no source detected")
                 ""}
         }
@@ -114,7 +130,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         when (source){
             Sources.MANGANATO -> {natoRepo.addToLibrary(manga)}
             Sources.MANGADEX -> {mangadexRepo.addToLibrary(manga)}
-            Sources.ALL -> return
+            else -> return
         }
     }
 
@@ -123,7 +139,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         when (source){
             Sources.MANGANATO -> {natoRepo.removeFromLibrary(manga)}
             Sources.MANGADEX -> {mangadexRepo.removeFromLibrary(manga)}
-            Sources.ALL -> return
+            else -> return
         }
     }
 
