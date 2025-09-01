@@ -20,6 +20,7 @@ import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
+import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
 import com.example.poomagnet.mangaRepositoryManager.isOnline
@@ -469,7 +470,8 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
                                         false,
                                         mutableListOf(),
                                         tags,
-                                        demographic = demographic
+                                        demographic = demographic,
+                                        source = Sources.MANGADEX
                                     )
                                 )
                                 altlist = mutableListOf()

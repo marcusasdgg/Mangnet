@@ -3,12 +3,14 @@ package com.example.poomagnet.comickService
 import android.content.Context
 import android.util.Log
 import com.example.poomagnet.downloadService.DownloadService
+import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.ContentRating
 import com.example.poomagnet.mangaRepositoryManager.Demographic
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.Ordering
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SlimChapter
+import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import com.example.poomagnet.ui.SearchScreen.Direction
@@ -49,6 +51,7 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
         setupTags()
 
     }
+
 
     private fun setupTags() {
         Log.d("TAG", "setupTags: starting up tag initialisation")
@@ -208,7 +211,8 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
                     coverArt = null,
                     offSet = offSet,
                     tagList = tagList.map { it.toString() }.toMutableList(),
-                    demographic = demographic.toString()
+                    demographic = demographic.toString(),
+                    source = Sources.COMICK
                 )
             )
         }
@@ -216,9 +220,34 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
         return Pair(mangaList, mangaList.size)
     }
 
-    fun getChapters(manga: MangaInfo): MangaInfo {
+    suspend fun getChapters(manga: MangaInfo): MangaInfo {
+        val body = apiService.getChapterList(manga.id, 5000,1)
 
-        return manga
+        val chapters: List<*> = if (body["chapters"] is List<*>) body["chapters"] as List<*> else return manga
+        Log.d("TAG", "getChapters: found ${chapters.size} chapters")
+        val foundChapters :List<Chapter> = chapters.map { ch ->
+            if (ch is Map<*,*>){
+                val title = ch["title"].toString()
+                val hid = ch["hid"].toString()
+                val chNum = ch["chap"].toString().toDoubleOrNull() ?: -1.0
+                val voNum = ch["vol"].toString().toDoubleOrNull() ?: -1.0
+                val type = "Manga"
+                val pageCount = 0.0
+
+                val groupName = "Test Group"
+                return@map Chapter(
+                    name = title,
+                    id = hid,
+                    chapter = chNum,
+                    volume = voNum,
+                    type = type,
+                    pageCount = pageCount,
+                    group = groupName
+                )
+            }
+            null
+        }.filterNotNull()
+        return manga.copy(chapterList = foundChapters)
     }
 }
 

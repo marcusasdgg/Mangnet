@@ -53,7 +53,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
     suspend fun getChapters(manga: MangaInfo) : MangaInfo{
-        return when(getBelongedRepo(manga.id)){
+        return when(manga.source){
             Sources.MANGANATO -> {
                 try {
                     Log.d("TAG", "getChapters: manganato")
@@ -72,7 +72,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
             }
             Sources.COMICK -> {
                 try {
-                    Log.d("TAG", "getChapters: mangadex")
+                    Log.d("TAG", "getChapters: comick")
                     mickRepo.getChapters(manga)
                 } catch(e: Exception){
                     manga

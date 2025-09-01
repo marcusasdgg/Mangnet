@@ -12,6 +12,7 @@ import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
+import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
 import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
 import com.example.poomagnet.mangaRepositoryManager.isOnline
@@ -277,7 +278,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 val tagList = mutableListOf<String>()
                 val demographic = ""
 
-                ret.add(MangaInfo(id, type, tite, alternateTitles, description, state, "noClue", listOf("en"), null, imgUrl, 0, inLibrary =  false, tagList = tagList, demographic = demographic))
+                ret.add(MangaInfo(id, type, tite, alternateTitles, description, state, "noClue", listOf("en"), null, imgUrl, 0, inLibrary =  false, tagList = tagList, demographic = demographic, source = Sources.MANGADEX))
             }
             val maxElm = Jsoup.parse(res).body().getElementsByTag("div").firstOrNull{
                 it.hasClass("body-site")
