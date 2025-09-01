@@ -585,7 +585,6 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
            val response = apiService.getChapterPagesInfo(id)
            val baseUrl = response["baseUrl"]
            val chapterInfo = response["chapter"]
-           Log.d("TAG", "getChapterContents: response is $response")
            var hash = ""
            val list: MutableList<String> = mutableListOf()
            if (chapterInfo is Map<*,*>){
@@ -597,6 +596,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
                    }
                }
            }
+           Log.d("TAG", "getChapterContents: list of images is $list")
            return ch.copy(contents = ChapterContents.Online(list, false))
        } catch (e: Exception) {
            return ch

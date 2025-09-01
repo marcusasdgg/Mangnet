@@ -28,7 +28,7 @@ interface mickService {
     @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
     suspend fun getChapterList(@Path("HID") id: String, @Query("limit") limit: Int, @Query("page") page: Int) : Map<String, Any?>
 
-    @GET("/chapter/{HID}?tachiyomi=true")
+    @GET("/chapter/{HID}/get_images?tachiyomi=true")
     @Headers("Referer: https://comick.app/", "Origin: https://comick.app/", "X-Requested-With: eu.kanade.tachiyomi", "User-Agent: Android", "Connection: keep-alive")
-    suspend fun getChapterPagesInfo(@Path("HID") chapterId: String) : Map<String,Any>?
+    suspend fun getChapterPagesInfo(@Path("HID") chapterId: String) : List<Map<String,Any>>?
 }

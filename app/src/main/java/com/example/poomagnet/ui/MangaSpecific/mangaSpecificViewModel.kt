@@ -123,7 +123,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
                     )
                 }
             } else {
-                val chap = repo.getChapterContents(chapterFound, currentManga.id)
+                val chap = repo.getChapterContents(chapterFound, currentManga)
                 chapterlist = chapterlist?.map {elm ->if (elm.id == chapterId){
                     chap
                 } else {
@@ -219,7 +219,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
     }
 
     fun getRefererUrl(): String{
-        val s = repo.getBaseUrls(uiState.value.currentManga!!.id , uiState.value.currentChapter!!.id )
+        val s = repo.getBaseUrls(uiState.value.currentManga!!.id , uiState.value.currentChapter!!.id,  uiState.value.currentManga!!.source)
         Log.d("TAG", "getRefererUrl: $s")
         return s
     }
@@ -244,7 +244,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
             }
 
             if (firstNextChapter !== null){
-                val chapter = repo.getChapterContents(firstNextChapter, uiState.value.currentManga?.id ?: "")
+                val chapter = repo.getChapterContents(firstNextChapter, uiState.value.currentManga)
                 if (chapter.contents?.imagePaths?.isEmpty() == true){
                     Log.d("TAG", "getNextChapter: no images found in getchapter contents")
                     _uiState.update {
@@ -375,7 +375,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
         if (currentVolume !== null && currentChapter !== null){
             var firstNextChapter = uiState.value.currentManga?.chapterList?.firstOrNull { elm  -> elm.chapter < currentChapter }
             if (firstNextChapter !== null){
-                val chapter = repo.getChapterContents(firstNextChapter, uiState.value.currentManga?.id ?: "")
+                val chapter = repo.getChapterContents(firstNextChapter, uiState.value.currentManga)
                 Log.d("TAG", "getNextChapter: $chapter")
                 if (chapter.contents is ChapterContents.Online){
                     firstNextChapter = chapter
@@ -446,7 +446,7 @@ class MangaSpecificViewModel @Inject constructor( private val repo: MangaReposit
     }
 
     suspend fun loadContentimage(mangaId: String, chapterId: String, url: String): String{
-        return repo.retrieveImageContent(mangaId, chapterId, url)
+        return repo.retrieveImageContent(mangaId, chapterId, url, repo.getSourceFromId(mangaId))
     }
 
 
@@ -467,7 +467,7 @@ class MangaWorker @AssistedInject constructor(
         val id = inputData.getString("chapterId") ?: return  Result.failure()
         Log.d("TAG", "doWork: ")
         return try {
-            repo.downloadChapter(mangaId, id)
+            repo.downloadChapter(mangaId, id, repo.getSourceFromId(mangaId))
             Result.success()
         } catch (e: NullPointerException) {
             Log.d("TAG", "doWork: $e")

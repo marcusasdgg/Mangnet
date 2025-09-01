@@ -34,13 +34,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
 
-    fun getBelongedRepo(mangaId: String): Sources{
-        if (mangaId.startsWith("manga")){
-            return Sources.MANGANATO
-        } else {
-            return Sources.MANGADEX
-        }
-    }
+
 
     suspend fun searchAllManga(title: String, offSet: Int = 0, ordering: Pair<Ordering, Direction>, demo: List<Demographic>, tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, rating: List<ContentRating>, source: Sources, status: mangaState = mangaState.IN_PROGRESS) : Pair<List<MangaInfo>,Int>{
         //title: String, page: Int = 1, ordering: String, demo: List<String> tagsIncluded: List<Tag>, tagsExcluded: List<Tag>, contentRating: List<String>, status: String
@@ -87,7 +81,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
     suspend fun getImageUri(mangaId: String, coverUrl: String) : String {
-        val source = getBelongedRepo(mangaId)
+        val source = getSourceFromId(mangaId)
         return when (source){
             Sources.MANGANATO -> {
                 val s = natoRepo.getImageUri(mangaId, coverUrl)
@@ -107,8 +101,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         }
     }
 
-    fun getBaseUrls( mangaId: String, chapterId: String): String{
-        val source = getBelongedRepo(mangaId)
+    fun getBaseUrls( mangaId: String, chapterId: String, source: Sources): String{
         return when(source){
             Sources.MANGANATO -> "https://chapmanganato.to/$mangaId/$chapterId"
             Sources.MANGADEX ->  "https://mangadex.org/chapter/$chapterId"
@@ -117,7 +110,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
     fun getMangaById(id: String): MangaInfo?{
-        val source = getBelongedRepo(id)
+        val source: Sources = getSourceFromId(id)
         return when(source){
             Sources.MANGANATO -> natoRepo.library.firstOrNull { e -> e.id == id }
             Sources.MANGADEX -> mangadexRepo.library.firstOrNull { e -> e.id == id }
@@ -126,8 +119,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
     suspend fun addToLibrary(manga: MangaInfo){
-        val source = getBelongedRepo(manga.id)
-        when (source){
+        when (manga.source){
             Sources.MANGANATO -> {natoRepo.addToLibrary(manga)}
             Sources.MANGADEX -> {mangadexRepo.addToLibrary(manga)}
             else -> return
@@ -135,8 +127,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
     suspend fun removeFromLibrary(manga: MangaInfo?){
-        val source = manga?.id?.let { getBelongedRepo(it) } ?: return
-        when (source){
+        when (manga?.source){
             Sources.MANGANATO -> {natoRepo.removeFromLibrary(manga)}
             Sources.MANGADEX -> {mangadexRepo.removeFromLibrary(manga)}
             else -> return
@@ -155,11 +146,13 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         }
     }
 
-    suspend fun getChapterContents(ch: Chapter, mangaId: String): Chapter{
-        val source = getBelongedRepo(mangaId)
+    suspend fun getChapterContents(ch: Chapter, manga: MangaInfo?): Chapter{
+        val source = manga?.source ?: return ch
+        Log.d("TAG", "getChapterContents: found manga to be of source ${manga.source}")
         return when (source){
-            Sources.MANGANATO -> natoRepo.getChapterContents(ch, mangaId)
+            Sources.MANGANATO -> natoRepo.getChapterContents(ch, manga.id)
             Sources.MANGADEX -> mangadexRepo.getChapterContents(ch)
+            Sources.COMICK -> mickRepo.getChapterContents(ch)
             else -> throw(IllegalArgumentException())
         }
     }
@@ -176,8 +169,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
     }
 
     suspend fun updateInLibrary(manga: MangaInfo){
-        val source = getBelongedRepo(manga.id)
-        when (source){
+        when (manga.source){
             Sources.MANGANATO -> natoRepo.updateInLibrary(manga)
             Sources.MANGADEX -> mangadexRepo.updateInLibrary(manga)
             else -> throw(IllegalArgumentException())
@@ -185,10 +177,13 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
 
     }
 
+    fun getSourceFromId(mangaId: String) : Sources{
+        return getLibrary().firstOrNull { it.id == mangaId }?.source ?: Sources.MANGADEX
+    }
 
-    suspend fun downloadChapter(mangaId: String, chapterId: String){
 
-        val source = getBelongedRepo(mangaId)
+    suspend fun downloadChapter(mangaId: String, chapterId: String, source: Sources){
+
         when(source){
             Sources.MANGANATO -> {
                 Log.d("TAG", "downloadChapter: nato")
@@ -202,8 +197,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         }
     }
 
-    suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String): String {
-        val source = getBelongedRepo(mangaId)
+    suspend fun retrieveImageContent(mangaId: String, chapterId: String, url: String, source: Sources): String {
         return when(source){
             Sources.MANGANATO -> natoRepo.retrieveImageContent(mangaId,chapterId,url)
             Sources.MANGADEX -> mangadexRepo.retrieveImageContent(mangaId,chapterId,url)

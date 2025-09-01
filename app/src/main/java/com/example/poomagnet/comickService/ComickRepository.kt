@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.poomagnet.downloadService.DownloadService
 import com.example.poomagnet.mangaRepositoryManager.Chapter
+import com.example.poomagnet.mangaRepositoryManager.ChapterContents
 import com.example.poomagnet.mangaRepositoryManager.ContentRating
 import com.example.poomagnet.mangaRepositoryManager.Demographic
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
@@ -227,10 +228,12 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
         Log.d("TAG", "getChapters: found ${chapters.size} chapters")
         val foundChapters :List<Chapter> = chapters.map { ch ->
             if (ch is Map<*,*>){
-                val title = ch["title"].toString()
+                val title = ch["title"]?.toString() ?: ""
                 val hid = ch["hid"].toString()
                 val chNum = ch["chap"].toString().toDoubleOrNull() ?: -1.0
                 val voNum = ch["vol"].toString().toDoubleOrNull() ?: -1.0
+                val updated_at = ch["created_at"].toString()
+                val date = SimpleDate(updated_at)
                 val type = "Manga"
                 val pageCount = 0.0
 
@@ -242,12 +245,34 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
                     volume = voNum,
                     type = type,
                     pageCount = pageCount,
-                    group = groupName
+                    group = groupName,
+                    date = date
                 )
             }
             null
         }.filterNotNull()
         return manga.copy(chapterList = foundChapters)
+    }
+
+    suspend fun getChapterContents(ch: Chapter): Chapter {
+        try {
+            val body = apiService.getChapterPagesInfo(ch.id)
+            if (body == null){
+                Log.d("TAG", "getChapterContents: request went wrong")
+                return ch
+            }
+            val imageList = body.map { imgObj ->
+                val imgName = imgObj["b2key"].toString()
+                "$basePictureUrl/$imgName"
+            }
+
+            val contents = ChapterContents.Online(imageList,false)
+            Log.d("TAG", "getChapterContents: found chapter with ${imageList.size} pages")
+            return ch.copy(contents = contents, pageCount = imageList.size.toDouble())
+        } catch (e: Exception){
+            Log.d("TAG", "getChapterContents: failed request $e")
+            return ch
+        }
     }
 }
 
