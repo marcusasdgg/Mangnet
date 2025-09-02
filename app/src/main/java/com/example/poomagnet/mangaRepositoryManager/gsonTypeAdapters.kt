@@ -56,7 +56,7 @@ class SlimChapterAdapter : JsonDeserializer<SlimChapter>, JsonSerializer<SlimCha
     }
 }
 
-class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
+class ChapterContentsAdapter : JsonDeserializer<ChapterContents>, JsonSerializer<ChapterContents> {
     override fun serialize(src: ChapterContents, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val jsonObject = JsonObject()
 
@@ -75,9 +75,7 @@ class ChapterContentsSerializer : JsonSerializer<ChapterContents> {
 
         return jsonObject
     }
-}
 
-class ChapterContentsDeserializer : JsonDeserializer<ChapterContents> {
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterContents {
         val jsonObject = json.asJsonObject
         val imagePathsType = object : TypeToken<List<String>>() {}.type

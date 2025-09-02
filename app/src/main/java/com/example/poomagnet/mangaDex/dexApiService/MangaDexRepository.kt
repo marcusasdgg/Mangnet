@@ -10,8 +10,7 @@ import androidx.annotation.RequiresApi
 import com.example.poomagnet.downloadService.DownloadService
 import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
-import com.example.poomagnet.mangaRepositoryManager.ChapterContentsDeserializer
-import com.example.poomagnet.mangaRepositoryManager.ChapterContentsSerializer
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsAdapter
 import com.example.poomagnet.mangaRepositoryManager.ContentRating
 import com.example.poomagnet.mangaRepositoryManager.Demographic
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
@@ -22,7 +21,7 @@ import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
-import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
+import com.example.poomagnet.mangaRepositoryManager.TagTypeAdapter
 import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import com.example.poomagnet.ui.SearchScreen.Direction
@@ -83,11 +82,10 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
     }
 
     private val gsonSerializer = GsonBuilder()
-        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
-        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsAdapter())
         .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
         .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
-        .registerTypeAdapter(Tag::class.java, TagDeserializer())
+        .registerTypeAdapter(Tag::class.java, TagTypeAdapter())
         .create()
 
     //local persistence is so much easier now, i just backup
@@ -160,7 +158,9 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
                 Log.d("TAG", "setupTags: failed due to $e")
             }
             Log.d("TAG", "setupTags: ${tagMap.size}")
+            backUpManga()
         }
+
     }
 
     private fun printBackUp(){
@@ -317,11 +317,10 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
             Log.d("TAG", "already in library ")
             return
         }
-        var mang = manga
         if(manga.chapterList?.size  == 0){
-            val chapterList = getChapters(mang)
+            val chapterList = getChapters(manga)
             Log.d("TAG", "no chapters found trying again")
-            library.add(mang)
+            library.add(manga)
             idSet.add(manga.id)
             printLibrary()
             backUpManga()
@@ -329,7 +328,7 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
         } else {
             val d = downloadService.downloadCoverUrl(manga.id, manga.coverArtUrl)
             Log.d("TAG", "addToLibrary: found url $d")
-            library.add(mang.copy(coverArtUrl = d))
+            library.add(manga.copy(coverArtUrl = d))
             idSet.add(manga.id)
             printLibrary()
             backUpManga()

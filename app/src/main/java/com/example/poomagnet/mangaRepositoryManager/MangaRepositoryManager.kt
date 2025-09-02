@@ -95,6 +95,12 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                 s
             }
 
+            Sources.COMICK -> {
+                val s = mickRepo.getImageUri(mangaId, coverUrl)
+
+                s
+            }
+
             else -> {
                 Log.d("TAG", "getImageUri: no source detected")
                 ""}
@@ -122,6 +128,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         when (manga.source){
             Sources.MANGANATO -> {natoRepo.addToLibrary(manga)}
             Sources.MANGADEX -> {mangadexRepo.addToLibrary(manga)}
+            Sources.COMICK -> {mickRepo.addToLibrary(manga)}
             else -> return
         }
     }
@@ -130,6 +137,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         when (manga?.source){
             Sources.MANGANATO -> {natoRepo.removeFromLibrary(manga)}
             Sources.MANGADEX -> {mangadexRepo.removeFromLibrary(manga)}
+            Sources.COMICK -> {mickRepo.removeFromLibrary(manga)}
             else -> return
         }
     }
@@ -172,6 +180,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         when (manga.source){
             Sources.MANGANATO -> natoRepo.updateInLibrary(manga)
             Sources.MANGADEX -> mangadexRepo.updateInLibrary(manga)
+            Sources.COMICK -> mickRepo.updateInLibrary(manga)
             else -> throw(IllegalArgumentException())
         }
 
@@ -193,6 +202,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                 Log.d("TAG", "downloadChapter: dex")
                 mangadexRepo.downloadChapter(mangaId,chapterId)
             }
+
             else -> {Log.d("TAG", "downloadChapter: nothing? $mangaId, $chapterId")}
         }
     }
@@ -201,6 +211,7 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
         return when(source){
             Sources.MANGANATO -> natoRepo.retrieveImageContent(mangaId,chapterId,url)
             Sources.MANGADEX -> mangadexRepo.retrieveImageContent(mangaId,chapterId,url)
+
             else -> ""
         }
     }

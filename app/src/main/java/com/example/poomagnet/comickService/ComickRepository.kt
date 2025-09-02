@@ -5,25 +5,40 @@ import android.util.Log
 import com.example.poomagnet.downloadService.DownloadService
 import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsAdapter
 import com.example.poomagnet.mangaRepositoryManager.ContentRating
+import com.example.poomagnet.mangaRepositoryManager.DemoTypeAdapter
 import com.example.poomagnet.mangaRepositoryManager.Demographic
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.Ordering
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
+import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapter
+import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
+import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import com.example.poomagnet.ui.SearchScreen.Direction
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import javax.inject.Inject
 
 data class BackUpInstance (
     val library: MutableList<MangaInfo>,
     var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>>,
-    val tagMap: MutableMap<Tag, String>
+    val tagMap: MutableMap<Tag, String>,
+    val demoMap: MutableMap<Demographic, Int>,
+    val reversedGenreMap: MutableMap<Int,Tag>,
+    val sortMap: MutableMap<Ordering, String>,
+    val idSet: MutableSet<String>,
 )
 
 // essence of a repository is that
@@ -34,6 +49,7 @@ data class BackUpInstance (
 class ComickRepository @Inject constructor(val context: Context, private val downloadService: DownloadService) {
     private val apiService = retrofitInstance.api
     private val basePictureUrl = "https://meo.comick.pictures"
+    var newUpdatedChapters: MutableList<Pair<SimpleDate, SlimChapter>> = mutableListOf()
     // comicks api works interestingly
     // tags work using a string instead of int like manganato
 
@@ -42,13 +58,22 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
     private var reversedGenreMap: MutableMap<Int, Tag> = mutableMapOf()
     private var sortMap: MutableMap<Ordering, String> = mutableMapOf()
     private val noDemo = 5
-    val library: MutableList<MangaInfo> = mutableListOf()
+    var library: MutableList<MangaInfo> = mutableListOf()
     private var idSet: MutableSet<String> = mutableSetOf()
 
+
+    // deserializer/serializer
+    private val gsonSerializer = GsonBuilder()
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsAdapter())
+        .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
+        .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
+        .registerTypeAdapter(Demographic::class.java, DemoTypeAdapter())
+        .create()
 
 
     init {
         // call restoreBackup
+        loadMangaFromBackup(context)
         setupTags()
 
     }
@@ -206,7 +231,7 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
                     alternateTitles = altTitles,
                     description = description,
                     state = mangaState.IN_PROGRESS,
-                    contentRating = manga["contentRating"].toString(),
+                    contentRating = manga["contentRating"]?.toString() ?: "Shounen",
                     availableLanguages = listOf(),
                     coverArtUrl = thumbnailUrl,
                     coverArt = null,
@@ -219,6 +244,29 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
         }
 
         return Pair(mangaList, mangaList.size)
+    }
+
+    suspend fun backUpLibrary(){
+        val libraryShouldBe = library.map {element ->
+            element.copy(chapterList = element.chapterList?.map { chapter ->
+                chapter.copy(contents = if (chapter.contents?.isOnline == true) null else chapter.contents )
+            } ?: listOf())
+        }.toMutableList()
+
+        val file = File(context.filesDir, "backup_comick.txt")
+        Log.d("TAG", "backUpLibrary: ${gsonSerializer.toJson(BackUpInstance(libraryShouldBe, newUpdatedChapters, tagMap, demoMap, reversedGenreMap, sortMap, idSet))}")
+        withContext(Dispatchers.IO) {
+            FileOutputStream(file).use { fos ->
+                // Create an OutputStreamWriter to write text data
+                OutputStreamWriter(fos).use { writer ->
+                    // Write the data to the file
+
+                    writer.write(
+                        gsonSerializer.toJson(BackUpInstance(libraryShouldBe, newUpdatedChapters, tagMap, demoMap, reversedGenreMap, sortMap, idSet))
+                    )
+                }
+            }
+        }
     }
 
     suspend fun getChapters(manga: MangaInfo): MangaInfo {
@@ -274,6 +322,90 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
             return ch
         }
     }
+
+    suspend fun addToLibrary(manga: MangaInfo) {
+        if (idSet.contains(manga.id)){
+            Log.d("TAG", "already in library ")
+            return
+        }
+
+        // mangadex also responsible for adding chapter list to the manga on add to library? it seems a bit unnecessary so wont add here.
+
+        val d = downloadService.downloadCoverUrl(manga.id, manga.coverArtUrl)
+        library.add(manga.copy(coverArtUrl = d))
+        idSet.add(manga.id)
+
+        // add call to backup library function
+        Log.d("TAG", "addToLibrary: library is now $library ")
+        Log.d("TAG", "addToLibrary: calling backupLibrary")
+        backUpLibrary()
+
+    }
+
+    suspend fun removeFromLibrary(manga: MangaInfo?){
+        library.removeIf { elm -> elm.id == manga?.id }
+
+        idSet.remove(manga?.id)
+        newUpdatedChapters.removeIf {
+            it.second.mangaId == manga?.id
+        }
+
+        // call backup here as well
+        backUpLibrary()
+    }
+
+    fun loadMangaFromBackup(context: Context){
+        val file = File(context.filesDir, "backup_comick.txt")
+        try {
+            if (!file.exists()){
+                Log.d("TAG", "loadMangaFromBackup: created new backup file for comick")
+                file.writeText(gsonSerializer.toJson(BackUpInstance(library, newUpdatedChapters, tagMap, demoMap, reversedGenreMap, sortMap, idSet)))
+                return
+            }
+            val jsonString = file.readText()
+
+            val listType = object : TypeToken<BackUpInstance>() {}.type
+            val r: BackUpInstance = gsonSerializer.fromJson(jsonString, listType)
+            library = r.library
+            idSet = r.idSet
+            newUpdatedChapters = r.newUpdatedChapters
+            tagMap = r.tagMap
+            demoMap = r.demoMap
+            reversedGenreMap = r.reversedGenreMap
+            sortMap = r.sortMap
+        } catch (e: Exception){
+            Log.e("TAG", "Error loading manga from comick_backup.txt", e)
+        }
+    }
+
+    suspend fun updateInLibrary(manga: MangaInfo) {
+        library = library.map { elm ->
+            if (manga.id == elm.id){
+                val oldChapters = elm.chapterList?.toMutableList()
+                manga.chapterList?.forEach { t ->
+                    if (!oldChapters?.any{ e -> e.id == t.id }!!){
+                        oldChapters.add(t)
+                    } else {
+                        val old = oldChapters.indexOfFirst { m -> m.id == t.id }
+                        if (old != -1){
+                            if (t.finished){
+                                oldChapters[old] = t
+                            }
+                        }
+                    }
+                }
+                manga.copy(chapterList = oldChapters ?: listOf())
+            }else {
+                elm
+            }
+        }.toMutableList()
+        backUpLibrary()
+    }
+
+    fun getImageUri(mangaId: String, coverUrl: String): String {
+        return downloadService.retrieveImage(mangaId,coverUrl).toString()
+    }
+
 }
 
 

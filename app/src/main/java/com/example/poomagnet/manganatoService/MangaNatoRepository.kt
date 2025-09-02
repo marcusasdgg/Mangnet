@@ -5,8 +5,7 @@ import android.util.Log
 import com.example.poomagnet.downloadService.DownloadService
 import com.example.poomagnet.mangaRepositoryManager.Chapter
 import com.example.poomagnet.mangaRepositoryManager.ChapterContents
-import com.example.poomagnet.mangaRepositoryManager.ChapterContentsDeserializer
-import com.example.poomagnet.mangaRepositoryManager.ChapterContentsSerializer
+import com.example.poomagnet.mangaRepositoryManager.ChapterContentsAdapter
 import com.example.poomagnet.mangaRepositoryManager.MangaInfo
 import com.example.poomagnet.mangaRepositoryManager.SimpleDate
 import com.example.poomagnet.mangaRepositoryManager.SimpleDateAdapter
@@ -14,7 +13,7 @@ import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
-import com.example.poomagnet.mangaRepositoryManager.TagDeserializer
+import com.example.poomagnet.mangaRepositoryManager.TagTypeAdapter
 import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import com.google.gson.GsonBuilder
@@ -82,11 +81,10 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
 
 
     private val gsonSerializer = GsonBuilder()
-        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsSerializer())
-        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsDeserializer())
+        .registerTypeAdapter(ChapterContents::class.java, ChapterContentsAdapter())
         .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
         .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
-        .registerTypeAdapter(Tag::class.java, TagDeserializer())
+        .registerTypeAdapter(Tag::class.java, TagTypeAdapter())
         .create()
 
     init {
@@ -125,7 +123,7 @@ class MangaNatoRepository @Inject constructor(private val context: Context, priv
                 file.writeText(gsonSerializer.toJson(BackUpInstance(library, idSet, newUpdatedChapters, tagMap, suggestiveRating, eroticaRating, pornographicRating, shounen, shoujo, seinen, josei)))
             }
         } catch (e: Exception) {
-            Log.e("TAG", "Error loading manga from backup.txt", e)
+            Log.e("TAG", "Error loading manga from manganato backup.txt", e)
         }
     }
 

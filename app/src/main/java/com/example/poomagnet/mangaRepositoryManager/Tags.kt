@@ -4,7 +4,12 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import java.lang.reflect.Type
+
+//problem - tostring method overwritten
 
 enum class Tag(val full_name: String){
     Romance("Romance"),
@@ -90,15 +95,29 @@ enum class Tag(val full_name: String){
         }
     }
 
-    override fun toString(): String {
-        return super.toString().replace("_", " ")
-    }
 }
 
-class TagDeserializer : JsonDeserializer<Tag> {
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Tag {
+
+class TagTypeAdapter : JsonSerializer<Tag>, JsonDeserializer<Tag> {
+    override fun serialize(
+        src: Tag?,
+        typeOfSrc: Type?,
+        context: JsonSerializationContext?
+    ): JsonElement {
+        if (src == null) {
+            throw JsonParseException("Tried to serialize null Tag as map key")
+        }
+        return JsonPrimitive(src.full_name)
+    }
+
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type?,
+        context: JsonDeserializationContext?
+    ): Tag {
         val value = json.asString
-        return Tag.fromValue(value) ?: throw JsonParseException("Unknown tag: $value")
+        return Tag.fromValue(value)
+            ?: throw JsonParseException("Unknown tag: $value")
     }
 }
 
@@ -112,10 +131,37 @@ enum class Ordering(val msg: String){
     Followed_Count("order[followedCount]"),
     Relevance("order[relevance]");
 
-    override fun toString(): String {
-        return super.toString().replace("_", " ")
+
+    companion object {
+        fun fromValue(value: String): Ordering? {
+            return Ordering.entries.find { it.msg.lowercase() == value.lowercase() }
+        }
     }
 }
+
+//class OrderingTypeAdapter : JsonSerializer<Ordering>, JsonDeserializer<Ordering> {
+//    override fun serialize(
+//        src: Ordering?,
+//        typeOfSrc: Type?,
+//        context: JsonSerializationContext?
+//    ): JsonElement {
+//        if (src == null) {
+//            throw JsonParseException("Tried to serialize null Tag as map key")
+//        }
+//        return JsonPrimitive(src.msg)
+//    }
+//
+//    override fun deserialize(
+//        json: JsonElement,
+//        typeOfT: Type?,
+//        context: JsonDeserializationContext?
+//    ): Ordering {
+//        val value = json.asString
+//        return Ordering.fromValue(value)
+//            ?: throw JsonParseException("Unknown tag: $value")
+//    }
+//}
+
 
 enum class Demographic(val msg: String){
     Shounen("shounen"),
@@ -128,11 +174,37 @@ enum class Demographic(val msg: String){
             return Demographic.entries.find { it.msg.lowercase() == value.lowercase() }
         }
     }
+
+}
+
+class DemoTypeAdapter : JsonSerializer<Demographic>, JsonDeserializer<Demographic> {
+    override fun serialize(
+        src: Demographic?,
+        typeOfSrc: Type?,
+        context: JsonSerializationContext?
+    ): JsonElement {
+        if (src == null) {
+            throw JsonParseException("Tried to serialize null Tag as map key")
+        }
+        return JsonPrimitive(src.msg)
+    }
+
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type?,
+        context: JsonDeserializationContext?
+    ): Demographic {
+        val value = json.asString
+        return Demographic.fromValue(value)
+            ?: throw JsonParseException("Unknown tag: $value")
+    }
+
 }
 
 enum class ContentRating(val msg: String){
     Safe("safe"),
     Suggestive("suggestive"),
     Erotica("erotica"),
-    Pornographic("pornographic")
+    Pornographic("pornographic");
+
 }
