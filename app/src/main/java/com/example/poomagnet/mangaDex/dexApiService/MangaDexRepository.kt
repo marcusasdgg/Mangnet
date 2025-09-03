@@ -21,7 +21,6 @@ import com.example.poomagnet.mangaRepositoryManager.SlimChapter
 import com.example.poomagnet.mangaRepositoryManager.SlimChapterAdapter
 import com.example.poomagnet.mangaRepositoryManager.Sources
 import com.example.poomagnet.mangaRepositoryManager.Tag
-import com.example.poomagnet.mangaRepositoryManager.TagTypeAdapter
 import com.example.poomagnet.mangaRepositoryManager.isOnline
 import com.example.poomagnet.mangaRepositoryManager.mangaState
 import com.example.poomagnet.ui.SearchScreen.Direction
@@ -85,7 +84,6 @@ class MangaDexRepository @Inject constructor(val context: Context, private val d
         .registerTypeAdapter(ChapterContents::class.java, ChapterContentsAdapter())
         .registerTypeAdapter(SimpleDate::class.java, SimpleDateAdapter())
         .registerTypeAdapter(SlimChapterAdapter::class.java, SlimChapterAdapter())
-        .registerTypeAdapter(Tag::class.java, TagTypeAdapter())
         .create()
 
     //local persistence is so much easier now, i just backup

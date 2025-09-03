@@ -202,7 +202,9 @@ class MangaRepositoryManager @Inject constructor( private val mangadexRepo: Mang
                 Log.d("TAG", "downloadChapter: dex")
                 mangadexRepo.downloadChapter(mangaId,chapterId)
             }
-
+            Sources.COMICK -> {
+                mickRepo.downloadChapter(mangaId,chapterId)
+            }
             else -> {Log.d("TAG", "downloadChapter: nothing? $mangaId, $chapterId")}
         }
     }

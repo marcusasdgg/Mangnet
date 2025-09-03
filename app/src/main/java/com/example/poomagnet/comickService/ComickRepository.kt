@@ -299,7 +299,12 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
             }
             null
         }.filterNotNull()
-        return manga.copy(chapterList = foundChapters)
+
+        val mergedChapters = foundChapters.map { ch ->
+            manga.chapterList?.firstOrNull { it.id == ch.id  } ?: ch
+        }
+
+        return manga.copy(chapterList = mergedChapters)
     }
 
     suspend fun getChapterContents(ch: Chapter): Chapter {
@@ -404,6 +409,24 @@ class ComickRepository @Inject constructor(val context: Context, private val dow
 
     fun getImageUri(mangaId: String, coverUrl: String): String {
         return downloadService.retrieveImage(mangaId,coverUrl).toString()
+    }
+
+    suspend fun downloadChapter(mangaId: String, chapterId: String) {
+        var manga : MangaInfo = library.first {it.id == mangaId}
+        var chList = manga.chapterList ?: return
+        var ch = chList.first{it.id == chapterId}
+        ch = getChapterContents(ch)
+        val imageList = ch.contents?.imagePaths ?: return
+
+        val uriList = imageList.map { downloadService.downloadContent(mangaId,chapterId, it)}
+        val newContents = ChapterContents.Downloaded(uriList,false)
+        ch = ch.copy(contents = newContents)
+
+        chList = chList.map { if( it.id != ch.id) it else ch}
+        manga = manga.copy(chapterList =  chList)
+
+        library = library.map { if (it.id != mangaId) it else manga }.toMutableList()
+        backUpLibrary()
     }
 
 }
